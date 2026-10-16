@@ -1,0 +1,12 @@
+{
+  "screen": {
+    "x": 400,
+    "y": 300,
+    "width": 3456,
+    "height": 2234
+  },
+  "frameSize": {
+    "width": 4256,
+    "height": 2834
+  }
+}

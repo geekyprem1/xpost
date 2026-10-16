@@ -1,0 +1,5 @@
+.next
+node_modules
+*.md
+.commandcode
+package-lock.json

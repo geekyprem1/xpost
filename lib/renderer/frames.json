@@ -1,0 +1,285 @@
+{
+  "browser": {
+    "name": "Browser",
+    "kindHint": "window",
+    "barHeight": 46,
+    "bezel": {
+      "left": 10,
+      "right": 10,
+      "bottom": 10
+    },
+    "radius": 18,
+    "screenRadius": 8,
+    "barColor": "#1c1c23",
+    "bodyColor": "#141419",
+    "borderColor": "#2e2e38",
+    "pillColor": "#26262e",
+    "dots": true,
+    "pill": true
+  },
+  "card": {
+    "name": "Card",
+    "kindHint": "window",
+    "barHeight": 0,
+    "bezel": {
+      "top": 12,
+      "left": 12,
+      "right": 12,
+      "bottom": 12
+    },
+    "radius": 16,
+    "screenRadius": 10,
+    "bodyColor": "#18181e",
+    "borderColor": "#32323c"
+  },
+  "dark-bar": {
+    "name": "Dark Bar",
+    "kindHint": "window",
+    "barHeight": 34,
+    "bezel": {
+      "left": 8,
+      "right": 8,
+      "bottom": 8
+    },
+    "radius": 14,
+    "screenRadius": 6,
+    "barColor": "#0c0c11",
+    "bodyColor": "#101015",
+    "borderColor": "#28282f"
+  },
+  "safari": {
+    "name": "Safari",
+    "kindHint": "window",
+    "barHeight": 44,
+    "bezel": {
+      "left": 10,
+      "right": 10,
+      "bottom": 10
+    },
+    "radius": 16,
+    "screenRadius": 8,
+    "barColor": "#f4f4f6",
+    "bodyColor": "#ffffff",
+    "borderColor": "#d6d6de",
+    "pillColor": "#e6e6ec",
+    "pill": true
+  },
+  "arc": {
+    "name": "Arc",
+    "kindHint": "window",
+    "barHeight": 42,
+    "bezel": {
+      "left": 10,
+      "right": 10,
+      "bottom": 10
+    },
+    "radius": 16,
+    "screenRadius": 8,
+    "barColor": "#232329",
+    "bodyColor": "#141419",
+    "borderColor": "#34343d",
+    "pillColor": "#2e2e37",
+    "accentColor": "#8b5cf6",
+    "accent": true,
+    "pill": true
+  },
+  "terminal": {
+    "name": "Terminal",
+    "kindHint": "window",
+    "barHeight": 40,
+    "bezel": {
+      "left": 10,
+      "right": 10,
+      "bottom": 10
+    },
+    "radius": 14,
+    "screenRadius": 6,
+    "barColor": "#15151b",
+    "bodyColor": "#0d0d12",
+    "borderColor": "#2c2c34",
+    "prompt": true
+  },
+  "glass": {
+    "name": "Glass",
+    "kindHint": "window",
+    "barHeight": 40,
+    "bezel": {
+      "left": 10,
+      "right": 10,
+      "bottom": 10
+    },
+    "radius": 18,
+    "screenRadius": 10,
+    "barColor": "rgba(255, 255, 255, 0.14)",
+    "bodyColor": "rgba(18, 18, 24, 0.55)",
+    "borderColor": "rgba(255, 255, 255, 0.38)",
+    "pillColor": "rgba(255, 255, 255, 0.2)",
+    "pill": true
+  },
+  "iphone-18-pro": {
+    "name": "iPhone 17 Pro",
+    "kindHint": "phone",
+    "margin": 0,
+    "bezel": {
+      "left": 82.91873963515755,
+      "top": 82.91873963515755,
+      "right": 82.91873963515755,
+      "bottom": 82.91873963515755
+    },
+    "radius": 142,
+    "screenRadius": 116,
+    "island": true,
+    "islandWidth": 152,
+    "islandHeight": 34,
+    "bezelColor": "#0a0a0e",
+    "edgeColor": "#5b5b68",
+    "screenAspect": 0.459954233409611,
+    "imageSrc": "/frames/iphone-pro.png"
+  },
+  "iphone-18-pro-max": {
+    "name": "iPhone 17 Pro Max",
+    "kindHint": "phone",
+    "margin": 0,
+    "bezel": {
+      "left": 75.75757575757575,
+      "top": 75.75757575757575,
+      "right": 75.75757575757575,
+      "bottom": 75.75757575757575
+    },
+    "radius": 142,
+    "screenRadius": 116,
+    "island": true,
+    "islandWidth": 160,
+    "islandHeight": 36,
+    "bezelColor": "#0a0a0e",
+    "edgeColor": "#5b5b68",
+    "screenAspect": 0.4602510460251046,
+    "imageSrc": "/frames/iphone-pro-max.png"
+  },
+  "iphone-17": {
+    "name": "iPhone 16",
+    "kindHint": "phone",
+    "margin": 0,
+    "bezel": {
+      "left": 84.81764206955047,
+      "top": 84.81764206955047,
+      "right": 84.81764206955047,
+      "bottom": 84.81764206955047
+    },
+    "radius": 142,
+    "screenRadius": 116,
+    "island": true,
+    "islandWidth": 136,
+    "islandHeight": 32,
+    "bezelColor": "#0b0b10",
+    "edgeColor": "#565664",
+    "screenAspect": 0.4612676056338028,
+    "imageSrc": "/frames/iphone-17.png"
+  },
+  "iphone-air": {
+    "name": "iPhone Air",
+    "kindHint": "phone",
+    "margin": 0,
+    "bezel": {
+      "left": 77.51937984496125,
+      "top": 77.51937984496125,
+      "right": 77.51937984496125,
+      "bottom": 77.51937984496125
+    },
+    "radius": 142,
+    "screenRadius": 116,
+    "island": true,
+    "islandWidth": 140,
+    "islandHeight": 30,
+    "bezelColor": "#0c0c11",
+    "edgeColor": "#62626f",
+    "screenAspect": 0.4613733905579399,
+    "imageSrc": "/frames/iphone-air.png"
+  },
+  "macbook-pro-14": {
+    "name": "MacBook Pro 14″",
+    "kindHint": "laptop",
+    "bezel": {
+      "left": 132.27513227513228,
+      "top": 99.20634920634922,
+      "right": 132.27513227513228,
+      "bottom": 99.20634920634922
+    },
+    "baseHeight": 0,
+    "baseOverhang": 0,
+    "radius": 34,
+    "screenRadius": 8,
+    "lidColor": "#d7d7dd",
+    "bodyColor": "#0b0b0e",
+    "borderColor": "#3a3a42",
+    "baseColor": "#e2e2e8",
+    "camera": true,
+    "screenAspect": 1.539714867617108,
+    "imageSrc": "/frames/macbook-pro-14.png",
+    "margin": 0
+  },
+  "macbook-pro-16": {
+    "name": "MacBook Pro 16″",
+    "kindHint": "laptop",
+    "bezel": {
+      "left": 115.74074074074075,
+      "top": 86.80555555555556,
+      "right": 115.74074074074075,
+      "bottom": 86.80555555555556
+    },
+    "baseHeight": 0,
+    "baseOverhang": 0,
+    "radius": 36,
+    "screenRadius": 8,
+    "lidColor": "#d7d7dd",
+    "bodyColor": "#0b0b0e",
+    "borderColor": "#3a3a42",
+    "baseColor": "#e2e2e8",
+    "camera": true,
+    "screenAspect": 1.5470008952551477,
+    "imageSrc": "/frames/macbook-pro-16.png",
+    "margin": 0
+  },
+  "ipad-pro-11": {
+    "name": "iPad Pro 11 inch",
+    "kindHint": "tablet",
+    "screenAspect": 0.6892561983471074,
+    "margin": 0,
+    "bezel": {
+      "left": 59.35251798561151,
+      "top": 59.95203836930456,
+      "right": 60.55155875299761,
+      "bottom": 59.95203836930456
+    },
+    "radius": 60,
+    "screenRadius": 30,
+    "bodyColor": "#111114",
+    "borderColor": "#a4a7af",
+    "bezelColor": "#111114",
+    "edgeColor": "#a4a7af",
+    "imageSrc": "/frames/ipad-pro-11.png",
+    "baseHeight": 0,
+    "baseOverhang": 0
+  },
+  "ipad-pro-13": {
+    "name": "iPad Pro 13 inch",
+    "kindHint": "tablet",
+    "screenAspect": 0.75,
+    "margin": 0,
+    "bezel": {
+      "left": 48.44961240310077,
+      "top": 48.44961240310077,
+      "right": 48.44961240310077,
+      "bottom": 48.44961240310077
+    },
+    "radius": 60,
+    "screenRadius": 30,
+    "bodyColor": "#111114",
+    "borderColor": "#a4a7af",
+    "bezelColor": "#111114",
+    "edgeColor": "#a4a7af",
+    "imageSrc": "/frames/ipad-pro-13.png",
+    "baseHeight": 0,
+    "baseOverhang": 0
+  }
+}
