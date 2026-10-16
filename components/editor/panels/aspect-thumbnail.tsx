@@ -42,16 +42,17 @@ export function AspectThumbnail({
     const x = (width - rectW) / 2;
     const y = (height - rectH) / 2;
 
+    const brandAccent = getComputedStyle(canvas).getPropertyValue("--brand-wing").trim();
     ctx.beginPath();
     ctx.roundRect(x, y, rectW, rectH, 3);
     if (ratio === null) {
       ctx.setLineDash([4, 3]);
-      ctx.strokeStyle = "#8b7bff";
+      ctx.strokeStyle = brandAccent;
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.setLineDash([]);
     } else {
-      ctx.fillStyle = "#8b7bff";
+      ctx.fillStyle = brandAccent;
       ctx.fill();
     }
   }, [ratio]);

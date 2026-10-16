@@ -43,12 +43,16 @@ function fakeAdmin(options: {
   consumeError?: string | null;
   remaining?: number;
   configModels?: unknown;
+  refundError?: string;
 }) {
   const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const inserts: Array<Record<string, unknown>> = [];
   const admin = {
     rpc: async (name: string, args: Record<string, unknown>) => {
       rpcCalls.push({ name, args });
+      if (name === "refund_credits" && options.refundError) {
+        return { data: null, error: { message: options.refundError } };
+      }
       if (name === "hit_rate_limit") {
         return { data: options.allowed ?? true, error: null };
       }
@@ -177,6 +181,17 @@ Deno.test("runAiStream: upstream error → refund + SSE error", async () => {
   assertEquals(events.at(-1)?.code, "UPSTREAM_ERROR");
   assertEquals(rpcCalls.at(-1)?.name, "refund_credits");
   assertEquals(inserts[0].status, "refunded");
+});
+
+Deno.test("runAiStream: refund RPC error → failed log, refund claim nahi", async () => {
+  const { admin, inserts } = fakeAdmin({ refundError: "db down" });
+  const fetchFn = (async () =>
+    sseResponse([{ choices: [{ delta: {}, finish_reason: "stop" }] }, "[DONE]"])) as typeof fetch;
+  const response = await runAiStream(streamOptions(admin, fetchFn));
+  const events = await readEvents(response);
+  assertEquals(events.at(-1)?.code, "EMPTY_OUTPUT");
+  assertEquals(String(events.at(-1)?.message).includes("has been refunded"), false);
+  assertEquals(inserts[0].status, "failed");
 });
 
 Deno.test("loadAiModels: app_config se models, warna defaults", async () => {

@@ -35,7 +35,7 @@ export function LayoutPresetThumbnail({
     const layout = computeCardLayout(scene, 1, { width: 1600, height: 1000 });
     ctx.fillStyle = "#131318";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#8b7bff";
+    ctx.fillStyle = getComputedStyle(canvas).getPropertyValue("--brand-wing").trim();
     ctx.beginPath();
     ctx.roundRect(
       layout.imageRect.x,

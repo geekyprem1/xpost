@@ -41,7 +41,7 @@ export function checkGifPreset(input: {
     issues.push("width × height × frames > 300M");
   }
   if (input.bytes > X_GIF_MAX_BYTES) {
-    issues.push(`1Exceeds 5 MB (${megabytes(input.bytes)})`);
+    issues.push(`Exceeds 15 MB (${megabytes(input.bytes)})`);
   }
   return { ok: issues.length === 0, issues };
 }

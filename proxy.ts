@@ -18,6 +18,20 @@ export async function proxy(request: NextRequest) {
   }
 
   let response = NextResponse.next({ request });
+  let cacheHeaders: Record<string, string> = {};
+
+  // Redirects are fresh responses; carry over any cookies/headers the
+  // Supabase client set (e.g. a refreshed session) so they aren't lost.
+  const redirectTo = (url: URL) => {
+    const redirect = NextResponse.redirect(url);
+    for (const cookie of response.cookies.getAll()) {
+      redirect.cookies.set(cookie);
+    }
+    for (const [key, value] of Object.entries(cacheHeaders)) {
+      redirect.headers.set(key, value);
+    }
+    return redirect;
+  };
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,6 +49,7 @@ export async function proxy(request: NextRequest) {
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
+          cacheHeaders = headers;
           for (const [key, value] of Object.entries(headers)) {
             response.headers.set(key, value);
           }
@@ -53,14 +68,14 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";
-    return NextResponse.redirect(url);
+    return redirectTo(url);
   }
 
   if (isLoggedIn && pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/editor";
     url.search = "";
-    return NextResponse.redirect(url);
+    return redirectTo(url);
   }
 
   return response;

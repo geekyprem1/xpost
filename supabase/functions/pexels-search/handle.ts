@@ -137,10 +137,11 @@ export function createHandle(overrides: Partial<HandleDeps> = {}) {
       });
       return jsonResponse({ ...result, cached: false });
     } catch (reason) {
-      return errorResponse(
-        "UPSTREAM_ERROR",
-        reason instanceof Error ? reason.message : "Pexels request failed",
+      console.error(
+        "pexels-search failed:",
+        reason instanceof Error ? reason.message : String(reason),
       );
+      return errorResponse("UPSTREAM_ERROR", "Pexels request failed");
     }
   }
 

@@ -29,7 +29,7 @@ export function MotionGallery() {
               type="button"
               aria-label={preset.label}
               aria-pressed={active}
-              className={`group bg-muted/30 focus-visible:ring-ring relative overflow-hidden rounded-xl border text-left transition-colors outline-none focus-visible:ring-2 ${active ? "border-violet-400 ring-1 ring-violet-400" : "hover:border-muted-foreground/50"}`}
+              className={`group bg-muted/30 focus-visible:ring-ring relative overflow-hidden rounded-xl border text-left transition-colors outline-none focus-visible:ring-2 ${active ? "border-primary ring-1 ring-primary" : "hover:border-muted-foreground/50"}`}
               onPointerEnter={(event) => {
                 if (
                   !window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -75,7 +75,7 @@ export function MotionGallery() {
                 <span className="truncate">{preset.label}</span>
                 {active ? (
                   <Check
-                    className="size-3 shrink-0 text-violet-400"
+                    className="text-primary size-3 shrink-0"
                     aria-hidden
                   />
                 ) : (

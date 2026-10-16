@@ -82,18 +82,17 @@ export async function runAiStream(options: AiStreamOptions): Promise<Response> {
         "Your AI credits are exhausted. Please wait until your reset date.",
       );
     }
-    return errorResponse(
-      "UPSTREAM_ERROR",
-      message || "Unable to deduct a credit",
-    );
+    console.error("consume_credits failed:", message);
+    return errorResponse("UPSTREAM_ERROR", "Unable to deduct a credit");
   }
 
   const logGeneration = async (
     status: AiGenerationStatus,
     result?: StreamChatResult,
   ) => {
+    // supabase-js resolves with { error } instead of throwing, so check both.
     try {
-      await options.admin.from("ai_generations").insert({
+      const { error } = await options.admin.from("ai_generations").insert({
         user_id: options.userId,
         project_id: options.projectId,
         action: options.action,
@@ -105,20 +104,28 @@ export async function runAiStream(options: AiStreamOptions): Promise<Response> {
         cost_usd: result?.usage.costUsd ?? null,
         status,
       });
-    } catch {
-      // logging best-effort hai
+      if (error) console.error("ai_generations insert failed:", error.message);
+    } catch (reason) {
+      console.error("ai_generations insert threw:", reason);
     }
   };
 
-  const refund = async (reason: string) => {
+  /** Returns true only when the refund RPC actually succeeded. */
+  const refund = async (reason: string): Promise<boolean> => {
     try {
-      await options.admin.rpc("refund_credits", {
+      const { error } = await options.admin.rpc("refund_credits", {
         p_user_id: options.userId,
         p_amount: 1,
         p_reason: reason,
       });
-    } catch {
-      // refund failure caller ko SSE error se dikhega
+      if (error) {
+        console.error("refund_credits failed:", error.message);
+        return false;
+      }
+      return true;
+    } catch (caught) {
+      console.error("refund_credits threw:", caught);
+      return false;
     }
   };
 
@@ -145,13 +152,14 @@ export async function runAiStream(options: AiStreamOptions): Promise<Response> {
           onDelta: (delta) => send({ type: "delta", delta }),
         });
         if (result.text.trim().length === 0) {
-          await refund(`${options.action}_empty`);
-          await logGeneration("refunded", result);
+          const refunded = await refund(`${options.action}_empty`);
+          await logGeneration(refunded ? "refunded" : "failed", result);
           send({
             type: "error",
             code: "EMPTY_OUTPUT",
-            message:
-              "The AI returned an empty response. Your credit has been refunded.",
+            message: refunded
+              ? "The AI returned an empty response. Your credit has been refunded."
+              : "The AI returned an empty response. We couldn't refund your credit automatically — please contact support.",
           });
         } else {
           await logGeneration("success", result);
@@ -162,15 +170,15 @@ export async function runAiStream(options: AiStreamOptions): Promise<Response> {
           });
         }
       } catch (error) {
-        await refund(`${options.action}_failed`);
-        await logGeneration("refunded");
+        const refunded = await refund(`${options.action}_failed`);
+        await logGeneration(refunded ? "refunded" : "failed");
+        console.error("AI stream failed:", error);
         send({
           type: "error",
           code: "UPSTREAM_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "The AI request failed. Your credit has been refunded.",
+          message: refunded
+            ? "The AI request failed. Your credit has been refunded."
+            : "The AI request failed. We couldn't refund your credit automatically — please contact support.",
         });
       }
       controller.close();

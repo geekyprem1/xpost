@@ -262,7 +262,7 @@ export function ScreenCapture() {
                 />
                 {region ? (
                   <div
-                    className="pointer-events-none absolute border-2 border-violet-400 bg-violet-400/5"
+                    className="border-primary bg-primary/5 pointer-events-none absolute border-2"
                     style={{
                       left: region.x * 100 + "%",
                       top: region.y * 100 + "%",

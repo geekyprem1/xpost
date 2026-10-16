@@ -87,4 +87,52 @@ describe("editor store", () => {
     undoEditor();
     expect(useEditorStore.getState().scene.watermark).toBe(true);
   });
+
+  const setZoom = (zoom: number) =>
+    useEditorStore.getState().setScene(
+      (scene) => ({ ...scene, transform: { ...scene.transform, zoom } }),
+      { transient: true }
+    );
+
+  it("gesture wapas same value pe khatam ho toh entry nahi banti aur history resume hoti hai", () => {
+    setZoom(140);
+    setZoom(100);
+    useEditorStore.getState().commitScene();
+    expect(useEditorStore.temporal.getState().pastStates.length).toBe(0);
+    expect(useEditorStore.temporal.getState().isTracking).toBe(true);
+  });
+
+  it("commit miss ho jaye toh agla discrete edit gesture close kar deta hai", () => {
+    setZoom(140);
+    // no commitScene()
+    useEditorStore.getState().setScene((scene) => ({ ...scene, watermark: false }));
+    expect(useEditorStore.temporal.getState().isTracking).toBe(true);
+    expect(useEditorStore.temporal.getState().pastStates.length).toBe(2);
+    undoEditor();
+    expect(useEditorStore.getState().scene.watermark).toBe(true);
+    expect(useEditorStore.getState().scene.transform.zoom).toBe(140);
+    undoEditor();
+    expect(useEditorStore.getState().scene.transform.zoom).toBe(100);
+  });
+
+  it("gesture ke bina commitScene no-op hai aur redo stack nahi mitata", () => {
+    useEditorStore.getState().setScene((scene) => ({ ...scene, watermark: false }));
+    undoEditor();
+    useEditorStore.getState().commitScene();
+    useEditorStore.getState().setImageError("x");
+    expect(useEditorStore.temporal.getState().futureStates.length).toBe(1);
+    redoEditor();
+    expect(useEditorStore.getState().scene.watermark).toBe(false);
+  });
+
+  it("image changes history mein nahi jaate aur undo image ko desync nahi karta", () => {
+    const element = { naturalWidth: 10, naturalHeight: 20 } as HTMLImageElement;
+    useEditorStore.getState().setScene((scene) => ({ ...scene, watermark: false }));
+    useEditorStore.getState().setImage(element, "blob:a", "a.png");
+    expect(useEditorStore.temporal.getState().pastStates.length).toBe(1);
+    undoEditor();
+    expect(useEditorStore.getState().scene.watermark).toBe(true);
+    expect(useEditorStore.getState().scene.image?.path).toBe("local/a.png");
+    expect(useEditorStore.getState().imageElement).toBe(element);
+  });
 });

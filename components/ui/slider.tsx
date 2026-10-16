@@ -11,8 +11,25 @@ function Slider({
   min = 0,
   max = 100,
   "aria-label": ariaLabel,
+  onValueCommit,
+  onPointerDown,
+  onPointerUp,
+  onPointerCancel,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root>) {
+  // Radix only fires onValueCommit when the value differs from the slide
+  // start. Callers use it to end a transient gesture, so guarantee exactly
+  // one commit per pointer slide even when the thumb ends where it started.
+  const committedRef = React.useRef(true)
+
+  const handleCommit = React.useCallback(
+    (values: number[]) => {
+      committedRef.current = true
+      onValueCommit?.(values)
+    },
+    [onValueCommit]
+  )
+
   const _values = React.useMemo(
     () =>
       Array.isArray(value)
@@ -22,6 +39,15 @@ function Slider({
           : [min, max],
     [value, defaultValue, min, max]
   )
+
+  const endSlide = React.useCallback(() => {
+    // Defer so Radix's own onSlideEnd (which may commit) runs first.
+    setTimeout(() => {
+      if (committedRef.current) return
+      committedRef.current = true
+      onValueCommit?.(_values)
+    }, 0)
+  }, [onValueCommit, _values])
 
   return (
     <SliderPrimitive.Root
@@ -35,6 +61,19 @@ function Slider({
         className
       )}
       {...props}
+      onValueCommit={handleCommit}
+      onPointerDown={(event) => {
+        committedRef.current = false
+        onPointerDown?.(event)
+      }}
+      onPointerUp={(event) => {
+        onPointerUp?.(event)
+        endSlide()
+      }}
+      onPointerCancel={(event) => {
+        onPointerCancel?.(event)
+        endSlide()
+      }}
     >
       <SliderPrimitive.Track
         data-slot="slider-track"

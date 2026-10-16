@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Download, Sparkles, User, Undo2, Redo2 } from "lucide-react";
+import { Download, User, Undo2, Redo2 } from "lucide-react";
 import { useStore } from "zustand";
 import { useEditorStore, undoEditor, redoEditor } from "@/lib/store";
 import { fetchCredits } from "@/lib/api/credits";
@@ -70,7 +71,13 @@ export function TopBar() {
           aria-label="Shotlark home"
         >
           <span className="studio-brand-icon">
-            <Sparkles className="size-5" aria-hidden />
+            <Image
+              src="/logos/shotlark-flight.svg"
+              width={30}
+              height={30}
+              alt=""
+              className="size-7"
+            />
           </span>
           Shotlark
         </Link>

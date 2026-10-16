@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Shotlark — Shutter</title>
+  <desc id="desc">Six interlocking shutter blades with an open hexagonal center.</desc>
+  <g fill="#D75934">
+    <path d="M35 9h24l13 23H48Z"/>
+    <path d="M35 9h24l13 23H48Z" transform="rotate(60 48 48)"/>
+    <path d="M35 9h24l13 23H48Z" transform="rotate(120 48 48)"/>
+    <path d="M35 9h24l13 23H48Z" transform="rotate(180 48 48)"/>
+    <path d="M35 9h24l13 23H48Z" transform="rotate(240 48 48)"/>
+    <path d="M35 9h24l13 23H48Z" transform="rotate(300 48 48)"/>
+  </g>
+</svg>

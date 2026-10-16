@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Shotlark — Focus</title>
+  <desc id="desc">Four screenshot crop corners surrounding an S-shaped capture stroke.</desc>
+  <path stroke="#2463D4" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M30 14H16v16m50-16h14v16M16 66v14h14m50-14v14H66"/>
+  <path stroke="#2463D4" stroke-width="9" stroke-linecap="round" d="M59 32H43a8 8 0 0 0 0 16h10a8 8 0 0 1 0 16H37"/>
+</svg>

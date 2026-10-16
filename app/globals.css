@@ -49,72 +49,78 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --brand-purple: #6650d8;
+  --brand-wing: #b4a6f4;
+  --brand-tint: #f0ecfc;
+  --brand-ink: #242334;
+  --background: #f6f5f9;
+  --foreground: var(--brand-ink);
+  --card: #ffffff;
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand-purple);
+  --primary-foreground: #ffffff;
+  --primary-hover: #5943c3;
+  --secondary: var(--brand-tint);
+  --secondary-foreground: #503da7;
+  --muted: #eeebf4;
+  --muted-foreground: #6c657c;
+  --accent: var(--brand-tint);
+  --accent-foreground: #503da7;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #ded8eb;
+  --input: #c5bcd8;
+  --ring: var(--brand-purple);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #15121e;
+  --foreground: #f3effc;
+  --card: #1e1a2b;
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand-wing);
+  --primary-foreground: #211a38;
+  --primary-hover: #c5b9ff;
+  --secondary: #2d2543;
+  --secondary-foreground: #d6ccff;
+  --muted: #282234;
+  --muted-foreground: #b4adc6;
+  --accent: #302747;
+  --accent-foreground: #d6ccff;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: #3b334e;
+  --input: #675a82;
+  --ring: var(--brand-wing);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 @layer base {
@@ -132,28 +138,29 @@
     color-scheme: dark;
   }
 }
-/* Shotlark studio: a quiet frame around the work. */
+
+/* Tabs can be portalled outside the editor, so use the shared theme tokens. */
+[data-slot="tabs-trigger"][data-state="active"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-color: var(--primary);
+}
+
+/* Flight palette: brand accents frame the work without recolouring the artwork. */
 .editor-shell {
-  --studio-bg: #eef1f5;
-  --studio-surface: #ffffff;
-  --studio-stage: #f7f8fb;
-  --studio-line: #dde2eb;
-  --studio-text: #242c3d;
-  --studio-muted: #647086;
-  --studio-blue: #4264df;
-  --studio-blue-soft: #e8edff;
+  --studio-bg: var(--background);
+  --studio-surface: var(--card);
+  --studio-stage: #faf9fd;
+  --studio-line: var(--border);
+  --studio-text: var(--foreground);
+  --studio-muted: var(--muted-foreground);
+  --studio-accent: var(--primary);
+  --studio-accent-soft: var(--accent);
   background: var(--studio-bg);
   color: var(--studio-text);
 }
 .dark .editor-shell {
-  --studio-bg: #101319;
-  --studio-surface: #191d26;
-  --studio-stage: #13171f;
-  --studio-line: #2a303d;
-  --studio-text: #edf0f7;
-  --studio-muted: #99a4b8;
-  --studio-blue: #a6b8ff;
-  --studio-blue-soft: #252f4c;
+  --studio-stage: #191624;
 }
 .studio-header {
   height: 76px;
@@ -179,8 +186,7 @@
   width: 34px;
   height: 34px;
   border-radius: 11px;
-  background: var(--studio-blue-soft);
-  color: var(--studio-blue);
+  background: var(--brand-tint);
 }
 .studio-header-divider {
   width: 1px;
@@ -208,13 +214,13 @@
   margin-inline: 8px;
 }
 .studio-export {
-  background: #dce5ff;
-  color: #1c305e;
-  border: 1px solid #b7c9ff;
-  box-shadow: inset 0 1px 0 #ffffff80;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: 1px solid var(--primary);
+  box-shadow: inset 0 1px 0 #ffffff20;
 }
 .studio-export:hover {
-  background: #c5d5ff;
+  background: var(--primary-hover);
 }
 .editor-workspace {
   padding: 0 24px;
@@ -313,19 +319,19 @@
   display: inline;
 }
 .editor-toolbar > button:hover {
-  background: var(--studio-blue-soft);
-  color: var(--studio-blue);
+  background: var(--studio-accent-soft);
+  color: var(--studio-accent);
 }
 .editor-toolbar button[aria-expanded="true"],
 .editor-toolbar button[aria-pressed="true"] {
-  background: var(--studio-blue-soft);
-  color: var(--studio-blue);
+  background: var(--studio-accent-soft);
+  color: var(--studio-accent);
   box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--studio-blue), transparent 70%);
+    color-mix(in srgb, var(--studio-accent), transparent 70%);
 }
 .editor-toolbar button[aria-label="AI Post Generator"] {
-  background: var(--studio-blue-soft);
-  color: var(--studio-blue);
+  background: var(--studio-accent-soft);
+  color: var(--studio-accent);
   padding-inline: 17px;
 }
 .workspace-footer {
@@ -357,7 +363,7 @@
   position: absolute;
   inset: -15px -30px;
   border-radius: 50%;
-  background: radial-gradient(ellipse, #6384ff1c, transparent 70%);
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--brand-purple), transparent 88%), transparent 70%);
 }
 .art-browser {
   position: absolute;
@@ -366,8 +372,8 @@
   width: 250px;
   height: 156px;
   border-radius: 11px;
-  background: #e9eefb;
-  border: 1px solid #aab9dc;
+  background: var(--brand-tint);
+  border: 1px solid var(--brand-wing);
   box-shadow: 0 20px 35px #00000020;
   transform: rotate(-7deg);
   overflow: hidden;
@@ -378,25 +384,25 @@
   align-items: center;
   height: 23px;
   padding: 0 9px;
-  background: #f8faff;
-  border-bottom: 1px solid #ccd6ed;
+  background: #faf9fd;
+  border-bottom: 1px solid #ddd5f3;
 }
 .art-browser-bar i {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #a9b6d0;
+  background: #a59abb;
 }
 .art-browser-bar span {
   font-family: var(--font-geist-mono), monospace;
   font-size: 7px;
   margin-left: 20px;
-  color: #75819b;
+  color: #6c657c;
 }
 .art-browser-content {
   padding: 17px 20px;
-  color: #283f70;
-  background: radial-gradient(ellipse at 100% 100%, #95b7fa 0, transparent 65%);
+  color: var(--brand-ink);
+  background: radial-gradient(ellipse at 100% 100%, var(--brand-wing) 0, transparent 65%);
   height: 100%;
 }
 .art-label {
@@ -414,7 +420,7 @@
 .art-line {
   height: 3px;
   width: 80px;
-  background: #8c9fbe70;
+  background: #9c8db970;
   border-radius: 4px;
   margin-top: 11px;
 }
@@ -429,21 +435,21 @@
   width: 79px;
   height: 146px;
   padding: 9px;
-  border: 4px solid #313b50;
+  border: 4px solid #342b4d;
   border-radius: 18px;
   transform: rotate(10deg);
-  background: linear-gradient(155deg, #cbd9ff, #6a8edf);
+  background: linear-gradient(155deg, var(--brand-tint), var(--brand-wing));
   box-shadow:
     0 12px 24px #00000030,
     inset 0 0 0 1px #ffffff70;
-  color: #203358;
+  color: var(--brand-ink);
 }
 .art-island {
   margin: -3px auto 16px;
   width: 23px;
   height: 6px;
   border-radius: 10px;
-  background: #263045;
+  background: #342b4d;
 }
 .art-phone-mark {
   margin-bottom: 11px;
@@ -466,7 +472,7 @@
   font-family: var(--font-geist-mono), monospace;
   font-size: 9px;
   letter-spacing: 2px;
-  color: var(--studio-blue);
+  color: var(--studio-accent);
   margin-bottom: 13px;
 }
 .welcome-title {
@@ -493,21 +499,21 @@
   padding: 12px 22px;
   margin-top: 24px;
   border-radius: 10px;
-  background: #dce5ff;
-  color: #20345e;
-  border: 1px solid #b8caff;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: 1px solid var(--primary);
   font-size: 12px;
   font-weight: 600;
   box-shadow:
     0 4px 12px #00000012,
-    inset 0 1px 0 #ffffff90;
+    inset 0 1px 0 #ffffff20;
   cursor: pointer;
   transition:
     background 160ms,
     transform 160ms;
 }
 .empty-upload:hover {
-  background: #c5d5ff;
+  background: var(--primary-hover);
   transform: translateY(-2px);
 }
 .welcome-hint {
@@ -550,8 +556,8 @@
   box-sizing: content-box;
   padding: 9px;
   border-radius: 10px;
-  color: var(--studio-blue);
-  background: var(--studio-blue-soft);
+  color: var(--studio-accent);
+  background: var(--studio-accent-soft);
 }
 .ai-studio-heading small {
   display: block;
@@ -601,7 +607,7 @@
 }
 .editor-shell button:focus-visible,
 .editor-shell a:focus-visible {
-  outline: 2px solid var(--studio-blue);
+  outline: 2px solid var(--studio-accent);
   outline-offset: 3px;
 }
 @media (min-width: 1600px) {

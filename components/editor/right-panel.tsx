@@ -2,19 +2,19 @@
 
 import { useRef, useState } from "react";
 import { LivePostPreview } from "@/components/editor/live-post-preview";
+import { PostTextEditor } from "@/components/editor/post-text-editor";
 import { useEditorStore } from "@/lib/store";
 import {
   BadgeCheck,
   BarChart2,
-  Bold,
   Bookmark,
   Bot,
   Copy,
   Download,
   ExternalLink,
   Heart,
-  Italic,
   Loader2,
+  Maximize2,
   MessageCircle,
   MoreHorizontal,
   Repeat2,
@@ -46,11 +46,6 @@ import {
   X_LONG_POST_LIMIT,
   X_WEIGHTED_LIMIT,
 } from "@/lib/editor/post-text";
-import {
-  containsUnicodeFormatting,
-  toUnicodeBold,
-  toUnicodeItalic,
-} from "@/lib/editor/unicode-format";
 import {
   blobToPng,
   buildXIntentUrl,
@@ -101,7 +96,6 @@ export function RightPanel({
   const [limitReached, setLimitReached] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [longPost, setLongPost] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const runRef = useRef(0);
   const actionRef = useRef(false);
   const streamRef = useRef(false);
@@ -111,7 +105,6 @@ export function RightPanel({
 
   const limit = longPost ? X_LONG_POST_LIMIT : X_WEIGHTED_LIMIT;
   const stats = analyzePostText(postText, limit);
-  const hasFormatting = containsUnicodeFormatting(postText);
 
   function flash(message: string) {
     setNote(message);
@@ -271,22 +264,6 @@ export function RightPanel({
     flash("Image downloaded. Attach it to your X post.");
   }
 
-  function applyFormat(kind: "bold" | "italic") {
-    const convert = kind === "bold" ? toUnicodeBold : toUnicodeItalic;
-    const textarea = textareaRef.current;
-    if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      setPostText(
-        postText.slice(0, start) +
-          convert(postText.slice(start, end)) +
-          postText.slice(end),
-      );
-    } else {
-      setPostText(convert(postText));
-    }
-  }
-
   return (
     <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
       <aside
@@ -338,14 +315,25 @@ export function RightPanel({
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-5">
           <div className="ai-section-caption">
-            Post preview <span>X / Twitter</span>
+            Post preview
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Expand post preview"
+                title="Expand post preview"
+              >
+                <Maximize2 aria-hidden />
+              </Button>
+            </DialogTrigger>
           </div>
           <div
             className="bg-card/40 rounded-2xl border p-4"
             aria-label="X preview"
           >
             <div className="flex items-start gap-2">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-pink-500 text-xs font-semibold text-white">
+              <span className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
                 You
               </span>
               <span className="min-w-0 flex-1">
@@ -370,15 +358,11 @@ export function RightPanel({
               />
             </div>
 
-            <p className="mt-2 text-sm whitespace-pre-wrap">
-              {postText.length > 0 ? (
-                postText
-              ) : (
-                <span className="text-muted-foreground">
-                  Your post preview appears here.
-                </span>
-              )}
-            </p>
+            <PostTextEditor
+              value={postText}
+              onChange={setPostText}
+              disabled={busy}
+            />
 
             {!hasScreenshot ? (
               <div className="text-muted-foreground mt-3 flex h-40 items-center justify-center rounded-xl border border-dashed p-5 text-center text-sm">
@@ -499,39 +483,7 @@ export function RightPanel({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="post-text" className="text-xs font-semibold">
-              Write your post
-            </label>
-            <textarea
-              id="post-text"
-              disabled={busy}
-              ref={textareaRef}
-              value={postText}
-              onChange={(event) => setPostText(event.target.value)}
-              rows={5}
-              aria-label="Post text"
-              placeholder="Write your post or generate one with AI."
-              className="bg-muted/20 focus-visible:ring-ring w-full resize-y rounded-xl border p-3 text-sm leading-relaxed outline-none focus-visible:ring-2 disabled:opacity-60"
-            />
             <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-[11px]">
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="outline"
-                aria-label="Bold (Unicode)"
-                onClick={() => applyFormat("bold")}
-              >
-                <Bold aria-hidden />
-              </Button>
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="outline"
-                aria-label="Italic (Unicode)"
-                onClick={() => applyFormat("italic")}
-              >
-                <Italic aria-hidden />
-              </Button>
               <span
                 className={
                   stats.overLimit ? "text-destructive font-medium" : undefined
@@ -556,12 +508,6 @@ export function RightPanel({
                 Long post
               </Button>
             </div>
-            {hasFormatting ? (
-              <p className="text-[11px] text-amber-500">
-                ⚠️ Unicode formatting may be difficult for screen readers and
-                search. Use it sparingly.
-              </p>
-            ) : null}
           </div>
 
           <div className="space-y-1.5">
@@ -695,18 +641,18 @@ export function RightPanel({
           Post preview
         </DialogTitle>
         <DialogDescription className="sr-only">
-          Preview your post and artwork before opening it in X.
+          Edit and format your post, then copy it or open it in X.
         </DialogDescription>
         <article className="bg-background rounded-2xl border p-4 sm:p-5">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-pink-500 text-sm font-semibold text-white">
+            <span className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
               You
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">
                 Your Name{" "}
                 <span className="text-muted-foreground font-normal">
-                  @yourhandle ? now
+                  @yourhandle · now
                 </span>
               </p>
             </div>
@@ -715,14 +661,12 @@ export function RightPanel({
               aria-hidden
             />
           </div>
-          <p className="mt-3 text-sm leading-relaxed break-words whitespace-pre-wrap">
-            {postText || (
-              <span className="text-muted-foreground">
-                Your post will appear here. Generate a post or write your own,
-                then refine it with AI.
-              </span>
-            )}
-          </p>
+          <PostTextEditor
+            value={postText}
+            onChange={setPostText}
+            disabled={busy}
+            label="Expanded post text"
+          />
           {videoBackground ? (
             <LivePostPreview expanded />
           ) : previewImage ? (
@@ -749,6 +693,10 @@ export function RightPanel({
             <Share className="size-4" />
           </div>
         </article>
+        <p className={`mt-3 text-xs ${stats.overLimit ? "text-destructive" : "text-muted-foreground"}`}>
+          {stats.weightedLength}/{limit} weighted characters
+          {stats.overLimit ? " — Shorten your post or enable Long post in the panel." : ""}
+        </p>
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button
             variant="outline"

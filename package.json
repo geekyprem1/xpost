@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "brand:generate": "node scripts/generate-brand-kit.mjs",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
@@ -44,8 +45,10 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "10.1.8",
+    "fflate": "0.8.3",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
+    "sharp": "0.35.5",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vitest": "5.0.5"

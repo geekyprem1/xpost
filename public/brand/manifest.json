@@ -1,0 +1,742 @@
+{
+  "brand": "Shotlark",
+  "direction": "Flight",
+  "sources": [
+    "https://help.x.com/en/managing-your-account/common-issues-when-uploading-profile-photo.html",
+    "https://support.google.com/youtube/answer/12950272?hl=en",
+    "https://www.linkedin.com/help/recruiter/answer/a568217/add-or-change-the-background-photo-on-your-profile?lang=en",
+    "https://www.linearity.io/guide/social-media-image-sizes/"
+  ],
+  "files": [
+    {
+      "name": "instagram-white",
+      "category": "profiles",
+      "width": 320,
+      "height": 320,
+      "png": "profiles/instagram-white-320x320.png",
+      "svg": "profiles/instagram-white-320x320.svg",
+      "bytes": 4954,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "instagram-purple",
+      "category": "profiles",
+      "width": 320,
+      "height": 320,
+      "png": "profiles/instagram-purple-320x320.png",
+      "svg": "profiles/instagram-purple-320x320.svg",
+      "bytes": 5732,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "instagram-lavender",
+      "category": "profiles",
+      "width": 320,
+      "height": 320,
+      "png": "profiles/instagram-lavender-320x320.png",
+      "svg": "profiles/instagram-lavender-320x320.svg",
+      "bytes": 6224,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "facebook-white",
+      "category": "profiles",
+      "width": 320,
+      "height": 320,
+      "png": "profiles/facebook-white-320x320.png",
+      "svg": "profiles/facebook-white-320x320.svg",
+      "bytes": 4954,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "facebook-purple",
+      "category": "profiles",
+      "width": 320,
+      "height": 320,
+      "png": "profiles/facebook-purple-320x320.png",
+      "svg": "profiles/facebook-purple-320x320.svg",
+      "bytes": 5732,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "facebook-lavender",
+      "category": "profiles",
+      "width": 320,
+      "height": 320,
+      "png": "profiles/facebook-lavender-320x320.png",
+      "svg": "profiles/facebook-lavender-320x320.svg",
+      "bytes": 6224,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "x-white",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/x-white-400x400.png",
+      "svg": "profiles/x-white-400x400.svg",
+      "bytes": 6629,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "x-purple",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/x-purple-400x400.png",
+      "svg": "profiles/x-purple-400x400.svg",
+      "bytes": 8316,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "x-lavender",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/x-lavender-400x400.png",
+      "svg": "profiles/x-lavender-400x400.svg",
+      "bytes": 8964,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "linkedin-white",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/linkedin-white-400x400.png",
+      "svg": "profiles/linkedin-white-400x400.svg",
+      "bytes": 6629,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "linkedin-purple",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/linkedin-purple-400x400.png",
+      "svg": "profiles/linkedin-purple-400x400.svg",
+      "bytes": 8316,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "linkedin-lavender",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/linkedin-lavender-400x400.png",
+      "svg": "profiles/linkedin-lavender-400x400.svg",
+      "bytes": 8964,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "linkedin-company-white",
+      "category": "profiles",
+      "width": 300,
+      "height": 300,
+      "png": "profiles/linkedin-company-white-300x300.png",
+      "svg": "profiles/linkedin-company-white-300x300.svg",
+      "bytes": 4647,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "linkedin-company-purple",
+      "category": "profiles",
+      "width": 300,
+      "height": 300,
+      "png": "profiles/linkedin-company-purple-300x300.png",
+      "svg": "profiles/linkedin-company-purple-300x300.svg",
+      "bytes": 5268,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "linkedin-company-lavender",
+      "category": "profiles",
+      "width": 300,
+      "height": 300,
+      "png": "profiles/linkedin-company-lavender-300x300.png",
+      "svg": "profiles/linkedin-company-lavender-300x300.svg",
+      "bytes": 5699,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "youtube-white",
+      "category": "profiles",
+      "width": 800,
+      "height": 800,
+      "png": "profiles/youtube-white-800x800.png",
+      "svg": "profiles/youtube-white-800x800.svg",
+      "bytes": 15944,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "youtube-purple",
+      "category": "profiles",
+      "width": 800,
+      "height": 800,
+      "png": "profiles/youtube-purple-800x800.png",
+      "svg": "profiles/youtube-purple-800x800.svg",
+      "bytes": 24095,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "youtube-lavender",
+      "category": "profiles",
+      "width": 800,
+      "height": 800,
+      "png": "profiles/youtube-lavender-800x800.png",
+      "svg": "profiles/youtube-lavender-800x800.svg",
+      "bytes": 25848,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "tiktok-white",
+      "category": "profiles",
+      "width": 200,
+      "height": 200,
+      "png": "profiles/tiktok-white-200x200.png",
+      "svg": "profiles/tiktok-white-200x200.svg",
+      "bytes": 3197,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "tiktok-purple",
+      "category": "profiles",
+      "width": 200,
+      "height": 200,
+      "png": "profiles/tiktok-purple-200x200.png",
+      "svg": "profiles/tiktok-purple-200x200.svg",
+      "bytes": 3287,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "tiktok-lavender",
+      "category": "profiles",
+      "width": 200,
+      "height": 200,
+      "png": "profiles/tiktok-lavender-200x200.png",
+      "svg": "profiles/tiktok-lavender-200x200.svg",
+      "bytes": 3643,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "threads-white",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/threads-white-400x400.png",
+      "svg": "profiles/threads-white-400x400.svg",
+      "bytes": 6629,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "threads-purple",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/threads-purple-400x400.png",
+      "svg": "profiles/threads-purple-400x400.svg",
+      "bytes": 8316,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "threads-lavender",
+      "category": "profiles",
+      "width": 400,
+      "height": 400,
+      "png": "profiles/threads-lavender-400x400.png",
+      "svg": "profiles/threads-lavender-400x400.svg",
+      "bytes": 8964,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "pinterest-white",
+      "category": "profiles",
+      "width": 165,
+      "height": 165,
+      "png": "profiles/pinterest-white-165x165.png",
+      "svg": "profiles/pinterest-white-165x165.svg",
+      "bytes": 2707,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "pinterest-purple",
+      "category": "profiles",
+      "width": 165,
+      "height": 165,
+      "png": "profiles/pinterest-purple-165x165.png",
+      "svg": "profiles/pinterest-purple-165x165.svg",
+      "bytes": 2619,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "pinterest-lavender",
+      "category": "profiles",
+      "width": 165,
+      "height": 165,
+      "png": "profiles/pinterest-lavender-165x165.png",
+      "svg": "profiles/pinterest-lavender-165x165.svg",
+      "bytes": 2945,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "discord-white",
+      "category": "profiles",
+      "width": 512,
+      "height": 512,
+      "png": "profiles/discord-white-512x512.png",
+      "svg": "profiles/discord-white-512x512.svg",
+      "bytes": 8925,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "discord-purple",
+      "category": "profiles",
+      "width": 512,
+      "height": 512,
+      "png": "profiles/discord-purple-512x512.png",
+      "svg": "profiles/discord-purple-512x512.svg",
+      "bytes": 11731,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "discord-lavender",
+      "category": "profiles",
+      "width": 512,
+      "height": 512,
+      "png": "profiles/discord-lavender-512x512.png",
+      "svg": "profiles/discord-lavender-512x512.svg",
+      "bytes": 12766,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "twitch-white",
+      "category": "profiles",
+      "width": 600,
+      "height": 600,
+      "png": "profiles/twitch-white-600x600.png",
+      "svg": "profiles/twitch-white-600x600.svg",
+      "bytes": 10864,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "twitch-purple",
+      "category": "profiles",
+      "width": 600,
+      "height": 600,
+      "png": "profiles/twitch-purple-600x600.png",
+      "svg": "profiles/twitch-purple-600x600.svg",
+      "bytes": 15259,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "twitch-lavender",
+      "category": "profiles",
+      "width": 600,
+      "height": 600,
+      "png": "profiles/twitch-lavender-600x600.png",
+      "svg": "profiles/twitch-lavender-600x600.svg",
+      "bytes": 16383,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "whatsapp-white",
+      "category": "profiles",
+      "width": 640,
+      "height": 640,
+      "png": "profiles/whatsapp-white-640x640.png",
+      "svg": "profiles/whatsapp-white-640x640.svg",
+      "bytes": 11751,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "whatsapp-purple",
+      "category": "profiles",
+      "width": 640,
+      "height": 640,
+      "png": "profiles/whatsapp-purple-640x640.png",
+      "svg": "profiles/whatsapp-purple-640x640.svg",
+      "bytes": 16602,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "whatsapp-lavender",
+      "category": "profiles",
+      "width": 640,
+      "height": 640,
+      "png": "profiles/whatsapp-lavender-640x640.png",
+      "svg": "profiles/whatsapp-lavender-640x640.svg",
+      "bytes": 17868,
+      "note": "Circle-safe square upload. Platforms may resize it for display."
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 16,
+      "height": 16,
+      "png": "icons/flight-transparent-16x16.png",
+      "svg": "icons/flight-transparent-16x16.svg",
+      "bytes": 375,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 32,
+      "height": 32,
+      "png": "icons/flight-transparent-32x32.png",
+      "svg": "icons/flight-transparent-32x32.svg",
+      "bytes": 697,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 48,
+      "height": 48,
+      "png": "icons/flight-transparent-48x48.png",
+      "svg": "icons/flight-transparent-48x48.svg",
+      "bytes": 977,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 64,
+      "height": 64,
+      "png": "icons/flight-transparent-64x64.png",
+      "svg": "icons/flight-transparent-64x64.svg",
+      "bytes": 1280,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 128,
+      "height": 128,
+      "png": "icons/flight-transparent-128x128.png",
+      "svg": "icons/flight-transparent-128x128.svg",
+      "bytes": 2365,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 180,
+      "height": 180,
+      "png": "icons/flight-transparent-180x180.png",
+      "svg": "icons/flight-transparent-180x180.svg",
+      "bytes": 3009,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 192,
+      "height": 192,
+      "png": "icons/flight-transparent-192x192.png",
+      "svg": "icons/flight-transparent-192x192.svg",
+      "bytes": 3060,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 256,
+      "height": 256,
+      "png": "icons/flight-transparent-256x256.png",
+      "svg": "icons/flight-transparent-256x256.svg",
+      "bytes": 4287,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 512,
+      "height": 512,
+      "png": "icons/flight-transparent-512x512.png",
+      "svg": "icons/flight-transparent-512x512.svg",
+      "bytes": 9942,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 1024,
+      "height": 1024,
+      "png": "icons/flight-transparent-1024x1024.png",
+      "svg": "icons/flight-transparent-1024x1024.svg",
+      "bytes": 26367,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "icons",
+      "width": 2048,
+      "height": 2048,
+      "png": "icons/flight-transparent-2048x2048.png",
+      "svg": "icons/flight-transparent-2048x2048.svg",
+      "bytes": 71779,
+      "note": ""
+    },
+    {
+      "name": "flight-transparent",
+      "category": "masters",
+      "width": 2048,
+      "height": 2048,
+      "png": "masters/flight-transparent-2048x2048.png",
+      "svg": "masters/flight-transparent-2048x2048.svg",
+      "bytes": 71779,
+      "note": ""
+    },
+    {
+      "name": "wordmark-transparent",
+      "category": "masters",
+      "width": 1824,
+      "height": 480,
+      "png": "masters/wordmark-transparent-1824x480.png",
+      "svg": "masters/wordmark-transparent-1824x480.svg",
+      "bytes": 39468,
+      "note": "Outlined vector lettering; no font installation required."
+    },
+    {
+      "name": "flight-black",
+      "category": "masters",
+      "width": 2048,
+      "height": 2048,
+      "png": "masters/flight-black-2048x2048.png",
+      "svg": "masters/flight-black-2048x2048.svg",
+      "bytes": 54988,
+      "note": ""
+    },
+    {
+      "name": "wordmark-black",
+      "category": "masters",
+      "width": 1824,
+      "height": 480,
+      "png": "masters/wordmark-black-1824x480.png",
+      "svg": "masters/wordmark-black-1824x480.svg",
+      "bytes": 29657,
+      "note": "Outlined vector lettering; no font installation required."
+    },
+    {
+      "name": "flight-reversed",
+      "category": "masters",
+      "width": 2048,
+      "height": 2048,
+      "png": "masters/flight-reversed-2048x2048.png",
+      "svg": "masters/flight-reversed-2048x2048.svg",
+      "bytes": 40340,
+      "note": ""
+    },
+    {
+      "name": "wordmark-reversed",
+      "category": "masters",
+      "width": 1824,
+      "height": 480,
+      "png": "masters/wordmark-reversed-1824x480.png",
+      "svg": "masters/wordmark-reversed-1824x480.svg",
+      "bytes": 28970,
+      "note": "Outlined vector lettering; no font installation required."
+    },
+    {
+      "name": "x-header",
+      "category": "covers",
+      "width": 1500,
+      "height": 500,
+      "png": "covers/x-header-1500x500.png",
+      "svg": "covers/x-header-1500x500.svg",
+      "bytes": 30418,
+      "note": "Keep the centre-right logo clear of the lower-left profile image."
+    },
+    {
+      "name": "facebook-cover",
+      "category": "covers",
+      "width": 851,
+      "height": 315,
+      "png": "covers/facebook-cover-851x315.png",
+      "svg": "covers/facebook-cover-851x315.svg",
+      "bytes": 13972,
+      "note": "Centred for mobile crops; check the platform preview before saving."
+    },
+    {
+      "name": "facebook-cover-2x",
+      "category": "covers",
+      "width": 1702,
+      "height": 630,
+      "png": "covers/facebook-cover-2x-1702x630.png",
+      "svg": "covers/facebook-cover-2x-1702x630.svg",
+      "bytes": 39197,
+      "note": "Double-resolution Facebook cover."
+    },
+    {
+      "name": "linkedin-personal-cover",
+      "category": "covers",
+      "width": 1584,
+      "height": 396,
+      "png": "covers/linkedin-personal-cover-1584x396.png",
+      "svg": "covers/linkedin-personal-cover-1584x396.svg",
+      "bytes": 28295,
+      "note": "Logo sits to the right of the profile-photo overlap."
+    },
+    {
+      "name": "linkedin-company-cover",
+      "category": "covers",
+      "width": 1128,
+      "height": 191,
+      "png": "covers/linkedin-company-cover-1128x191.png",
+      "svg": "covers/linkedin-company-cover-1128x191.svg",
+      "bytes": 13382,
+      "note": "Company page cover; distinct from personal-profile dimensions."
+    },
+    {
+      "name": "youtube-banner",
+      "category": "covers",
+      "width": 2560,
+      "height": 1440,
+      "png": "covers/youtube-banner-2560x1440.png",
+      "svg": "covers/youtube-banner-2560x1440.svg",
+      "bytes": 98056,
+      "note": "All branding fits within the central 1235 × 338 px area."
+    },
+    {
+      "name": "discord-server-banner",
+      "category": "covers",
+      "width": 960,
+      "height": 540,
+      "png": "covers/discord-server-banner-960x540.png",
+      "svg": "covers/discord-server-banner-960x540.svg",
+      "bytes": 20059,
+      "note": "Banner availability depends on server features."
+    },
+    {
+      "name": "twitch-banner",
+      "category": "covers",
+      "width": 1920,
+      "height": 480,
+      "png": "covers/twitch-banner-1920x480.png",
+      "svg": "covers/twitch-banner-1920x480.svg",
+      "bytes": 37478,
+      "note": "Keep important branding centred; platform overlays may vary."
+    },
+    {
+      "name": "square-instagram-facebook-threads",
+      "category": "posts",
+      "width": 1080,
+      "height": 1080,
+      "png": "posts/square-instagram-facebook-threads-1080x1080.png",
+      "svg": "posts/square-instagram-facebook-threads-1080x1080.svg",
+      "bytes": 44072,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "portrait-instagram-facebook",
+      "category": "posts",
+      "width": 1080,
+      "height": 1350,
+      "png": "posts/portrait-instagram-facebook-1080x1350.png",
+      "svg": "posts/portrait-instagram-facebook-1080x1350.svg",
+      "bytes": 50552,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "portrait-instagram-3x4",
+      "category": "posts",
+      "width": 1080,
+      "height": 1440,
+      "png": "posts/portrait-instagram-3x4-1080x1440.png",
+      "svg": "posts/portrait-instagram-3x4-1080x1440.svg",
+      "bytes": 52646,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "instagram-landscape",
+      "category": "posts",
+      "width": 1080,
+      "height": 566,
+      "png": "posts/instagram-landscape-1080x566.png",
+      "svg": "posts/instagram-landscape-1080x566.svg",
+      "bytes": 25942,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "story-reel-tiktok-shorts",
+      "category": "posts",
+      "width": 1080,
+      "height": 1920,
+      "png": "posts/story-reel-tiktok-shorts-1080x1920.png",
+      "svg": "posts/story-reel-tiktok-shorts-1080x1920.svg",
+      "bytes": 63836,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "facebook-link-open-graph",
+      "category": "posts",
+      "width": 1200,
+      "height": 630,
+      "png": "posts/facebook-link-open-graph-1200x630.png",
+      "svg": "posts/facebook-link-open-graph-1200x630.svg",
+      "bytes": 30423,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "x-post",
+      "category": "posts",
+      "width": 1200,
+      "height": 675,
+      "png": "posts/x-post-1200x675.png",
+      "svg": "posts/x-post-1200x675.svg",
+      "bytes": 31560,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "x-card",
+      "category": "posts",
+      "width": 800,
+      "height": 418,
+      "png": "posts/x-card-800x418.png",
+      "svg": "posts/x-card-800x418.svg",
+      "bytes": 16861,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "linkedin-post",
+      "category": "posts",
+      "width": 1200,
+      "height": 627,
+      "png": "posts/linkedin-post-1200x627.png",
+      "svg": "posts/linkedin-post-1200x627.svg",
+      "bytes": 30319,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "youtube-thumbnail",
+      "category": "posts",
+      "width": 1280,
+      "height": 720,
+      "png": "posts/youtube-thumbnail-1280x720.png",
+      "svg": "posts/youtube-thumbnail-1280x720.svg",
+      "bytes": 34670,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "pinterest-pin",
+      "category": "posts",
+      "width": 1000,
+      "height": 1500,
+      "png": "posts/pinterest-pin-1000x1500.png",
+      "svg": "posts/pinterest-pin-1000x1500.svg",
+      "bytes": 51235,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    },
+    {
+      "name": "facebook-event",
+      "category": "posts",
+      "width": 1920,
+      "height": 1005,
+      "png": "posts/facebook-event-1920x1005.png",
+      "svg": "posts/facebook-event-1920x1005.svg",
+      "bytes": 62544,
+      "note": "Static branded artwork, not a video. Check the platform crop before publishing."
+    }
+  ]
+}

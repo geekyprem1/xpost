@@ -163,10 +163,11 @@ export function createHandle(overrides: Partial<HandleDeps> = {}) {
       });
       return jsonResponse({ ...result, cached: false });
     } catch (reason) {
-      return errorResponse(
-        "UPSTREAM_ERROR",
-        reason instanceof Error ? reason.message : "Pixabay request failed",
-      );
+      // Never echo reason.message: network errors include the request URL,
+      // which carries the API key in its query string.
+      const detail = reason instanceof Error ? reason.message : String(reason);
+      console.error("pixabay-search failed:", detail.replace(/key=[^&\s)]+/g, "key=REDACTED"));
+      return errorResponse("UPSTREAM_ERROR", "Pixabay request failed");
     }
   }
 
