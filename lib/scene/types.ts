@@ -91,8 +91,45 @@ export const OVERLAY_IDS = [
 ] as const;
 export type OverlayId = (typeof OVERLAY_IDS)[number];
 
-export const MEDIA_PROVIDERS = ["pexels", "pixabay", "curated", "upload"] as const;
+export const MEDIA_PROVIDERS = [
+  "pexels",
+  "pixabay",
+  "curated",
+  "upload",
+] as const;
 export type MediaProvider = (typeof MEDIA_PROVIDERS)[number];
+
+// Scene v2 (ARCH §4.4). Final 8-font list is a T8.3 / PRD §15 Q10 decision.
+export const FONT_IDS = [
+  "inter",
+  "space-grotesk",
+  "playfair-display",
+  "lora",
+  "jetbrains-mono",
+  "ibm-plex-mono",
+  "caveat",
+  "bricolage-grotesque",
+] as const;
+export type FontId = (typeof FONT_IDS)[number];
+
+export const FONT_WEIGHTS = [400, 500, 600, 700, 800] as const;
+export type FontWeight = (typeof FONT_WEIGHTS)[number];
+
+export const TEXT_ALIGNS = ["left", "center", "right"] as const;
+export type TextAlign = (typeof TEXT_ALIGNS)[number];
+
+export const ANNOTATION_SHAPE_TYPES = [
+  "arrow",
+  "rect",
+  "ellipse",
+  "highlight",
+  "step",
+  "emoji",
+] as const;
+export type AnnotationShapeType = (typeof ANNOTATION_SHAPE_TYPES)[number];
+
+export const REDACT_MODES = ["pixelate", "blur", "solid"] as const;
+export type RedactMode = (typeof REDACT_MODES)[number];
 
 export type MediaCredit = {
   name: string;

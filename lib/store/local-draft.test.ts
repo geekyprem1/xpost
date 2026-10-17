@@ -1,12 +1,35 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
-import { createDefaultScene } from "@/lib/scene";
+import { createDefaultScene, type TextLayer } from "@/lib/scene";
 import {
   parseLocalDraft,
   readLocalDraft,
   writeLocalDraft,
   type LocalDraft,
 } from "./local-draft";
+
+const textLayer = (): TextLayer => ({
+  id: "text-1",
+  kind: "text",
+  visible: true,
+  locked: false,
+  x: 0.5,
+  y: 0.5,
+  width: 0.6,
+  rotation: 0,
+  text: "Screenshot ready",
+  style: {
+    font: "inter",
+    weight: 600,
+    size: 64,
+    color: "#ffffff",
+    align: "center",
+    lineHeight: 1.1,
+    letterSpacing: 0,
+    background: null,
+    shadow: null,
+  },
+});
 
 function draft(): LocalDraft {
   const scene = createDefaultScene();
@@ -66,5 +89,35 @@ describe("local editor drafts", () => {
       "missing its screenshot",
     );
     expect(() => parseLocalDraft({ ...draft(), version: 2 })).toThrow();
+  });
+
+  it("persists scene v2 layers with the draft", async () => {
+    const original = draft();
+    original.scene.layers.push(textLayer());
+    await writeLocalDraft("layers-user", original);
+
+    const restored = await readLocalDraft("layers-user");
+
+    expect(restored?.scene.version).toBe(2);
+    expect(restored?.scene.layers).toEqual(original.scene.layers);
+  });
+
+  it("migrates a v1 scene inside a saved draft", () => {
+    const v1Scene = {
+      ...createDefaultScene(),
+      version: 1,
+    } as Record<string, unknown>;
+    delete v1Scene.layers;
+
+    const parsed = parseLocalDraft({
+      version: 1,
+      scene: v1Scene,
+      image: null,
+      postText: "Old draft",
+    });
+
+    expect(parsed.scene.version).toBe(2);
+    expect(parsed.scene.layers).toEqual([]);
+    expect(parsed.postText).toBe("Old draft");
   });
 });

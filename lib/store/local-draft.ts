@@ -1,4 +1,4 @@
-import { sceneSchema, type Scene } from "@/lib/scene";
+import { migrateScene, type Scene } from "@/lib/scene";
 
 export type LocalDraft = {
   version: 1;
@@ -38,13 +38,17 @@ export function parseLocalDraft(value: unknown): LocalDraft {
   if (!value || typeof value !== "object")
     throw new Error("Invalid saved draft.");
   const draft = value as LocalDraft;
-  const scene = sceneSchema.parse(draft.scene);
   if (
     draft.version !== 1 ||
     typeof draft.postText !== "string" ||
-    (draft.image !== null && !(draft.image instanceof Blob)) ||
-    (scene.image !== null && draft.image === null)
+    (draft.image !== null && !(draft.image instanceof Blob))
   ) {
+    throw new Error(
+      "The saved draft is missing its screenshot or has an unsupported format.",
+    );
+  }
+  const { scene, warning } = migrateScene(draft.scene);
+  if (warning || (scene.image !== null && draft.image === null)) {
     throw new Error(
       "The saved draft is missing its screenshot or has an unsupported format.",
     );

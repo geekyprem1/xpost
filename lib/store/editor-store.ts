@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { temporal } from "zundo";
-import { createDefaultScene, type Scene } from "@/lib/scene";
+import {
+  createDefaultScene,
+  MAX_LAYERS,
+  type Layer,
+  type Scene,
+} from "@/lib/scene";
+import { useUiStore } from "./ui-store";
 
 export const HISTORY_LIMIT = 50;
 
@@ -25,6 +31,14 @@ export type EditorStore = {
     updater: (scene: Scene) => Scene,
     options?: SetSceneOptions,
   ) => void;
+  addLayer: (layer: Layer, index?: number) => void;
+  updateLayer: (
+    id: string,
+    updater: (layer: Layer) => Layer,
+    options?: SetSceneOptions,
+  ) => void;
+  removeLayer: (id: string) => void;
+  reorderLayer: (id: string, toIndex: number) => void;
   commitScene: () => void;
   replaceScene: (scene: Scene) => void;
   setImage: (
@@ -32,6 +46,7 @@ export type EditorStore = {
     url: string,
     name: string,
     blob?: Blob,
+    options?: { clearLayers?: boolean },
   ) => void;
   clearImage: () => void;
   setImageError: (message: string | null) => void;
@@ -132,11 +147,65 @@ export const useEditorStore = create<EditorStore>()(
         }
         set((state) => ({ scene: updater(state.scene) }));
       },
+      addLayer: (layer, index) => {
+        if (get().scene.layers.length >= MAX_LAYERS) return;
+        get().setScene((scene) => {
+          const at =
+            index === undefined
+              ? scene.layers.length
+              : Math.max(0, Math.min(index, scene.layers.length));
+          const layers = scene.layers.slice();
+          layers.splice(at, 0, layer);
+          return { ...scene, layers };
+        });
+        useUiStore.getState().selectLayer(layer.id);
+      },
+      updateLayer: (id, updater, options) => {
+        get().setScene((scene) => {
+          const index = scene.layers.findIndex((layer) => layer.id === id);
+          if (index === -1) return scene;
+          const current = scene.layers[index];
+          const updated = updater(current);
+          // id / kind fix rakhna selection aur rendering contract ke liye zaroori hai.
+          if (
+            updated === current ||
+            updated.id !== current.id ||
+            updated.kind !== current.kind
+          ) {
+            return scene;
+          }
+          const layers = scene.layers.slice();
+          layers[index] = updated;
+          return { ...scene, layers };
+        }, options);
+      },
+      removeLayer: (id) => {
+        if (!get().scene.layers.some((layer) => layer.id === id)) return;
+        get().setScene((scene) => ({
+          ...scene,
+          layers: scene.layers.filter((layer) => layer.id !== id),
+        }));
+        if (useUiStore.getState().selectedLayerId === id)
+          useUiStore.getState().selectLayer(null);
+      },
+      reorderLayer: (id, toIndex) => {
+        get().setScene((scene) => {
+          const from = scene.layers.findIndex((layer) => layer.id === id);
+          if (from === -1) return scene;
+          const to = Math.max(0, Math.min(toIndex, scene.layers.length - 1));
+          if (from === to) return scene;
+          const layers = scene.layers.slice();
+          const [layer] = layers.splice(from, 1);
+          layers.splice(to, 0, layer);
+          return { ...scene, layers };
+        });
+      },
       commitScene: () => {
         finalizeGesture(get().scene);
       },
       replaceScene: (scene) => {
         activeGesture = null;
+        useUiStore.getState().selectLayer(null);
         const previousUrl = get().imageUrl;
         set({
           scene,
@@ -151,7 +220,7 @@ export const useEditorStore = create<EditorStore>()(
         history.clear();
         history.resume();
       },
-      setImage: (element, url, name, blob) => {
+      setImage: (element, url, name, blob, options) => {
         const previousUrl = get().imageUrl;
         setImageUntracked(set, (state) => ({
           imageUrl: url,
@@ -160,13 +229,21 @@ export const useEditorStore = create<EditorStore>()(
           imageError: null,
           scene: {
             ...state.scene,
+            layers: options?.clearLayers ? [] : state.scene.layers,
             image: {
               path: `local/${name}`,
               width: element.naturalWidth,
               height: element.naturalHeight,
+              crop: { x: 0, y: 0, w: 1, h: 1 },
             },
           },
         }));
+        if (options?.clearLayers) {
+          useUiStore.getState().selectLayer(null);
+          const history = useEditorStore.temporal.getState();
+          history.clear();
+          history.resume();
+        }
         if (previousUrl && previousUrl !== url)
           URL.revokeObjectURL(previousUrl);
       },

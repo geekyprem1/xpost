@@ -5,7 +5,13 @@ export type SceneMigration = (
   scene: Record<string, unknown>,
 ) => Record<string, unknown>;
 
-export const SCENE_MIGRATIONS: Record<number, SceneMigration> = {};
+export const SCENE_MIGRATIONS: Record<number, SceneMigration> = {
+  1: (scene) => ({
+    ...scene,
+    version: 2,
+    layers: Array.isArray(scene.layers) ? scene.layers : [],
+  }),
+};
 
 export type MigrateResult = {
   scene: Scene;

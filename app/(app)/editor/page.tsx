@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EditorCanvas } from "@/components/editor/canvas";
+import { ReplaceImageDialog } from "@/components/editor/replace-image-dialog";
 import { RightPanel } from "@/components/editor/right-panel";
 import { Toolbar, type PanelId } from "@/components/editor/toolbar";
 import { TopBar } from "@/components/editor/top-bar";
 import { capturePostImageForAi } from "@/lib/editor/ai-image";
 import { fetchCredits } from "@/lib/api/credits";
-import { useEditorStore } from "@/lib/store";
+import { useEditorStore, useUiStore } from "@/lib/store";
 import { useCreditsStore } from "@/lib/store/credits-store";
 import { useEditorShortcuts } from "@/lib/store/use-editor-shortcuts";
 import { useLocalDraft } from "@/lib/store/use-local-draft";
@@ -35,13 +36,16 @@ export default function EditorPage() {
     }
     setAiPreviewBusy(true);
     try {
+      const liveCanvas = useUiStore.getState().cropTool
+        ? null
+        : document.querySelector<HTMLCanvasElement>(
+            "canvas[data-editor-preview]",
+          );
       const dataUrl = await capturePostImageForAi(
         scene,
         imageElement,
         1024,
-        document.querySelector<HTMLCanvasElement>(
-          "canvas[data-editor-preview]",
-        ),
+        liveCanvas,
       );
       if (id === captureId.current) setAiPreview(dataUrl);
       return dataUrl;
@@ -95,6 +99,7 @@ export default function EditorPage() {
       className={`editor-shell flex h-dvh flex-col overflow-hidden ${scene.image ? "" : "editor-empty"}`}
     >
       <TopBar />
+      <ReplaceImageDialog />
       {draft.error ? (
         <p
           role="alert"

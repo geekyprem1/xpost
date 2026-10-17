@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { loadImageFromFile, MAX_IMAGE_BYTES } from "@/lib/image/load";
-import { useEditorStore } from "@/lib/store";
+import { requestImageReplace } from "@/lib/image/replace-image";
 
 type Point = { x: number; y: number };
 type Region = { x: number; y: number; width: number; height: number };
@@ -179,9 +179,12 @@ export function ScreenCapture() {
         type: "image/png",
       });
       const loaded = await loadImageFromFile(file);
-      useEditorStore
-        .getState()
-        .setImage(loaded.element, loaded.url, file.name, file);
+      requestImageReplace({
+        element: loaded.element,
+        url: loaded.url,
+        name: file.name,
+        blob: file,
+      });
       close();
     } catch (reason) {
       setError(

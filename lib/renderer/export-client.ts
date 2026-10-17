@@ -1,5 +1,7 @@
 import { createSunlightOverlayCanvas } from "@/lib/editor/sunlight-overlays";
-import type { Scene } from "@/lib/scene";
+import { compositeImageLayers } from "@/lib/layers/image-composite";
+import { rasterizeTextLayers } from "@/lib/layers/text-raster";
+import { croppedImageSize, type Scene } from "@/lib/scene";
 import {
   loadImage,
   loadVideoFrame,
@@ -10,11 +12,14 @@ import {
 import { exportImage } from "./export";
 import type {
   BakedAssets,
+  BakedTextLayer,
   ExportWorkerMessage,
   ExportWorkerRequest,
   GifExportOptions,
   VideoExportOptions,
 } from "./export-protocol";
+import { computeOutputSize } from "./geometry";
+import { capVideoSize } from "./export-video";
 import { createWatermarkCanvas } from "./watermark";
 
 export class ExportCancelledError extends Error {
@@ -54,6 +59,7 @@ export type ExportClientDeps = {
   bakeAssets?: (
     scene: Scene,
     assets: ExportImageAssets,
+    textScale: number,
   ) => Promise<BakedAssets>;
   runMain?: typeof exportImage;
 };
@@ -88,16 +94,36 @@ export async function videoExportSupported(): Promise<boolean> {
   }
 }
 
+async function bakeTextLayers(
+  scene: Scene,
+  scale: number,
+): Promise<BakedTextLayer[]> {
+  const outputWidth = Math.max(1, Math.round(scene.canvas.baseWidth * scale));
+  const layers = await rasterizeTextLayers(scene, outputWidth, scale);
+  return Promise.all(
+    layers.map(async (layer) => ({
+      ...layer,
+      bitmap: await createImageBitmap(layer.source as HTMLCanvasElement),
+    })),
+  );
+}
+
 async function bakeAssets(
   scene: Scene,
   assets: ExportImageAssets,
+  textScale = 1,
 ): Promise<BakedAssets> {
   await document.fonts.ready;
   const baked: BakedAssets = {
     watermark: await createImageBitmap(createWatermarkCanvas()),
   };
+  const textLayers = await bakeTextLayers(scene, textScale);
+  if (textLayers.length > 0) baked.textLayers = textLayers;
   if (assets.screenshot) {
-    baked.screenshot = await createImageBitmap(assets.screenshot);
+    const composed = compositeImageLayers(assets.screenshot, scene.layers, {
+      maxDimension: 4096,
+    });
+    baked.screenshot = await createImageBitmap(composed ?? assets.screenshot);
   }
   if (scene.sunlight.overlay !== "none") {
     baked.sunlightOverlay = await createImageBitmap(
@@ -138,7 +164,29 @@ function transferables(baked: BakedAssets): Transferable[] {
   ]) {
     if (candidate) transfer.push(candidate);
   }
+  for (const layer of baked.textLayers ?? []) transfer.push(layer.bitmap);
   return transfer;
+}
+
+function textScaleForCap(
+  scene: Scene,
+  assets: ExportImageAssets,
+  maxWidth: number,
+  maxHeight: number,
+): number {
+  const screenshotSize = assets.screenshot
+    ? {
+        width: assets.screenshot.naturalWidth,
+        height: assets.screenshot.naturalHeight,
+      }
+    : null;
+  const full = computeOutputSize(
+    scene,
+    1,
+    croppedImageSize(scene, screenshotSize),
+  );
+  const capped = capVideoSize(full, maxWidth, maxHeight);
+  return capped.width / scene.canvas.baseWidth;
 }
 
 function workerRoundTrip(
@@ -221,7 +269,11 @@ export function startImageExport(
       return { ...result, via: "main" };
     }
     hooks.onProgress?.({ phase: "assets" });
-    const baked = await (deps.bakeAssets ?? bakeAssets)(scene, assets);
+    const baked = await (deps.bakeAssets ?? bakeAssets)(
+      scene,
+      assets,
+      options.scale,
+    );
     if (state.cancelled) throw new ExportCancelledError();
     const worker = (deps.createWorker ?? defaultCreateWorker)();
     state.worker = worker;
@@ -263,7 +315,17 @@ export function startVideoExport(
       );
     }
     hooks.onProgress?.({ phase: "assets" });
-    const baked = await (deps.bakeAssets ?? bakeAssets)(scene, assets);
+    const textScale = textScaleForCap(
+      scene,
+      assets,
+      options.maxWidth,
+      options.maxHeight,
+    );
+    const baked = await (deps.bakeAssets ?? bakeAssets)(
+      scene,
+      assets,
+      textScale,
+    );
     if (state.cancelled) throw new ExportCancelledError();
     const worker = (deps.createWorker ?? defaultCreateWorker)();
     state.worker = worker;
@@ -306,7 +368,17 @@ export function startGifExport(
       );
     }
     hooks.onProgress?.({ phase: "assets" });
-    const baked = await (deps.bakeAssets ?? bakeAssets)(scene, assets);
+    const textScale = textScaleForCap(
+      scene,
+      assets,
+      options.maxWidth,
+      options.maxHeight,
+    );
+    const baked = await (deps.bakeAssets ?? bakeAssets)(
+      scene,
+      assets,
+      textScale,
+    );
     if (state.cancelled) throw new ExportCancelledError();
     const worker = (deps.createWorker ?? defaultCreateWorker)();
     state.worker = worker;

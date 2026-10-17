@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { LayerOverlay } from "@/components/editor/layer-overlay";
 import { useCanvasBuildAnimation } from "@/lib/hooks/use-canvas-build-animation";
+import { ensureFonts } from "@/lib/fonts";
+import {
+  compositeImageLayers,
+  imageSpaceCacheKey,
+} from "@/lib/layers/image-composite";
+import { rasterizeTextLayer } from "@/lib/layers/text-raster";
 import { ImagePlus } from "lucide-react";
 import { IMAGE_ACCEPT } from "@/lib/image/load";
 import { useImageActions } from "@/lib/image/use-image-actions";
@@ -12,8 +19,10 @@ import {
   createWatermarkCanvas,
   fitSize,
   WebGL2Renderer,
+  type TextLayerAsset,
 } from "@/lib/renderer";
-import { useEditorStore } from "@/lib/store";
+import { croppedImageSize, FULL_CROP } from "@/lib/scene";
+import { useEditorStore, useUiStore } from "@/lib/store";
 
 const WELCOME_TILES = [13, 23, 16, 12, 14, 30, 21, 24, 11, 28, 25, 20];
 
@@ -31,9 +40,14 @@ export function EditorCanvas() {
   );
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const textCacheRef = useRef(
+    new Map<string, { key: string; asset: TextLayerAsset }>(),
+  );
+  const compositeKeyRef = useRef<string | null>(null);
   const scene = useEditorStore((state) => state.scene);
   const imageElement = useEditorStore((state) => state.imageElement);
   const imageError = useEditorStore((state) => state.imageError);
+  const cropTool = useUiStore((state) => state.cropTool);
   const setScene = useEditorStore((state) => state.setScene);
   const commitScene = useEditorStore((state) => state.commitScene);
   const hasImage = scene.image !== null;
@@ -125,21 +139,33 @@ export function EditorCanvas() {
     const renderer = rendererRef.current;
     if (!renderer || !ready) return;
     if (hasImage && imageElement) {
-      if (lastUploadedRef.current !== imageElement) {
+      const key = imageSpaceCacheKey(scene.layers);
+      if (
+        lastUploadedRef.current !== imageElement ||
+        compositeKeyRef.current !== key
+      ) {
+        const composed = compositeImageLayers(imageElement, scene.layers, {
+          maxDimension: 2048,
+        });
         renderer.setAssets({
-          screenshot: imageElement,
-          screenshotSize: {
-            width: imageElement.naturalWidth,
-            height: imageElement.naturalHeight,
-          },
+          screenshot: composed ?? imageElement,
+          screenshotSize: composed
+            ? { width: composed.width, height: composed.height }
+            : {
+                width: imageElement.naturalWidth,
+                height: imageElement.naturalHeight,
+              },
         });
         lastUploadedRef.current = imageElement;
+        compositeKeyRef.current = key;
+        renderSceneRef.current();
       }
     } else if (lastUploadedRef.current) {
       renderer.setAssets({ screenshot: null, screenshotSize: null });
       lastUploadedRef.current = null;
+      compositeKeyRef.current = null;
     }
-  }, [hasImage, imageElement, ready]);
+  }, [hasImage, imageElement, ready, scene.layers]);
 
   const overlayId = scene.sunlight.overlay;
   useEffect(() => {
@@ -158,13 +184,16 @@ export function EditorCanvas() {
     const renderer = rendererRef.current;
     const canvas = canvasRef.current;
     if (!renderer || !canvas || !ready || !size) return;
-    const imageSize =
+    const fullImageSize =
       hasImage && imageElement
         ? {
             width: imageElement.naturalWidth,
             height: imageElement.naturalHeight,
           }
         : null;
+    const imageSize = cropTool
+      ? fullImageSize
+      : croppedImageSize(scene, fullImageSize);
     const output = computeOutputSize(scene, 1, imageSize);
     const display = fitSize(
       { width: Math.max(1, size.width), height: Math.max(1, size.height) },
@@ -175,14 +204,17 @@ export function EditorCanvas() {
     canvas.style.height = `${Math.round(display.height)}px`;
     const bufferWidth = Math.max(1, Math.round(display.width * dpr));
     try {
-      renderer.render(scene, { scale: bufferWidth / scene.canvas.baseWidth });
+      renderer.render(scene, {
+        scale: bufferWidth / scene.canvas.baseWidth,
+        cropOverride: cropTool ? FULL_CROP : undefined,
+      });
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : String(reason);
       queueMicrotask(() => {
         if (rendererRef.current === renderer) setError(message);
       });
     }
-  }, [scene, size, ready, hasImage, imageElement]);
+  }, [scene, size, ready, hasImage, imageElement, cropTool]);
 
   useEffect(() => {
     renderScene();
@@ -327,13 +359,92 @@ export function EditorCanvas() {
     return () => cancelAnimationFrame(raf);
   }, [motion, reducedMotion, renderScene]);
 
+  const fullImageSize =
+    hasImage && imageElement
+      ? {
+          width: imageElement.naturalWidth,
+          height: imageElement.naturalHeight,
+        }
+      : null;
   const output = computeOutputSize(
     scene,
     1,
-    hasImage && imageElement
-      ? { width: imageElement.naturalWidth, height: imageElement.naturalHeight }
-      : null,
+    cropTool ? fullImageSize : croppedImageSize(scene, fullImageSize),
   );
+  const display = size
+    ? fitSize(
+        { width: Math.max(1, size.width), height: Math.max(1, size.height) },
+        output,
+      )
+    : null;
+  const displayWidth = display ? Math.round(display.width) : 0;
+  const displayHeight = display ? Math.round(display.height) : 0;
+
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer || !ready) return;
+    const textLayers = scene.layers.filter(
+      (layer) => layer.kind === "text" && layer.visible,
+    );
+    if (!hasImage || displayWidth <= 0 || textLayers.length === 0) {
+      renderer.setAssets({ textLayers: [] });
+      renderSceneRef.current();
+      return;
+    }
+
+    let cancelled = false;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const outputWidth = Math.max(1, Math.round(displayWidth * dpr));
+    const scale = outputWidth / scene.canvas.baseWidth;
+    const cache = textCacheRef.current;
+    const keep = new Set(textLayers.map((layer) => layer.id));
+    for (const id of [...cache.keys()]) {
+      if (!keep.has(id)) cache.delete(id);
+    }
+
+    void (async () => {
+      await ensureFonts(scene);
+      if (cancelled || rendererRef.current !== renderer) return;
+      const assets: TextLayerAsset[] = [];
+      for (const layer of textLayers) {
+        if (layer.kind !== "text") continue;
+        const key = JSON.stringify([
+          layer.text,
+          layer.style,
+          layer.width,
+          outputWidth,
+        ]);
+        const cached = cache.get(layer.id);
+        const asset =
+          cached && cached.key === key
+            ? cached.asset
+            : rasterizeTextLayer(layer, outputWidth, scale);
+        if (!cached || cached.key !== key) {
+          cache.set(layer.id, { key, asset });
+        }
+        assets.push({
+          id: layer.id,
+          source: asset.source,
+          x: layer.x,
+          y: layer.y,
+          width: layer.width,
+          aspect: asset.aspect,
+          rotation: layer.rotation,
+        });
+      }
+      if (cancelled || rendererRef.current !== renderer) return;
+      renderer.setAssets({ textLayers: assets });
+      renderSceneRef.current();
+    })().catch((reason: unknown) => {
+      if (!cancelled) {
+        setError(reason instanceof Error ? reason.message : String(reason));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [scene, ready, hasImage, displayWidth, displayHeight]);
 
   return (
     <div
@@ -350,71 +461,84 @@ export function EditorCanvas() {
         loadFromDataTransfer(event.dataTransfer);
       }}
     >
-      <canvas
-        ref={canvasRef}
-        aria-label="Editor canvas"
-        data-editor-preview="true"
-        style={{
-          touchAction: "none",
-          visibility: hasImage ? "visible" : "hidden",
-        }}
-        className={
-          dragActive
-            ? "opacity-60"
-            : hasImage
-              ? "cursor-grab active:cursor-grabbing"
-              : undefined
+      <div
+        className="relative shrink-0"
+        style={
+          displayWidth > 0 && displayHeight > 0
+            ? { width: displayWidth, height: displayHeight }
+            : undefined
         }
-        onPointerDown={(event) => {
-          if (!hasImage) return;
-          const bounds = canvasRef.current?.getBoundingClientRect();
-          if (!bounds) return;
-          event.currentTarget.setPointerCapture(event.pointerId);
-          const offset = useEditorStore.getState().scene.transform.offset;
-          dragRef.current = {
-            pointerId: event.pointerId,
-            startX: event.clientX,
-            startY: event.clientY,
-            startOffset: { ...offset },
-            displayWidth: bounds.width,
-          };
-        }}
-        onPointerMove={(event) => {
-          const drag = dragRef.current;
-          if (!drag || drag.pointerId !== event.pointerId) return;
-          const baseWidth = useEditorStore.getState().scene.canvas.baseWidth;
-          const factor = baseWidth / Math.max(1, drag.displayWidth);
-          const deltaX = (event.clientX - drag.startX) * factor;
-          const deltaY = (event.clientY - drag.startY) * factor;
-          setScene(
-            (current) => ({
-              ...current,
-              transform: {
-                ...current.transform,
-                offset: {
-                  x: drag.startOffset.x + deltaX,
-                  y: drag.startOffset.y + deltaY,
+      >
+        <canvas
+          ref={canvasRef}
+          aria-label="Editor canvas"
+          data-editor-preview="true"
+          style={{
+            touchAction: "none",
+            visibility: hasImage ? "visible" : "hidden",
+          }}
+          className={
+            dragActive
+              ? "opacity-60"
+              : hasImage
+                ? "cursor-grab active:cursor-grabbing"
+                : undefined
+          }
+          onPointerDown={(event) => {
+            useUiStore.getState().selectLayer(null);
+            if (!hasImage) return;
+            const bounds = canvasRef.current?.getBoundingClientRect();
+            if (!bounds) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            const offset = useEditorStore.getState().scene.transform.offset;
+            dragRef.current = {
+              pointerId: event.pointerId,
+              startX: event.clientX,
+              startY: event.clientY,
+              startOffset: { ...offset },
+              displayWidth: bounds.width,
+            };
+          }}
+          onPointerMove={(event) => {
+            const drag = dragRef.current;
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            const baseWidth = useEditorStore.getState().scene.canvas.baseWidth;
+            const factor = baseWidth / Math.max(1, drag.displayWidth);
+            const deltaX = (event.clientX - drag.startX) * factor;
+            const deltaY = (event.clientY - drag.startY) * factor;
+            setScene(
+              (current) => ({
+                ...current,
+                transform: {
+                  ...current.transform,
+                  offset: {
+                    x: drag.startOffset.x + deltaX,
+                    y: drag.startOffset.y + deltaY,
+                  },
                 },
-              },
-            }),
-            { transient: true },
-          );
-        }}
-        onPointerUp={(event) => {
-          const drag = dragRef.current;
-          if (!drag || drag.pointerId !== event.pointerId) return;
-          dragRef.current = null;
-          commitScene();
-        }}
-        onPointerCancel={() => {
-          if (dragRef.current) commitScene();
-          dragRef.current = null;
-        }}
-        onLostPointerCapture={() => {
-          if (dragRef.current) commitScene();
-          dragRef.current = null;
-        }}
-      />
+              }),
+              { transient: true },
+            );
+          }}
+          onPointerUp={(event) => {
+            const drag = dragRef.current;
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            dragRef.current = null;
+            commitScene();
+          }}
+          onPointerCancel={() => {
+            if (dragRef.current) commitScene();
+            dragRef.current = null;
+          }}
+          onLostPointerCapture={() => {
+            if (dragRef.current) commitScene();
+            dragRef.current = null;
+          }}
+        />
+        {hasImage && displayWidth > 0 && displayHeight > 0 ? (
+          <LayerOverlay width={displayWidth} height={displayHeight} />
+        ) : null}
+      </div>
       {hasImage ? null : (
         <div className="welcome-screen pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-5">
           <div className="welcome-tiles" aria-hidden="true">

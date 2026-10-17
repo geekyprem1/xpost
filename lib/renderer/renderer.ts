@@ -1,4 +1,4 @@
-import type { Scene } from "@/lib/scene";
+import { getImageCrop, type ImageCrop, type Scene } from "@/lib/scene";
 import { findMeshPreset, type MeshPreset } from "@/lib/backgrounds/presets";
 import { parseColor } from "./color";
 import { composeFrameCanvas, loadFrameImages } from "./frame-canvas";
@@ -32,6 +32,7 @@ import type {
   RenderBlobResult,
   RenderOptions,
   Renderer,
+  TextLayerAsset,
 } from "./types";
 
 const GRID = 24;
@@ -180,6 +181,8 @@ uniform vec2 uSize;
 uniform float uRadius;
 uniform float uDeviceScreen;
 uniform float uContain;
+uniform float uSourceAspect;
+uniform vec4 uCrop;
 ${ROUND_RECT_SDF}
 void main() {
   vec2 p = vUv * uSize;
@@ -187,8 +190,7 @@ void main() {
   float mask = 1.0 - smoothstep(-0.75, 0.75, d);
   vec2 uv = vUv;
   if (uDeviceScreen > 0.5) {
-    vec2 source = vec2(textureSize(uTex, 0));
-    float sourceAspect = source.x / source.y;
+    float sourceAspect = uSourceAspect;
     float targetAspect = uSize.x / uSize.y;
     vec2 crop = vec2(min(1.0, targetAspect / sourceAspect), min(1.0, sourceAspect / targetAspect));
     if (uContain > 0.5) {
@@ -202,8 +204,20 @@ void main() {
       uv = (uv - 0.5) * crop + 0.5;
     }
   }
+  uv = uCrop.xy + uv * uCrop.zw;
   vec4 c = texture(uTex, uv);
   outColor = vec4(c.rgb, c.a * mask);
+}`;
+
+const TEXT_FS = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outColor;
+uniform sampler2D uTex;
+uniform float uOpacity;
+void main() {
+  vec4 c = texture(uTex, vUv);
+  outColor = vec4(c.rgb, c.a * uOpacity);
 }`;
 
 const BLUR_FS = `#version 300 es
@@ -298,6 +312,7 @@ export class WebGL2Renderer implements Renderer {
   private sunlightProgram: GlProgram | null = null;
   private grainProgram: GlProgram | null = null;
   private watermarkProgram: GlProgram | null = null;
+  private textProgram: GlProgram | null = null;
   private triVao: WebGLVertexArrayObject | null = null;
   private triBuf: WebGLBuffer | null = null;
   private meshVao: WebGLVertexArrayObject | null = null;
@@ -311,6 +326,8 @@ export class WebGL2Renderer implements Renderer {
   private fboWidth = 0;
   private fboHeight = 0;
   private assets: PreviewAssets = {};
+  private textLayers: TextLayerAsset[] = [];
+  private textSources = new Map<string, TexImageSource>();
   private watermarkSize: { width: number; height: number } | null = null;
   private frameTextureKey: string | null = null;
 
@@ -335,6 +352,7 @@ export class WebGL2Renderer implements Renderer {
     this.sunlightProgram = createGlProgram(gl, SUNLIGHT_FS);
     this.grainProgram = createGlProgram(gl, GRAIN_FS);
     this.watermarkProgram = createGlProgram(gl, WATERMARK_FS);
+    this.textProgram = createGlProgram(gl, TEXT_FS);
 
     const triData = new Float32Array([-1, -1, 0, 0, 3, -1, 2, 0, -1, 3, 0, 2]);
     const triBuf = gl.createBuffer();
@@ -424,6 +442,23 @@ export class WebGL2Renderer implements Renderer {
           ? { width: size.width, height: size.height }
           : null;
     }
+    if ("textLayers" in partial) {
+      const next = partial.textLayers ?? [];
+      for (const item of next) {
+        if (this.textSources.get(item.id) !== item.source) {
+          this.upload(`text:${item.id}`, item.source);
+          this.textSources.set(item.id, item.source);
+        }
+      }
+      const keep = new Set(next.map((item) => item.id));
+      for (const id of [...this.textSources.keys()]) {
+        if (!keep.has(id)) {
+          this.deleteTexture(`text:${id}`);
+          this.textSources.delete(id);
+        }
+      }
+      this.textLayers = next;
+    }
   }
 
   render(scene: Scene, options: RenderOptions) {
@@ -431,11 +466,15 @@ export class WebGL2Renderer implements Renderer {
     const canvas = this.canvas;
     if (!gl || !canvas) throw new Error("The renderer is not initialized");
 
-    const layout = computeCardLayout(
-      scene,
-      options.scale,
-      this.assets.screenshotSize ?? null,
-    );
+    const crop = options.cropOverride ?? getImageCrop(scene);
+    const screenshotSize = this.assets.screenshotSize ?? null;
+    const displaySize = screenshotSize
+      ? {
+          width: screenshotSize.width * crop.w,
+          height: screenshotSize.height * crop.h,
+        }
+      : null;
+    const layout = computeCardLayout(scene, options.scale, displaySize);
     const width = layout.output.width;
     const height = layout.output.height;
     if (canvas.width !== width || canvas.height !== height) {
@@ -462,9 +501,10 @@ export class WebGL2Renderer implements Renderer {
     const frameBox = this.computeFrameBox(scene, layout);
     this.drawShadow(scene, layout, options.scale, frameBox);
     this.drawPlate(scene, layout, options.scale, useGlass);
-    this.drawScreenshot(scene, layout, options.scale, frameBox);
+    this.drawScreenshot(scene, layout, options.scale, frameBox, crop);
 
     this.drawFrame(scene, frameBox, options.scale);
+    this.drawTextLayers();
     this.drawSunlight(scene);
     gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE);
     this.drawGrain(scene);
@@ -528,11 +568,14 @@ export class WebGL2Renderer implements Renderer {
         this.sunlightProgram,
         this.grainProgram,
         this.watermarkProgram,
+        this.textProgram,
       ]) {
         if (program) gl.deleteProgram(program.program);
       }
     }
     this.textures.clear();
+    this.textSources.clear();
+    this.textLayers = [];
     this.glassFbo = null;
     this.blurFbo = null;
     this.frameTextureKey = null;
@@ -859,6 +902,7 @@ export class WebGL2Renderer implements Renderer {
     layout: CardLayout,
     scale: number,
     frameBox: FrameBox | null,
+    crop: ImageCrop,
   ) {
     const gl = this.gl;
     const program = this.imageProgram;
@@ -874,6 +918,18 @@ export class WebGL2Renderer implements Renderer {
     gl.uniform2f(u.uSize, layout.imageRect.width, layout.imageRect.height);
     gl.uniform1f(u.uDeviceScreen, frameBox?.config.screenAspect ? 1 : 0);
     gl.uniform1f(u.uContain, scene.frame.fit === "contain" ? 1 : 0);
+    const screenshotSize = this.assets.screenshotSize ?? null;
+    const displaySize = screenshotSize
+      ? {
+          width: screenshotSize.width * crop.w,
+          height: screenshotSize.height * crop.h,
+        }
+      : null;
+    gl.uniform1f(
+      u.uSourceAspect,
+      displaySize ? displaySize.width / displaySize.height : 1,
+    );
+    gl.uniform4f(u.uCrop, crop.x, crop.y, crop.w, crop.h);
     gl.uniform1f(
       u.uRadius,
       frameBox
@@ -937,6 +993,8 @@ export class WebGL2Renderer implements Renderer {
     gl.uniform1i(u.uTex, 0);
     gl.uniform2f(u.uSize, frameBox.rect.width, frameBox.rect.height);
     gl.uniform1f(u.uDeviceScreen, 0);
+    gl.uniform1f(u.uSourceAspect, 1);
+    gl.uniform4f(u.uCrop, 0, 0, 1, 1);
     gl.uniform1f(u.uRadius, 0);
     this.updateMesh(
       frameBox.rect,
@@ -948,13 +1006,69 @@ export class WebGL2Renderer implements Renderer {
     gl.drawElements(gl.TRIANGLES, GRID * GRID * 6, gl.UNSIGNED_SHORT, 0);
   }
 
+  private drawTextLayers() {
+    const gl = this.gl;
+    const program = this.textProgram;
+    const canvas = this.canvas;
+    if (!gl || !program || !canvas || this.textLayers.length === 0) return;
+
+    gl.useProgram(program.program);
+    const u = program.uniforms;
+    gl.uniform1i(u.uTex, 0);
+
+    for (const item of this.textLayers) {
+      const texture = this.getTexture(`text:${item.id}`);
+      if (!texture) continue;
+      const widthPx = item.width * canvas.width;
+      const heightPx = widthPx * item.aspect;
+      const cx = item.x * canvas.width;
+      const cy = item.y * canvas.height;
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.uniform1f(u.uOpacity, item.opacity ?? 1);
+      this.updateRotatedMesh(
+        {
+          x: cx - widthPx / 2,
+          y: cy - heightPx / 2,
+          width: widthPx,
+          height: heightPx,
+        },
+        item.rotation,
+      );
+      gl.bindVertexArray(this.meshVao);
+      gl.drawElements(gl.TRIANGLES, GRID * GRID * 6, gl.UNSIGNED_SHORT, 0);
+    }
+  }
+
+  private updateRotatedMesh(rect: Rect, rotationDegrees: number) {
+    const cx = rect.x + rect.width / 2;
+    const cy = rect.y + rect.height / 2;
+    const radians = (rotationDegrees * Math.PI) / 180;
+    const cos = Math.cos(radians);
+    const sin = Math.sin(radians);
+    const rotate = (x: number, y: number): [number, number] => {
+      const dx = x - cx;
+      const dy = y - cy;
+      return [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos];
+    };
+    this.updateMeshCorners([
+      rotate(rect.x, rect.y),
+      rotate(rect.x + rect.width, rect.y),
+      rotate(rect.x + rect.width, rect.y + rect.height),
+      rotate(rect.x, rect.y + rect.height),
+    ]);
+  }
+
   private updateMesh(rect: Rect, tiltX: number, tiltY: number, camera: number) {
+    this.updateMeshCorners(projectTiltedCorners(rect, tiltX, tiltY, camera));
+  }
+
+  private updateMeshCorners(corners: [number, number][]) {
     const gl = this.gl;
     const canvas = this.canvas;
     const buffer = this.meshPosBuf;
     if (!gl || !canvas || !buffer) return;
 
-    const corners = projectTiltedCorners(rect, tiltX, tiltY, camera);
     const matrix = squareToQuad(corners);
     const positions = this.meshPositions;
     const width = canvas.width;

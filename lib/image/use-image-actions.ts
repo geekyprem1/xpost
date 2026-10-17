@@ -8,9 +8,9 @@ import {
   loadImageFromFile,
   validateImageFile,
 } from "./load";
+import { requestImageReplace } from "./replace-image";
 
 export function useImageActions() {
-  const setImage = useEditorStore((state) => state.setImage);
   const clearImage = useEditorStore((state) => state.clearImage);
   const setImageError = useEditorStore((state) => state.setImageError);
 
@@ -23,7 +23,7 @@ export function useImageActions() {
       }
       try {
         const { element, url } = await loadImageFromFile(file);
-        setImage(element, url, file.name, file);
+        requestImageReplace({ element, url, name: file.name, blob: file });
       } catch (reason) {
         setImageError(
           reason instanceof Error
@@ -32,7 +32,7 @@ export function useImageActions() {
         );
       }
     },
-    [setImage, setImageError],
+    [setImageError],
   );
 
   const openPicker = useCallback(() => {

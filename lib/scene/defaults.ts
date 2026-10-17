@@ -4,7 +4,8 @@ import motionPresets from "@/lib/backgrounds/motion-presets.json";
 export function createDefaultScene(): Scene {
   const motion = motionPresets.find((preset) => preset.id === "loop-13")!;
   return {
-    version: 1,
+    version: 2,
+    layers: [],
     canvas: { aspect: "auto", baseWidth: 1500 },
     image: null,
     background: {

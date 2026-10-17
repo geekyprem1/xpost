@@ -1,6 +1,13 @@
-import type { AnchorId, Scene, StyleId } from "@/lib/scene";
+import {
+  croppedImageSize,
+  getImageCrop,
+  type AnchorId,
+  type Scene,
+  type StyleId,
+} from "@/lib/scene";
 
 import { getFrameConfig, getFrameMetrics, FRAME_DESIGN_WIDTH } from "./frames";
+import { squareToQuad } from "./gl";
 
 export const DEFAULT_CAMERA_DIST = 1600;
 
@@ -150,7 +157,7 @@ export type CardLayout = {
 export function computeOutputSize(
   scene: Scene,
   scale: number,
-  imageSize?: Size | null
+  imageSize?: Size | null,
 ): Size {
   const width = Math.max(1, Math.round(scene.canvas.baseWidth * scale));
   const ratio =
@@ -158,7 +165,7 @@ export function computeOutputSize(
       ? imageSize && imageSize.height > 0
         ? imageSize.width / imageSize.height
         : 4 / 3
-      : ASPECT_RATIOS[scene.canvas.aspect] ?? 4 / 3;
+      : (ASPECT_RATIOS[scene.canvas.aspect] ?? 4 / 3);
   return { width, height: Math.max(1, Math.round(width / ratio)) };
 }
 
@@ -198,7 +205,7 @@ export function shadowParams(scene: Scene, scale: number): ShadowParams {
 export function computeCardLayout(
   scene: Scene,
   scale: number,
-  imageSize?: Size | null
+  imageSize?: Size | null,
 ): CardLayout {
   const output = computeOutputSize(scene, scale, imageSize);
   const padding = scene.transform.padding * scale;
@@ -217,7 +224,7 @@ export function computeCardLayout(
   if (imageSize && imageSize.width > 0 && imageSize.height > 0) {
     const fit = Math.min(
       contentRect.width / imageSize.width,
-      contentRect.height / imageSize.height
+      contentRect.height / imageSize.height,
     );
     imageWidth = imageSize.width * fit * zoom;
     imageHeight = imageSize.height * fit * zoom;
@@ -230,15 +237,25 @@ export function computeCardLayout(
   if (device?.screenAspect) {
     const metrics = getFrameMetrics(device);
     const outerWidth = 1 + (metrics.left + metrics.right) / FRAME_DESIGN_WIDTH;
-    const outerHeight = 1 / device.screenAspect + (metrics.top + metrics.bottom) / FRAME_DESIGN_WIDTH;
-    imageWidth = Math.min(contentRect.width / outerWidth, contentRect.height / outerHeight) * zoom;
+    const outerHeight =
+      1 / device.screenAspect +
+      (metrics.top + metrics.bottom) / FRAME_DESIGN_WIDTH;
+    imageWidth =
+      Math.min(
+        contentRect.width / outerWidth,
+        contentRect.height / outerHeight,
+      ) * zoom;
     imageHeight = imageWidth / device.screenAspect;
   }
   const anchor = ANCHOR_POINTS[scene.transform.anchor];
   const centerX =
-    contentRect.x + contentRect.width * anchor.x + scene.transform.offset.x * scale;
+    contentRect.x +
+    contentRect.width * anchor.x +
+    scene.transform.offset.x * scale;
   const centerY =
-    contentRect.y + contentRect.height * anchor.y + scene.transform.offset.y * scale;
+    contentRect.y +
+    contentRect.height * anchor.y +
+    scene.transform.offset.y * scale;
 
   const imageRect = {
     x: centerX - imageWidth / 2,
@@ -273,7 +290,7 @@ export function fitSize(container: Size, content: Size): Size {
   }
   const factor = Math.min(
     container.width / content.width,
-    container.height / content.height
+    container.height / content.height,
   );
   return { width: content.width * factor, height: content.height * factor };
 }
@@ -282,7 +299,7 @@ export function projectTiltedCorners(
   rect: Rect,
   tiltX: number,
   tiltY: number,
-  camera: number
+  camera: number,
 ): [number, number][] {
   const rx = (tiltX * Math.PI) / 180;
   const ry = (tiltY * Math.PI) / 180;
@@ -320,4 +337,170 @@ export function boundingRect(points: [number, number][]): Rect {
   const maxX = Math.max(...xs);
   const maxY = Math.max(...ys);
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+export type Point = { x: number; y: number };
+
+/**
+ * Screen point → unit-square coordinates for a projected quad. Mirrors the
+ * mesh mapping the renderer uses (squareToQuad) so hit testing lands on the
+ * same pixels under tilt.
+ */
+export function quadToUnit(quad: [number, number][], point: Point): Point {
+  const [a, b, c, d, e, f, g, h] = squareToQuad(quad);
+  const A = a - point.x * g;
+  const B = b - point.x * h;
+  const C = point.x - c;
+  const D = d - point.y * g;
+  const E = e - point.y * h;
+  const F = point.y - f;
+  const det = A * E - B * D;
+  if (Math.abs(det) < 1e-12) return { x: Number.NaN, y: Number.NaN };
+  return {
+    x: (C * E - B * F) / det,
+    y: (A * F - C * D) / det,
+  };
+}
+
+/** Unit-square coordinates → screen point, matching the renderer mesh. */
+export function unitToQuad(quad: [number, number][], uv: Point): Point {
+  const [a, b, c, d, e, f, g, h] = squareToQuad(quad);
+  const den = g * uv.x + h * uv.y + 1;
+  return {
+    x: (a * uv.x + b * uv.y + c) / den,
+    y: (d * uv.x + e * uv.y + f) / den,
+  };
+}
+
+type ScreenMapping = {
+  contain: boolean;
+  fit: Point;
+  crop: Point;
+};
+
+/**
+ * Device-screen frames letterbox (contain) or crop (cover) the source texture
+ * inside the screen quad — same math as IMAGE_FS in the renderer.
+ */
+function screenMapping(
+  scene: Scene,
+  layout: CardLayout,
+  sourceSize: Size,
+): ScreenMapping | null {
+  const config = getFrameConfig(scene.frame.kind);
+  if (!config?.screenAspect) return null;
+  const sourceAspect = sourceSize.width / Math.max(1, sourceSize.height);
+  const targetAspect =
+    layout.imageRect.width / Math.max(1, layout.imageRect.height);
+  return {
+    contain: scene.frame.fit === "contain",
+    fit: {
+      x: Math.min(1, sourceAspect / targetAspect),
+      y: Math.min(1, targetAspect / sourceAspect),
+    },
+    crop: {
+      x: Math.min(1, targetAspect / sourceAspect),
+      y: Math.min(1, sourceAspect / targetAspect),
+    },
+  };
+}
+
+function sourceUvToScreenUv(uv: Point, mapping: ScreenMapping | null): Point {
+  if (!mapping) return uv;
+  if (mapping.contain) {
+    return {
+      x: (uv.x - 0.5) * mapping.fit.x + 0.5,
+      y: (uv.y - 0.5) * mapping.fit.y + 0.5,
+    };
+  }
+  return {
+    x: (uv.x - 0.5) / mapping.crop.x + 0.5,
+    y: (uv.y - 0.5) / mapping.crop.y + 0.5,
+  };
+}
+
+function screenUvToSourceUv(uv: Point, mapping: ScreenMapping | null): Point {
+  if (!mapping) return uv;
+  if (mapping.contain) {
+    return {
+      x: (uv.x - 0.5) / mapping.fit.x + 0.5,
+      y: (uv.y - 0.5) / mapping.fit.y + 0.5,
+    };
+  }
+  return {
+    x: (uv.x - 0.5) * mapping.crop.x + 0.5,
+    y: (uv.y - 0.5) * mapping.crop.y + 0.5,
+  };
+}
+
+export function imageQuad(
+  scene: Scene,
+  layout: CardLayout,
+  scale: number,
+): [number, number][] {
+  return projectTiltedCorners(
+    layout.imageRect,
+    scene.transform.tiltX,
+    scene.transform.tiltY,
+    DEFAULT_CAMERA_DIST * scale,
+  );
+}
+
+/** Pointer → UV inside the displayed (cropped) image, 0–1. */
+export function canvasToDisplayedUv(
+  point: Point,
+  scene: Scene,
+  layout: CardLayout,
+  displayedSize: Size,
+  scale: number,
+): Point {
+  const screenUv = quadToUnit(imageQuad(scene, layout, scale), point);
+  return screenUvToSourceUv(
+    screenUv,
+    screenMapping(scene, layout, displayedSize),
+  );
+}
+
+/** Overlay point (CSS px inside the canvas) → uncropped source UV (0–1). */
+export function canvasToSourceUv(
+  point: Point,
+  scene: Scene,
+  layout: CardLayout,
+  sourceSize: Size,
+  scale: number,
+): Point {
+  const crop = getImageCrop(scene);
+  const displayedSize = croppedImageSize(scene, sourceSize) ?? sourceSize;
+  const localUv = canvasToDisplayedUv(
+    point,
+    scene,
+    layout,
+    displayedSize,
+    scale,
+  );
+  return {
+    x: crop.x + localUv.x * crop.w,
+    y: crop.y + localUv.y * crop.h,
+  };
+}
+
+/** Uncropped source UV (0–1) → overlay point (CSS px inside the canvas). */
+export function sourceUvToCanvasPoint(
+  uv: Point,
+  scene: Scene,
+  layout: CardLayout,
+  sourceSize: Size,
+  scale: number,
+): Point {
+  const crop = getImageCrop(scene);
+  const displayedSize = croppedImageSize(scene, sourceSize) ?? sourceSize;
+  const localUv = {
+    x: (uv.x - crop.x) / crop.w,
+    y: (uv.y - crop.y) / crop.h,
+  };
+  const screenUv = sourceUvToScreenUv(
+    localUv,
+    screenMapping(scene, layout, displayedSize),
+  );
+  return unitToQuad(imageQuad(scene, layout, scale), screenUv);
 }

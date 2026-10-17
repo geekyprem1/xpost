@@ -1,8 +1,25 @@
-import type { Scene } from "@/lib/scene";
+import type { ImageCrop, Scene } from "@/lib/scene";
 
 export type RenderOptions = {
   scale: number;
   timeSec?: number;
+  /** Preview-only override, e.g. full image while the crop UI is open. */
+  cropOverride?: ImageCrop | null;
+};
+
+/**
+ * Normalized text-layer quad: position/size as canvas fractions so the same
+ * baked bitmap works at preview DPR and any export scale.
+ */
+export type TextLayerAsset = {
+  id: string;
+  source: TexImageSource;
+  x: number;
+  y: number;
+  width: number;
+  aspect: number;
+  rotation: number;
+  opacity?: number;
 };
 
 export type PreviewAssets = {
@@ -14,6 +31,7 @@ export type PreviewAssets = {
   videoAspect?: number | null;
   sunlightOverlay?: TexImageSource | null;
   watermark?: TexImageSource | null;
+  textLayers?: TextLayerAsset[] | null;
 };
 
 export interface Renderer {

@@ -11,16 +11,19 @@ import {
   VideoSampleSink,
   type VideoSample,
 } from "mediabunny";
+import { croppedImageSize } from "@/lib/scene";
 import { computeOutputSize } from "./geometry";
 import { exportMime } from "./export-format";
 import { gifFrameDelayMs } from "./export-gif";
 import { buildLoopTimestamps, computeVideoDuration } from "./export-video";
 import { WebGL2Renderer } from "./renderer";
 import type {
+  BakedAssets,
   ExportWorkerCancel,
   ExportWorkerMessage,
   ExportWorkerRequest,
 } from "./export-protocol";
+import type { TextLayerAsset } from "./types";
 
 type ImageRequest = Extract<ExportWorkerRequest, { kind: "image" }>;
 type VideoRequest = Extract<ExportWorkerRequest, { kind: "video" }>;
@@ -43,6 +46,26 @@ function canvasFrom(
   if (!context) throw new Error("Unable to create a 2D rendering context");
   context.drawImage(source, 0, 0);
   return canvas;
+}
+
+function textLayersFrom(assets: BakedAssets): TextLayerAsset[] | undefined {
+  if (!assets.textLayers) return undefined;
+  const layers: TextLayerAsset[] = [];
+  for (const item of assets.textLayers) {
+    const source = canvasFrom(item.bitmap);
+    if (!source) continue;
+    layers.push({
+      id: item.id,
+      source,
+      x: item.x,
+      y: item.y,
+      width: item.width,
+      aspect: item.aspect,
+      rotation: item.rotation,
+      opacity: item.opacity,
+    });
+  }
+  return layers;
 }
 
 const cancelled = new Set<number>();
@@ -117,7 +140,11 @@ async function runImage(request: ImageRequest) {
     const screenshotSize = screenshot
       ? { width: screenshot.width, height: screenshot.height }
       : null;
-    const output = computeOutputSize(scene, options.scale, screenshotSize);
+    const output = computeOutputSize(
+      scene,
+      options.scale,
+      croppedImageSize(scene, screenshotSize),
+    );
     const canvas = new OffscreenCanvas(output.width, output.height);
     await renderer.init(canvas);
     check();
@@ -129,6 +156,7 @@ async function runImage(request: ImageRequest) {
       videoAspect: assets.videoAspect ?? null,
       sunlightOverlay: canvasFrom(assets.sunlightOverlay),
       watermark: canvasFrom(assets.watermark),
+      textLayers: textLayersFrom(assets),
     });
     check();
     post({ id, type: "progress", phase: "render" });
@@ -181,7 +209,11 @@ async function runVideo(request: VideoRequest) {
     const screenshotSize = screenshot
       ? { width: screenshot.width, height: screenshot.height }
       : null;
-    const full = computeOutputSize(scene, 1, screenshotSize);
+    const full = computeOutputSize(
+      scene,
+      1,
+      croppedImageSize(scene, screenshotSize),
+    );
     const scale = Math.min(
       1,
       options.maxWidth / Math.max(1, full.width),
@@ -199,6 +231,7 @@ async function runVideo(request: VideoRequest) {
       screenshotSize,
       sunlightOverlay: canvasFrom(assets.sunlightOverlay),
       watermark: canvasFrom(assets.watermark),
+      textLayers: textLayersFrom(assets),
     });
 
     const muxer = new Output({
@@ -302,7 +335,11 @@ async function runGif(request: GifRequest) {
     const screenshotSize = screenshot
       ? { width: screenshot.width, height: screenshot.height }
       : null;
-    const full = computeOutputSize(scene, 1, screenshotSize);
+    const full = computeOutputSize(
+      scene,
+      1,
+      croppedImageSize(scene, screenshotSize),
+    );
     const scale = Math.min(
       1,
       options.maxWidth / Math.max(1, full.width),
@@ -320,6 +357,7 @@ async function runGif(request: GifRequest) {
       screenshotSize,
       sunlightOverlay: canvasFrom(assets.sunlightOverlay),
       watermark: canvasFrom(assets.watermark),
+      textLayers: textLayersFrom(assets),
     });
 
     const readCanvas = new OffscreenCanvas(width, height);

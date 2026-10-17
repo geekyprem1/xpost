@@ -244,7 +244,7 @@ type Pt = { x: number; y: number };
 - **Migration v1 → v2:** `{ ...scene, version: 2, layers: [] }` (`SCENE_MIGRATIONS[1]`). Har load path `migrateScene()` se guzrega — **LocalDraft abhi seedha `sceneSchema.parse` karta hai, wo T8.1 mein `migrateScene` pe shift** (warna purane drafts toot jayenge). Projects (`editor_state`) bhi isi se.
 - **History:** layers scene ka hissa hain → zundo undo / redo automatically. Drag / resize / slider = gesture API (ek entry). Text typing = edit session (focus → blur / Esc) ek entry.
 - **Selection** (`selectedLayerId`, edit mode, active tool) `uiStore` mein — history / persist mein nahi.
-- `scene.image` remove karne pe image-space layers rehte hain (hidden), naya screenshot aane pe wapas — user confirm ("Annotations rakhein?") T8.4 mein.
+- `scene.image` remove karne pe image-space layers rehte hain (hidden). Naya screenshot aane pe dialog: **Keep layers** ya **Clear & start fresh** (clear = saare layers + layer history reset; background / frame / style intact).
 
 ## 5. Rendering & Export Engine
 
@@ -349,9 +349,11 @@ source bitmap ──► redact layers (pixelate / blur / solid — source pixels
 type BakedAssets = {
   screenshot?: ImageBitmap | null;       // ab image composite (layers ho to)
   // …existing fields…
-  layers?: Array<{ id: string; bitmap: ImageBitmap;
-                   cx: number; cy: number; width: number; height: number;  // output px
-                   rotation: number }>;
+  textLayers?: Array<{ id: string; bitmap: ImageBitmap;
+                       x: number; y: number;          // center, canvas fractions
+                       width: number;                 // box width, canvas fraction
+                       aspect: number;                // bitmap height / width
+                       rotation: number; opacity?: number }>;
 };
 ```
 

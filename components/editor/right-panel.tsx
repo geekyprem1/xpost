@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { LivePostPreview } from "@/components/editor/live-post-preview";
 import { PostTextEditor } from "@/components/editor/post-text-editor";
+import { XVerifiedBadge } from "@/components/editor/x-verified-badge";
 import { useEditorStore } from "@/lib/store";
 import {
-  BadgeCheck,
   Pencil,
   BarChart2,
   Bookmark,
@@ -72,7 +72,7 @@ function PreviewIdentity({ email }: { email: string | null }) {
         >
           {name}
         </span>
-        <BadgeCheck className="size-4 shrink-0 text-sky-500" aria-hidden />
+        <XVerifiedBadge className="size-4 shrink-0" />
         <span
           className="text-muted-foreground min-w-0 flex-1 truncate"
           title={`@${handle}`}

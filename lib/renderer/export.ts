@@ -1,5 +1,7 @@
 import { createSunlightOverlayCanvas } from "@/lib/editor/sunlight-overlays";
-import type { Scene } from "@/lib/scene";
+import { compositeImageLayers } from "@/lib/layers/image-composite";
+import { rasterizeTextLayers } from "@/lib/layers/text-raster";
+import { croppedImageSize, type Scene } from "@/lib/scene";
 import type { PreviewAssets } from "./types";
 import { computeOutputSize } from "./geometry";
 import { WebGL2Renderer } from "./renderer";
@@ -115,11 +117,16 @@ async function collectAssets(
   };
 
   if (assets.screenshot) {
-    collected.screenshot = assets.screenshot;
-    collected.screenshotSize = {
-      width: assets.screenshot.naturalWidth,
-      height: assets.screenshot.naturalHeight,
-    };
+    const composed = compositeImageLayers(assets.screenshot, scene.layers, {
+      maxDimension: 4096,
+    });
+    collected.screenshot = composed ?? assets.screenshot;
+    collected.screenshotSize = composed
+      ? { width: composed.width, height: composed.height }
+      : {
+          width: assets.screenshot.naturalWidth,
+          height: assets.screenshot.naturalHeight,
+        };
   }
 
   if (scene.background.kind === "image") {
@@ -179,7 +186,11 @@ export async function exportImage(
         height: assets.screenshot.naturalHeight,
       }
     : null;
-  const output = computeOutputSize(scene, options.scale, imageSize);
+  const output = computeOutputSize(
+    scene,
+    options.scale,
+    croppedImageSize(scene, imageSize),
+  );
 
   const canvas = document.createElement("canvas");
   canvas.width = output.width;
@@ -190,7 +201,12 @@ export async function exportImage(
   try {
     await renderer.init(canvas);
     await document.fonts.ready;
-    renderer.setAssets(await collectAssets(scene, assets));
+    const textLayers = await rasterizeTextLayers(
+      scene,
+      output.width,
+      output.width / scene.canvas.baseWidth,
+    );
+    renderer.setAssets({ ...(await collectAssets(scene, assets)), textLayers });
     renderer.render(scene, { scale: output.width / scene.canvas.baseWidth });
     const blob = await canvasToBlob(
       canvas,

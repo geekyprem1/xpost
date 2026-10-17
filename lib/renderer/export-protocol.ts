@@ -1,6 +1,17 @@
 import type { Scene } from "@/lib/scene";
 import type { ExportFormat, ExportScale } from "./export-format";
 
+export type BakedTextLayer = {
+  id: string;
+  bitmap: ImageBitmap;
+  x: number;
+  y: number;
+  width: number;
+  aspect: number;
+  rotation: number;
+  opacity?: number;
+};
+
 // NOTE: ImageBitmaps transfer hote hain (OffscreenCanvas with context transfer nahi
 // ho sakta). Worker inhe OffscreenCanvas mein draw karta hai — kyunki Chrome
 // ImageBitmap ke liye UNPACK_FLIP_Y_WEBGL ignore karta hai, par canvas pe honored
@@ -12,6 +23,7 @@ export type BakedAssets = {
   videoAspect?: number | null;
   sunlightOverlay?: ImageBitmap | null;
   watermark?: ImageBitmap | null;
+  textLayers?: BakedTextLayer[] | null;
 };
 
 export type ImageExportOptions = {

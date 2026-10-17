@@ -10,6 +10,21 @@ describe("scene migrations", () => {
     expect(result.scene).toEqual(createDefaultScene());
   });
 
+  it("v1 scene ko v2 mein migrate karta hai (empty layers)", () => {
+    const current = createDefaultScene();
+    const v1 = { ...current, version: 1 } as Record<string, unknown>;
+    delete v1.layers;
+
+    const result = migrateScene(v1);
+
+    expect(result.warning).toBeNull();
+    expect(result.migrated).toBe(true);
+    expect(result.scene.version).toBe(2);
+    expect(result.scene.layers).toEqual([]);
+    expect(result.scene.background).toEqual(current.background);
+    expect(result.scene.transform).toEqual(current.transform);
+  });
+
   it("missing version pe defaults + warning milta hai", () => {
     const result = migrateScene({ canvas: {} });
     expect(result.warning).not.toBeNull();
@@ -37,7 +52,11 @@ describe("scene migrations", () => {
 
   it("applyMigrations chain chalti hai", () => {
     const migrations = {
-      0: (scene: Record<string, unknown>) => ({ ...scene, version: 1, added: true }),
+      0: (scene: Record<string, unknown>) => ({
+        ...scene,
+        version: 1,
+        added: true,
+      }),
     };
     const result = applyMigrations({ version: 0 }, 0, 1, migrations);
     expect(result.complete).toBe(true);

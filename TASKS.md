@@ -21,7 +21,7 @@
 | M4 — AI Studio | 7–8 | Mostly done (T4.4 live review, T4.5 pending; T4.8 → T9.10) |
 | M5 — X Share (no API) | 9 | ✅ Complete |
 | M7 — Quick wins | ~1 week | Not started — M8 ke baad |
-| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0 approved (17 Oct); T8.1 in progress |
+| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.6 done (17 Oct); T8.7 next |
 | M9 — Differentiators | ~2–3 weeks | Not started |
 | M6 — Launch | M9 ke baad | Not started (T6.1 done; T6.4 PostHog → T7.9) |
 | M10 — Growth + Pro | Launch ke baad | Not started |
@@ -493,58 +493,63 @@ T8.0 → T8.1 → T8.2 baaki sab ke blocker hain. T8.10 (projects) T8.1 ke baad 
 **Done when:** Doc review ho (user approve) — implementation isi pe.
 **Refs:** PRD LY-1, LY-2
 
-### T8.1 Scene v2 + layer store
-- [ ] `lib/scene`: v2 types + zod + migration v1 → v2 (unit tests, purane drafts load hon)
-- [ ] `local-draft.ts`: `sceneSchema.parse` → `migrateScene` (v1 draft fixture test)
-- [ ] Store: add / update / remove / reorder layer, selection (uiStore — history mein nahi), gesture API (drag = 1 entry)
-- [ ] LocalDraft + autosave v2 compatible
+### T8.1 Scene v2 + layer store ✅
+- [x] `lib/scene`: v2 types + zod + migration v1 → v2 (unit tests, purane drafts load hon) — text / annotation / redact layer schemas, max 50 layers, text ≤ 500; `SCENE_MIGRATIONS[1]` = `layers: []`
+- [x] `local-draft.ts`: `sceneSchema.parse` → `migrateScene` (v1 draft fixture test) — unsupported/invalid scene ab bhi throw karta hai (silent overwrite nahi)
+- [x] Store: add / update / remove / reorder layer, selection (uiStore — history mein nahi), gesture API (drag = 1 entry) — `addLayer` (max 50, auto-select), `updateLayer` (id/kind pinned, transient), `removeLayer` (selection clear), `reorderLayer`
+- [x] LocalDraft + autosave v2 compatible — layers IndexedDB draft ke saath round-trip, autosave generic Scene type
 
-**Done when:** v1 draft v2 mein load ho; layer ops undo / redo hon; tests green.
+**Done when:** v1 draft v2 mein load ho; layer ops undo / redo hon; tests green. — ✓ **190 tests green** (20 naye: schema 8, migration 1, store 9, draft 2); lint 0 errors, typecheck + build pass.
 **Refs:** PRD LY-1, ED-5
 
-### T8.2 Layer interaction + layers panel
-- [ ] Canvas overlay (DOM / SVG) selection box, handles, drag, resize; image-space ke liye inverse homography hit test
-- [ ] Shortcuts: Delete, Ctrl+D, arrows (Shift ×10), Esc, bring forward / send back
-- [ ] Layers list: reorder, hide, lock, rename — keyboard accessible
-- [ ] Geometry unit tests (inverse mapping, tilt ke saath)
+### T8.2 Layer interaction + layers panel ✅
+- [x] Canvas overlay (DOM / SVG) selection box, handles, drag, resize; image-space ke liye inverse homography hit test — `components/editor/layer-overlay.tsx`; text = rotated box + width handles, image-space = projected quad + corner handles; `canvasToSourceUv` / `sourceUvToCanvasPoint` shader jaisa hi mapping (tilt + device screen cover/contain)
+- [x] Shortcuts: Delete, Ctrl+D, arrows (Shift ×10), Esc, bring forward / send back — `lib/store/layer-shortcuts.ts` (locked layers ignore edits, editable targets ignore), Ctrl/Cmd+[ / ] reorder
+- [x] Layers list: reorder, hide, lock, rename — keyboard accessible — toolbar mein naya "Layers" panel; select, rename input, eye/lock toggles, forward/back, delete
+- [x] Geometry unit tests (inverse mapping, tilt ke saath) — `quadToUnit`/`unitToQuad` round-trip (tilt 20°/-10°, cover + contain device frames), layer helpers (move/bounds/resize/duplicate), shortcuts
 
-**Done when:** Tilt 20° pe bhi annotation sahi jagah select / drag ho; axe 0 serious issues.
+**Done when:** Tilt 20° pe bhi annotation sahi jagah select / drag ho; axe 0 serious issues. — **Implementation + unit tests ✓ (216 tests green; lint 0 errors, typecheck + build pass). Browser select/drag + axe check T8.3/T8.4 ke baad** (layer creation UI abhi nahi hai, isliye live drag verify nahi ho saka).
+**Bug fix (17 Oct, user-report):** naya screenshot lete waqt purane text / annotations / redactions chupchaap reh jaate the. Ab `ReplaceImageDialog` poochhta hai — **Keep layers** ya **Clear & start fresh** (clear karne pe layers + layer history reset, background/frame/style intact).
 **Refs:** PRD LY-3, LY-4
 
-### T8.3 Text layers
-- [ ] 8 OFL fonts self-hosted `public/fonts/` + licence files; lazy `FontFace` load (**[USER]** final list — PRD §15 Q10)
-- [ ] Presets: Headline / Subheadline / Badge / Caption; properties panel (TX-2)
-- [ ] Inline edit (double-click textarea overlay), multi-line, emoji
-- [ ] Renderer: Canvas2D raster → texture, font-ready gate; worker export path
-- [ ] Text-aware layout presets (TX-5)
-- [ ] Visual fixtures: preview vs export
+### T8.3 Text layers ✅
+- [x] 8 OFL fonts self-hosted `public/fonts/` + licence files; lazy `FontFace` load — Inter, Space Grotesk, Playfair Display, Lora, JetBrains Mono, IBM Plex Mono (4 static weights), Caveat, Bricolage Grotesque; Latin woff2 subset, ~355 KB total + OFL.txt each; variable fonts weight ranges ke saath
+- [x] Presets: Headline / Subheadline / Badge / Caption; properties panel (TX-2) — `lib/editor/text-presets.ts` + `text-panel.tsx` (font, weight, size, color, align, line height/letter spacing, pill, shadow; toolbar "Text" tool)
+- [x] Inline edit (double-click textarea overlay), multi-line, emoji — rotated textarea same font/size; typing transient + blur/Esc = ek history entry
+- [x] Renderer: Canvas2D raster → texture, font-ready gate; worker export path — `TEXT_FS` + rotated mesh, sunlight/grain ke neeche; preview cache (move/rotate pe re-raster nahi); export/worker ke liye normalized `textLayers` assets + ImageBitmap transfer; main-thread fallback bhi
+- [x] Text-aware layout presets (TX-5) — Headline top / Headline left / Badge; text + screenshot anchor/padding/zoom ek hi undo entry mein
+- [x] Visual fixtures: preview vs export — `/poc/fixtures` mein text fixture (headline + badge pill), per-scale baking; Strict Mode timer bug bhi fix hua
 
-**Done when:** Har font export mein sahi aaye (fixture diff ≤ 4 mean); text 1× / 2× / 3× sharp.
+**Done when:** Har font export mein sahi aaye (fixture diff ≤ 4 mean); text 1× / 2× / 3× sharp. — ✓ **fixtures 5/5 pass** (text mean **0.787**, p99 27), text har scale pe bake hota hai. **234 tests green**; lint 0 errors, typecheck + build pass.
+**Pending (manual):** logged-in editor mein text add/edit visual check (auth session nahi tha).
 **Refs:** PRD TX-1…TX-5
 
-### T8.4 Annotations
-- [ ] Tools: arrow (straight + curved), rectangle, ellipse, highlight, numbered badge (auto increment), emoji sticker
-- [ ] Style: color (palette + brand colors), stroke, arrow head
-- [ ] Image-space bake (tilt / zoom ke saath chalein); shortcuts A / R / H / N
-- [ ] Fixtures
+### T8.4 Annotations ✅
+- [x] Tools: arrow (straight + curved), rectangle, ellipse, highlight, numbered badge (auto increment), emoji sticker — naya "Annotate" toolbar panel; canvas pe drag-to-draw (step/emoji click-to-place), curved arrow bend slider + head toggle, auto-increment step numbers
+- [x] Style: color (palette + brand colors), stroke, arrow head — 8-color palette + custom color, stroke 1–30 px (design px); BK-3 brand colors T8.7 mein
+- [x] Image-space bake (tilt / zoom ke saath chalein); shortcuts A / R / H / N — Canvas2D composite screenshot pixels mein bake (`lib/layers/image-composite.ts`), phir texture tilt/zoom/frame ke saath chalta hai; preview 2048 px cap, export 4096; shortcuts A/R/O/H/N/E + T text (B blur T8.5)
+- [x] Fixtures — annotated fixture (rect + curved arrow + highlight + step + emoji) tilt 14° / zoom 90 ke saath
 
-**Done when:** Annotations tilt + zoom + drag ke saath screenshot se chipke rahein; export = preview.
+**Done when:** Annotations tilt + zoom + drag ke saath screenshot se chipke rahein; export = preview. — ✓ composite texture ki wajah se annotations screenshot ke saath hi transform hote hain; fixture **0.301 mean diff** (pass), preview/export dono same composite use karte hain.
 **Refs:** PRD AN-1…AN-3
 
-### T8.5 Manual redact
-- [ ] Region tool: Pixelate / Blur / Solid + strength
-- [ ] Bake source texture pe — export **aur** AI capture (`capturePostImageForAi`) dono mein
-- [ ] Test: redact region ke output pixels mein original content na ho (solid exact color; pixelate block uniform)
-- [ ] UI hint (weak blur warning)
+### T8.5 Manual redact ✅
+- [x] Region tool: Pixelate / Blur / Solid + strength — naya "Redact" toolbar panel; drag-to-draw image-space region; strength 0–100; solid fill color picker
+- [x] Bake source texture pe — export **aur** AI capture (`capturePostImageForAi`) dono mein — `compositeImageLayers` redactions ko annotations se pehle source pixels pe apply karta hai; preview, main-thread export, worker (PNG/MP4/GIF) aur AI capture sab isi composite se jaate hain
+- [x] Test: redact region ke output pixels mein original content na ho (solid exact color; pixelate block uniform) — `/poc/fixtures` privacy checks browser mein: solid exact RGB, har pixelate cell uniform, blur source se mean diff > 5; redact fixture mean **0.231**, privacy **ok**
+- [x] UI hint (weak blur warning) — blur mode mein strength < 30 pe amber warning
 
-**Done when:** Redacted area ka original data na export mein na AI request mein ho (test se verify).
+**Done when:** Redacted area ka original data na export mein na AI request mein ho (test se verify). — ✓ composite hi screenshot texture (preview) aur worker/AI files (export) banta hai, isliye original pixels output tak nahi pahunchte; browser privacy checks green.
 **Refs:** PRD RD-1, RD-2
 
-### T8.6 Crop + auto-trim
-- [ ] `scene.image.crop` normalized rect; renderer UV crop; crop mode UI (handles, aspect lock, reset)
-- [ ] Auto-trim: border uniform color detect (tolerance) → crop rect; unit tests
+### T8.6 Crop + auto-trim ✅
+- [x] `scene.image.crop` normalized rect; renderer UV crop; crop mode UI (handles, aspect lock, reset) — schema (optional, bounds-checked), shader UV crop + cropped aspect in layout/output, naya "Crop" panel, image quad ke corner handles (tilt-aware), Free/1:1/4:5/16:9 aspect lock, reset; crop undoable (gesture = 1 entry)
+- [x] Auto-trim: border uniform color detect (tolerance) → crop rect; unit tests — `lib/image/auto-trim.ts` (corner-consistency + edge scan, 1024 px cap) + panel button; white-margin screenshot ek click mein trim
+- [x] Export/AI: cropped dimensions renderer, main-thread export, worker (PNG/MP4/GIF), text-aware preview aur annotations mapping sab crop-aware
 
-**Done when:** Crop undoable, export mein sahi; white-margin screenshot ek click mein trim.
+**Done when:** Crop undoable, export mein sahi; white-margin screenshot ek click mein trim. — ✓ fixtures **8/8 pass**; crop fixture output **600×450** (4:3 cropped aspect), preview/export mean **0.102**; crop mapping round-trip tilt ke saath tested.
+**Fix (17 Oct, user-report):** crop pehle already-cropped image ke corners se chalta tha, isliye drag ke dauraan composition resize hota tha aur expand nahi hota. Ab crop mode mein **full image + movable/resizable crop box** dikhta hai (dark shade outside), drag ke dauraan canvas stable rehta hai, corners se expand/shrink aur box ko move kiya ja sakta hai. Crop mode ke dauraan AI capture export path use karta hai (full uncropped image na jaaye).
+**Pending (manual):** logged-in editor mein crop handles drag (auth session nahi thi).
 **Refs:** PRD CR-1, CR-2
 
 ### T8.7 Brand kit
