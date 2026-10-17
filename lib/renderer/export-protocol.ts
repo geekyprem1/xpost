@@ -28,6 +28,7 @@ export type VideoExportOptions = {
 };
 
 export type GifExportOptions = {
+  durationSeconds?: number;
   fps: number;
   maxWidth: number;
   maxHeight: number;

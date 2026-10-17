@@ -290,7 +290,8 @@ async function runGif(request: GifRequest) {
     const track = await input.getPrimaryVideoTrack();
     if (!track) throw new Error("No video track found");
     const sourceDuration = await input.computeDuration();
-    const duration = computeVideoDuration(sourceDuration);
+    const duration =
+      options.durationSeconds ?? computeVideoDuration(sourceDuration);
     const timestamps = buildLoopTimestamps(
       duration,
       options.fps,

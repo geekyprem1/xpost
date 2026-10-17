@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Copy, Download, Loader2 } from "lucide-react";
+import {
+  Copy,
+  Download,
+  Loader2,
+  ImageIcon,
+  Sparkles,
+  Film,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,12 +30,7 @@ import {
   type ExportHandle,
   type ExportProgress,
 } from "@/lib/renderer/export-client";
-import {
-  GIF_FPS,
-  GIF_MAX_FRAMES,
-  GIF_MAX_HEIGHT,
-  GIF_MAX_WIDTH,
-} from "@/lib/renderer/export-gif";
+import { GIF_MAX_FRAMES, GIF_MAX_HEIGHT } from "@/lib/renderer/export-gif";
 import {
   VIDEO_BITRATE,
   VIDEO_FPS,
@@ -42,9 +44,9 @@ import {
 import { useEditorStore } from "@/lib/store";
 
 const TYPES = [
-  { id: "image", label: "Image" },
-  { id: "gif", label: "GIF" },
-  { id: "video", label: "Video" },
+  { id: "image", label: "Image", icon: ImageIcon },
+  { id: "gif", label: "GIF", icon: Sparkles },
+  { id: "video", label: "Video", icon: Film },
 ] as const;
 
 type ExportType = (typeof TYPES)[number]["id"];
@@ -83,6 +85,8 @@ export function DownloadModal({
   const [type, setType] = useState<ExportType>("image");
   const [format, setFormat] = useState<ExportFormat>("png");
   const [scale, setScale] = useState<ExportScale>(2);
+  const [gifWidth, setGifWidth] = useState(480);
+  const [gifLength, setGifLength] = useState(5);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -166,8 +170,9 @@ export function DownloadModal({
         scene,
         { screenshot: imageElement },
         {
-          fps: GIF_FPS,
-          maxWidth: GIF_MAX_WIDTH,
+          fps: 12,
+          maxWidth: gifWidth,
+          durationSeconds: gifLength,
           maxHeight: GIF_MAX_HEIGHT,
           maxFrames: GIF_MAX_FRAMES,
         },
@@ -209,31 +214,38 @@ export function DownloadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent aria-label="Download">
+      <DialogContent
+        aria-label="Download"
+        className="max-h-[90dvh] w-[calc(100%-2rem)] max-w-sm overflow-y-auto rounded-3xl p-6"
+      >
         <DialogHeader>
           <DialogTitle>Download</DialogTitle>
           <DialogDescription>
-            Choose a file type, format and scale.
+            {type === "gif"
+              ? `${gifWidth}px wide · ${gifLength}s`
+              : "Choose a file type, format and scale."}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 pt-2">
+        <div className="border-border mt-4 space-y-5 border-t pt-5">
           <div className="space-y-1">
             <span className="text-xs font-medium">Type</span>
-            <div className="flex gap-1">
+            <div className="grid grid-cols-3 gap-2">
               {TYPES.map((option) => (
                 <Button
                   key={option.id}
                   type="button"
                   size="sm"
+                  className="h-16 flex-col gap-1 rounded-xl"
                   variant={type === option.id ? "secondary" : "outline"}
                   aria-pressed={type === option.id}
-                  disabled={option.id !== "image" && !motionAvailable}
+                  disabled={busy || (option.id !== "image" && !motionAvailable)}
                   onClick={() => {
                     setType(option.id);
                     setError(null);
                     setStatus(null);
                   }}
                 >
+                  <option.icon className="size-4" aria-hidden />
                   {option.label}
                 </Button>
               ))}
@@ -244,6 +256,53 @@ export function DownloadModal({
               </p>
             ) : null}
           </div>
+
+          {type === "gif" ? (
+            <>
+              <fieldset disabled={busy} className="space-y-2">
+                <legend className="text-muted-foreground mb-2 text-xs font-medium uppercase">
+                  Width
+                </legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {[480, 640].map((width) => (
+                    <Button
+                      key={width}
+                      type="button"
+                      className="h-11 rounded-xl"
+                      variant={gifWidth === width ? "secondary" : "outline"}
+                      aria-pressed={gifWidth === width}
+                      onClick={() => setGifWidth(width)}
+                    >
+                      {width}px
+                    </Button>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset disabled={busy} className="space-y-2">
+                <legend className="text-muted-foreground mb-2 text-xs font-medium uppercase">
+                  Length
+                </legend>
+                <div className="grid grid-cols-3 gap-2">
+                  {[3, 5, 8].map((seconds) => (
+                    <Button
+                      key={seconds}
+                      type="button"
+                      className="h-11 rounded-xl"
+                      variant={gifLength === seconds ? "secondary" : "outline"}
+                      aria-pressed={gifLength === seconds}
+                      onClick={() => setGifLength(seconds)}
+                    >
+                      {seconds}s
+                    </Button>
+                  ))}
+                </div>
+              </fieldset>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Creates your GIF at 12 fps in your browser. Smaller widths and
+                shorter lengths export faster.
+              </p>
+            </>
+          ) : null}
 
           {type === "image" ? (
             <>
@@ -330,17 +389,24 @@ export function DownloadModal({
               onClick={() => void onDownload()}
             >
               <Download aria-hidden />
-              Download
+              Download{" "}
+              {type === "gif"
+                ? "GIF"
+                : type === "video"
+                  ? "Video"
+                  : format.toUpperCase()}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              onClick={() => void onCopy()}
-            >
-              <Copy aria-hidden />
-              Copy PNG
-            </Button>
+            {type === "image" ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => void onCopy()}
+              >
+                <Copy aria-hidden />
+                Copy PNG
+              </Button>
+            ) : null}
             {busy ? (
               <Button
                 type="button"
