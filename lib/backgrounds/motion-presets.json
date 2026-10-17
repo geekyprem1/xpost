@@ -148,5 +148,305 @@
       "name": "FreeVideoMotion",
       "url": "https://pixabay.com/videos/id-74716/"
     }
+  },
+  {
+    "id": "loop-11",
+    "label": "Azure Drift",
+    "url": "/motion/loop-11.mp4",
+    "previewUrl": "/motion/loop-11.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 10,
+    "source": "https://pixabay.com/videos/id-4382/",
+    "tags": "liquid, lights, beautiful wallpaper, intro, blue, blur, bokeh, abstract, background",
+    "credit": {
+      "name": "NeuroPixels",
+      "url": "https://pixabay.com/videos/id-4382/"
+    }
+  },
+  {
+    "id": "loop-12",
+    "label": "Ivory Silk",
+    "url": "/motion/loop-12.mp4",
+    "previewUrl": "/motion/loop-12.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 10,
+    "source": "https://pixabay.com/videos/id-116618/",
+    "tags": "milk, liquid, abstract, 4k, pattern, texture, background, speed, design, sample, beautiful wallpaper, liquid background",
+    "credit": {
+      "name": "Fialo_4k_256",
+      "url": "https://pixabay.com/videos/id-116618/"
+    }
+  },
+  {
+    "id": "loop-13",
+    "label": "Candy Shapes",
+    "url": "/motion/loop-13.mp4",
+    "previewUrl": "/motion/loop-13.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 15,
+    "source": "https://pixabay.com/videos/id-81094/",
+    "tags": "squares, triangles, pattern, beautiful wallpaper, gradient, geometric, drawing, banner, ornament, texture, fabric, textile, tropical, floral, loop, background",
+    "credit": {
+      "name": "Ranca_Studio",
+      "url": "https://pixabay.com/videos/id-81094/"
+    }
+  },
+  {
+    "id": "loop-14",
+    "label": "Magenta Prism",
+    "url": "/motion/loop-14.mp4",
+    "previewUrl": "/motion/loop-14.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 15,
+    "source": "https://pixabay.com/videos/id-81095/",
+    "tags": "circles, particles, pattern, gradient, geometric, drawing, banner, ornament, texture, fabric, textile, beautiful wallpaper, tropical, loop, background",
+    "credit": {
+      "name": "Ranca_Studio",
+      "url": "https://pixabay.com/videos/id-81095/"
+    }
+  },
+  {
+    "id": "loop-15",
+    "label": "Neon Starfield",
+    "url": "/motion/loop-15.mp4",
+    "previewUrl": "/motion/loop-15.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 15,
+    "source": "https://pixabay.com/videos/id-204924/",
+    "tags": "particles, waves, beautiful wallpaper, design, pattern, glow, neon, background",
+    "credit": {
+      "name": "visualhub",
+      "url": "https://pixabay.com/videos/id-204924/"
+    }
+  },
+  {
+    "id": "loop-16",
+    "label": "Cyan Flow",
+    "url": "/motion/loop-16.mp4",
+    "previewUrl": "/motion/loop-16.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 20,
+    "source": "https://pixabay.com/videos/id-138770/",
+    "tags": "wave, abstract, background, loop, 3d, movement, modern, digital, glow, futuristic, light, minimal, design, pattern, beautiful wallpaper, render, neon, art, dynamic, seamless, energy, science, technology",
+    "credit": {
+      "name": "aNDYAlly",
+      "url": "https://pixabay.com/videos/id-138770/"
+    }
+  },
+  {
+    "id": "loop-17",
+    "label": "Emerald Grid",
+    "url": "/motion/loop-17.mp4",
+    "previewUrl": "/motion/loop-17.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 30,
+    "source": "https://pixabay.com/videos/id-173243/",
+    "tags": "grid, digital grid, beautiful wallpaper, particles, loop, background",
+    "credit": {
+      "name": "olenchic",
+      "url": "https://pixabay.com/videos/id-173243/"
+    }
+  },
+  {
+    "id": "loop-18",
+    "label": "Midnight Grid",
+    "url": "/motion/loop-18.mp4",
+    "previewUrl": "/motion/loop-18.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 15,
+    "source": "https://pixabay.com/videos/id-191573/",
+    "tags": "grid, beautiful wallpaper, digital grid, particles, loop, background",
+    "credit": {
+      "name": "olenchic",
+      "url": "https://pixabay.com/videos/id-191573/"
+    }
+  },
+  {
+    "id": "loop-19",
+    "label": "Silver Smoke",
+    "url": "/motion/loop-19.mp4",
+    "previewUrl": "/motion/loop-19.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 12,
+    "source": "https://pixabay.com/videos/id-66481/",
+    "tags": "smoke, swirls, abstract, smoking, smoke art, art, background, dark, black, fire, beautiful wallpaper, toxic, cigarettes",
+    "credit": {
+      "name": "Mohamed_hassan",
+      "url": "https://pixabay.com/videos/id-66481/"
+    }
+  },
+  {
+    "id": "loop-20",
+    "label": "Chromatic Smoke",
+    "url": "/motion/loop-20.mp4",
+    "previewUrl": "/motion/loop-20.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 6,
+    "source": "https://pixabay.com/videos/id-130064/",
+    "tags": "smoke, particles, abstract, beautiful wallpaper, effect, colorful, background",
+    "credit": {
+      "name": "ariful755",
+      "url": "https://pixabay.com/videos/id-130064/"
+    }
+  },
+  {
+    "id": "loop-21",
+    "label": "Aurora Mist",
+    "url": "/motion/loop-21.mp4",
+    "previewUrl": "/motion/loop-21.webp",
+    "width": 640,
+    "height": 360,
+    "duration": 60,
+    "source": "https://pixabay.com/videos/id-112684/",
+    "tags": "northern lights, aurora, sky, background, texture, artwork, abstract, green, blue, light, evolving, purple, fractal",
+    "credit": {
+      "name": "adamcalma",
+      "url": "https://pixabay.com/videos/id-112684/"
+    }
+  },
+  {
+    "id": "loop-22",
+    "label": "Solar Halo",
+    "url": "/motion/loop-22.mp4",
+    "previewUrl": "/motion/loop-22.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 10,
+    "source": "https://pixabay.com/videos/id-116855/",
+    "tags": "abstract, astrology, astronomy, aurora, background, beautiful, black, bright, circle, corona, cosmic, cosmos, earth, eclipse, energy, event, flare, full, futuristic, glow, graphic, heat, image, light",
+    "credit": {
+      "name": "Gam-Ol",
+      "url": "https://pixabay.com/videos/id-116855/"
+    }
+  },
+  {
+    "id": "loop-23",
+    "label": "Violet Ripples",
+    "url": "/motion/loop-23.mp4",
+    "previewUrl": "/motion/loop-23.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 10,
+    "source": "https://pixabay.com/videos/id-190838/",
+    "tags": "waves, fluid, ink, texture, flow, minimal, pattern, movement, gradient, beautiful wallpaper, colorful, art, abstract, purple, background, wallpaper",
+    "credit": {
+      "name": "skarletmotion",
+      "url": "https://pixabay.com/videos/id-190838/"
+    }
+  },
+  {
+    "id": "loop-24",
+    "label": "Purple Silk",
+    "url": "/motion/loop-24.mp4",
+    "previewUrl": "/motion/loop-24.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 10,
+    "source": "https://pixabay.com/videos/id-190830/",
+    "tags": "waves, fluid, ink, texture, flow, minimal, pattern, movement, gradient, colorful, art, abstract, beautiful wallpaper, purple, background, wallpaper",
+    "credit": {
+      "name": "skarletmotion",
+      "url": "https://pixabay.com/videos/id-190830/"
+    }
+  },
+  {
+    "id": "loop-25",
+    "label": "Golden Bokeh",
+    "url": "/motion/loop-25.mp4",
+    "previewUrl": "/motion/loop-25.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 20,
+    "source": "https://pixabay.com/videos/id-204923/",
+    "tags": "particles, gold, golden, luxury, design, portrait",
+    "credit": {
+      "name": "visualhub",
+      "url": "https://pixabay.com/videos/id-204923/"
+    }
+  },
+  {
+    "id": "loop-26",
+    "label": "Gold Confetti",
+    "url": "/motion/loop-26.mp4",
+    "previewUrl": "/motion/loop-26.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 10,
+    "source": "https://pixabay.com/videos/id-208675/",
+    "tags": "particles, confetti, rain, gold, celebration, fun, decoration",
+    "credit": {
+      "name": "olenchic",
+      "url": "https://pixabay.com/videos/id-208675/"
+    }
+  },
+  {
+    "id": "loop-27",
+    "label": "Crimson Tunnel",
+    "url": "/motion/loop-27.mp4",
+    "previewUrl": "/motion/loop-27.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 17,
+    "source": "https://pixabay.com/videos/id-86593/",
+    "tags": "geometric, lights, shape, motion, loop, abstract, beautiful wallpaper, background",
+    "credit": {
+      "name": "FractalSkii",
+      "url": "https://pixabay.com/videos/id-86593/"
+    }
+  },
+  {
+    "id": "loop-28",
+    "label": "Violet Facets",
+    "url": "/motion/loop-28.mp4",
+    "previewUrl": "/motion/loop-28.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 16,
+    "source": "https://pixabay.com/videos/id-27018/",
+    "tags": "network, geometric, connectivity, beautiful wallpaper, loop, background, structure, titles background",
+    "credit": {
+      "name": "motionstock",
+      "url": "https://pixabay.com/videos/id-27018/"
+    }
+  },
+  {
+    "id": "loop-29",
+    "label": "Blue Matrix",
+    "url": "/motion/loop-29.mp4",
+    "previewUrl": "/motion/loop-29.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 10,
+    "source": "https://pixabay.com/videos/id-12902/",
+    "tags": "abstract, blue, wave, background, design, backdrop, space, light, motion, blue abstract, texture, digital, artistic, futuristic, dynamic, modern, web, water, flow, pattern, square, waving, shape, flowing, style, smooth, decoration, beautiful wallpaper, effect",
+    "credit": {
+      "name": "QuinceCreative",
+      "url": "https://pixabay.com/videos/id-12902/"
+    }
+  },
+  {
+    "id": "loop-30",
+    "label": "Azure Ribbons",
+    "url": "/motion/loop-30.mp4",
+    "previewUrl": "/motion/loop-30.webp",
+    "width": 960,
+    "height": 540,
+    "duration": 35,
+    "source": "https://pixabay.com/videos/id-6266/",
+    "tags": "background, blue, lines, abstract, light, waves, beautiful wallpaper, backdrop",
+    "credit": {
+      "name": "tommyvideo",
+      "url": "https://pixabay.com/videos/id-6266/"
+    }
   }
 ]

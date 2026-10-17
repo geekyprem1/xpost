@@ -16,7 +16,7 @@ export function MotionGallery() {
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold">Ready to use</span>
         <span className="bg-muted text-muted-foreground rounded-full px-2 py-1 text-[10px]">
-          10 video loops
+          {presets.length} video loops
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -29,7 +29,7 @@ export function MotionGallery() {
               type="button"
               aria-label={preset.label}
               aria-pressed={active}
-              className={`group bg-muted/30 focus-visible:ring-ring relative overflow-hidden rounded-xl border text-left transition-colors outline-none focus-visible:ring-2 ${active ? "border-primary ring-1 ring-primary" : "hover:border-muted-foreground/50"}`}
+              className={`group bg-muted/30 focus-visible:ring-ring relative overflow-hidden rounded-xl border text-left transition-colors outline-none focus-visible:ring-2 ${active ? "border-primary ring-primary ring-1" : "hover:border-muted-foreground/50"}`}
               onPointerEnter={(event) => {
                 if (
                   !window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -74,10 +74,7 @@ export function MotionGallery() {
               <span className="flex items-center justify-between gap-1 px-2 py-2 text-[10px] font-medium">
                 <span className="truncate">{preset.label}</span>
                 {active ? (
-                  <Check
-                    className="text-primary size-3 shrink-0"
-                    aria-hidden
-                  />
+                  <Check className="text-primary size-3 shrink-0" aria-hidden />
                 ) : (
                   <Play
                     className="text-muted-foreground size-3 shrink-0"

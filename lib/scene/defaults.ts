@@ -2,6 +2,7 @@ import type { Scene } from "./schema";
 import motionPresets from "@/lib/backgrounds/motion-presets.json";
 
 export function createDefaultScene(): Scene {
+  const motion = motionPresets.find((preset) => preset.id === "loop-13")!;
   return {
     version: 1,
     canvas: { aspect: "auto", baseWidth: 1500 },
@@ -10,10 +11,10 @@ export function createDefaultScene(): Scene {
       kind: "video",
       src: {
         provider: "curated",
-        id: motionPresets[0].id,
-        url: motionPresets[0].url,
-        previewUrl: motionPresets[0].previewUrl,
-        credit: { ...motionPresets[0].credit },
+        id: motion.id,
+        url: motion.url,
+        previewUrl: motion.previewUrl,
+        credit: { ...motion.credit },
       },
     },
     frame: { kind: "screenshot" },
