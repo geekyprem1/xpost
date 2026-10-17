@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { isAuthEnabled } from "@/lib/supabase/auth-flag";
 
 const PROTECTED_PREFIXES = ["/editor", "/account"];
 
@@ -11,10 +10,6 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/callback";
     return NextResponse.redirect(url);
-  }
-
-  if (!isAuthEnabled()) {
-    return NextResponse.next({ request });
   }
 
   let response = NextResponse.next({ request });
@@ -55,7 +50,7 @@ export async function proxy(request: NextRequest) {
           }
         },
       },
-    }
+    },
   );
 
   const { data } = await supabase.auth.getClaims();

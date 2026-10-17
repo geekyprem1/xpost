@@ -23,7 +23,7 @@ export default async function LoginPage({
           />
           <h1 className="text-xl font-semibold">Shotlark</h1>
           <p className="text-muted-foreground text-sm">
-            Sign in with your email. We will send you a sign-in link.
+            Sign in or create an account with your email and password.
           </p>
         </div>
         <LoginForm

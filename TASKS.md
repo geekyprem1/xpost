@@ -100,7 +100,7 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 - [x] Logout; server components / route handlers mein `auth.getUser()` check
 
 **Done when:** `http://127.0.0.1:3000` pe magic link login kaam kare (default SMTP sirf team member emails pe, 2/hour — development ke liye kaafi); logged-out user `/editor` pe jaaye to `/login` redirect; naye user ka profile 30 credits ke saath bane.
-**Deferred (16 Oct):** **login gate abhi OFF hai** — `.env.local` mein `AUTH_ENABLED=false` (dev flow unblocked; default SMTP ki 2/hour limit ke wajah se). Launch/test ke liye ready hone pe: flag true karo (ya line hatao), email template update karo, phir E2E login verify karo. Code poora ready hai.
+**Updated (17 Oct):** Email/password sign-in and sign-up added. Removed the AUTH_ENABLED bypass: /editor and /account always require authentication. Logged-out redirects verified locally; email confirmation and real-account sign-in still need live verification.
 **Refs:** PRD AUTH-1, AUTH-2; ARCH §8.1
 
 ### T1.4 App shell

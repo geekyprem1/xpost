@@ -83,15 +83,9 @@ T4.5 (model comparison) ke baad yehi row update hogi.
 
 **Koi naya migration pending nahi hai** — aapke chalaye 5 migrations + marker ke baad kuch bhi DB-side change nahi hua (functions existing tables/RPCs use karte hain: `profiles`, `ai_generations`, `rate_limits`, `pexels_cache`, `consume_credits`, `refund_credits`, `hit_rate_limit`).
 
-## 4. Auth on karna (jab live test karna ho)
+## 4. Auth verification
 
-`.env.local` mein:
-
-```
-AUTH_ENABLED=true
-```
-
-Phir `/login` pe magic link (email rate limit 2/hour ho sakta hai — wait karna pade to batao, custom SMTP add karne ka rasta hai).
+Authentication is always required for `/editor` and `/account`. `/login` supports email/password sign-in and account creation, with magic links as an alternative. `AUTH_ENABLED` no longer disables the login gate.
 
 ## 5. Verification (deploy ke baad)
 
