@@ -116,7 +116,8 @@ export function RightPanel({
   );
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [postText, setPostText] = useState("");
+  const postText = useEditorStore((state) => state.postText);
+  const setPostText = useEditorStore((state) => state.setPostText);
   const [prompt, setPrompt] = useState("");
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);

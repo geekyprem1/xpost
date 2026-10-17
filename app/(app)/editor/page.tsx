@@ -10,10 +10,12 @@ import { fetchCredits } from "@/lib/api/credits";
 import { useEditorStore } from "@/lib/store";
 import { useCreditsStore } from "@/lib/store/credits-store";
 import { useEditorShortcuts } from "@/lib/store/use-editor-shortcuts";
+import { useLocalDraft } from "@/lib/store/use-local-draft";
 import { Aperture, ArrowUpRight } from "lucide-react";
 
 export default function EditorPage() {
   useEditorShortcuts();
+  const draft = useLocalDraft();
   const [openPanel, setOpenPanel] = useState<PanelId | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiPreview, setAiPreview] = useState<string | null>(null);
@@ -78,11 +80,29 @@ export default function EditorPage() {
     void refreshCredits();
   }
 
+  if (!draft.ready)
+    return (
+      <main
+        className="text-muted-foreground flex min-h-dvh items-center justify-center text-sm"
+        role="status"
+      >
+        Restoring your last draft...
+      </main>
+    );
+
   return (
     <div
       className={`editor-shell flex h-dvh flex-col overflow-hidden ${scene.image ? "" : "editor-empty"}`}
     >
       <TopBar />
+      {draft.error ? (
+        <p
+          role="alert"
+          className="bg-background text-destructive border-b px-4 py-2 text-sm"
+        >
+          {draft.error}
+        </p>
+      ) : null}
       <div className="relative flex min-h-0 flex-1">
         <main className="editor-workspace relative flex min-h-0 min-w-0 flex-1 flex-col px-3 pt-3 sm:px-6 sm:pt-5">
           <h1 className="sr-only">Shotlark editor</h1>

@@ -23,7 +23,7 @@ export function useImageActions() {
       }
       try {
         const { element, url } = await loadImageFromFile(file);
-        setImage(element, url, file.name);
+        setImage(element, url, file.name, file);
       } catch (reason) {
         setImageError(
           reason instanceof Error

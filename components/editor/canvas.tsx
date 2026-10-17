@@ -49,11 +49,15 @@ export function EditorCanvas() {
     if (!canvas || rendererRef.current) return;
     let disposed = false;
     const renderer = new WebGL2Renderer();
-    rendererRef.current = renderer;
     renderer
       .init(canvas)
       .then(() => {
         if (disposed) return;
+        // Publish only initialized instances. Readiness state can survive
+        // effect replays during development while the renderer is recreated.
+        rendererRef.current = renderer;
+        lastUploadedRef.current = null;
+        setError(null);
         setReady((value) => value + 1);
         void document.fonts.ready.then(() => {
           if (disposed) return;
@@ -67,8 +71,12 @@ export function EditorCanvas() {
       });
     return () => {
       disposed = true;
+      if (rendererRef.current === renderer) {
+        rendererRef.current = null;
+        lastUploadedRef.current = null;
+      }
+      renderSceneRef.current = () => {};
       renderer.dispose();
-      rendererRef.current = null;
     };
   }, []);
 
@@ -168,7 +176,9 @@ export function EditorCanvas() {
       renderer.render(scene, { scale: bufferWidth / scene.canvas.baseWidth });
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : String(reason);
-      queueMicrotask(() => setError(message));
+      queueMicrotask(() => {
+        if (rendererRef.current === renderer) setError(message);
+      });
     }
   }, [scene, size, ready, hasImage, imageElement]);
 
@@ -261,6 +271,7 @@ export function EditorCanvas() {
     videoRef.current = video;
 
     const upload = () => {
+      if (cancelled || rendererRef.current !== renderer) return;
       if (video.readyState >= 2 && video.videoWidth > 0) {
         renderer.setAssets({
           videoFrame: video,

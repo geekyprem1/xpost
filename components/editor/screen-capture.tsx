@@ -179,7 +179,9 @@ export function ScreenCapture() {
         type: "image/png",
       });
       const loaded = await loadImageFromFile(file);
-      useEditorStore.getState().setImage(loaded.element, loaded.url, file.name);
+      useEditorStore
+        .getState()
+        .setImage(loaded.element, loaded.url, file.name, file);
       close();
     } catch (reason) {
       setError(

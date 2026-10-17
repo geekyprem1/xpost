@@ -17,11 +17,22 @@ export type EditorStore = {
   scene: Scene;
   imageUrl: string | null;
   imageElement: HTMLImageElement | null;
+  imageBlob: Blob | null;
+  postText: string;
+  setPostText: (value: string | ((text: string) => string)) => void;
   imageError: string | null;
-  setScene: (updater: (scene: Scene) => Scene, options?: SetSceneOptions) => void;
+  setScene: (
+    updater: (scene: Scene) => Scene,
+    options?: SetSceneOptions,
+  ) => void;
   commitScene: () => void;
   replaceScene: (scene: Scene) => void;
-  setImage: (element: HTMLImageElement, url: string, name: string) => void;
+  setImage: (
+    element: HTMLImageElement,
+    url: string,
+    name: string,
+    blob?: Blob,
+  ) => void;
   clearImage: () => void;
   setImageError: (message: string | null) => void;
 };
@@ -77,8 +88,11 @@ function syncImageAcrossHistory(image: Scene["image"]) {
 
 /** Applies a scene.image change without recording a history entry. */
 function setImageUntracked(
-  set: (partial: Partial<EditorStore> | ((state: EditorStore) => Partial<EditorStore>)) => void,
-  patch: (state: EditorStore) => Partial<EditorStore>
+  set: (
+    partial:
+      Partial<EditorStore> | ((state: EditorStore) => Partial<EditorStore>),
+  ) => void,
+  patch: (state: EditorStore) => Partial<EditorStore>,
 ) {
   const history = useEditorStore.temporal.getState();
   const wasTracking = history.isTracking;
@@ -94,6 +108,12 @@ export const useEditorStore = create<EditorStore>()(
       scene: createDefaultScene(),
       imageUrl: null,
       imageElement: null,
+      imageBlob: null,
+      postText: "",
+      setPostText: (value) =>
+        set((state) => ({
+          postText: typeof value === "function" ? value(state.postText) : value,
+        })),
       imageError: null,
       setScene: (updater, options) => {
         if (options?.transient) {
@@ -118,17 +138,25 @@ export const useEditorStore = create<EditorStore>()(
       replaceScene: (scene) => {
         activeGesture = null;
         const previousUrl = get().imageUrl;
-        set({ scene, imageUrl: null, imageElement: null, imageError: null });
+        set({
+          scene,
+          imageUrl: null,
+          imageElement: null,
+          imageBlob: null,
+          postText: "",
+          imageError: null,
+        });
         if (previousUrl) URL.revokeObjectURL(previousUrl);
         const history = useEditorStore.temporal.getState();
         history.clear();
         history.resume();
       },
-      setImage: (element, url, name) => {
+      setImage: (element, url, name, blob) => {
         const previousUrl = get().imageUrl;
         setImageUntracked(set, (state) => ({
           imageUrl: url,
           imageElement: element,
+          imageBlob: blob ?? null,
           imageError: null,
           scene: {
             ...state.scene,
@@ -139,13 +167,15 @@ export const useEditorStore = create<EditorStore>()(
             },
           },
         }));
-        if (previousUrl && previousUrl !== url) URL.revokeObjectURL(previousUrl);
+        if (previousUrl && previousUrl !== url)
+          URL.revokeObjectURL(previousUrl);
       },
       clearImage: () => {
         const previousUrl = get().imageUrl;
         setImageUntracked(set, (state) => ({
           imageUrl: null,
           imageElement: null,
+          imageBlob: null,
           imageError: null,
           scene: { ...state.scene, image: null },
         }));
@@ -158,9 +188,10 @@ export const useEditorStore = create<EditorStore>()(
       partialize: (state) => ({ scene: state.scene }),
       // Only record an entry when the scene actually changed (skips
       // setImageError and other non-scene updates).
-      equality: (pastState, currentState) => pastState.scene === currentState.scene,
-    }
-  )
+      equality: (pastState, currentState) =>
+        pastState.scene === currentState.scene,
+    },
+  ),
 );
 
 export function undoEditor() {
