@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { LivePostPreview } from "@/components/editor/live-post-preview";
 import { PostTextEditor } from "@/components/editor/post-text-editor";
 import { useEditorStore } from "@/lib/store";
 import {
   BadgeCheck,
+  Pencil,
   BarChart2,
   Bookmark,
   Bot,
@@ -55,6 +57,34 @@ import { useCreditsStore } from "@/lib/store/credits-store";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
+function PreviewIdentity({ email }: { email: string | null }) {
+  const handle = email?.split("@")[0] || "you";
+  const name = handle.charAt(0).toUpperCase() + handle.slice(1);
+  return (
+    <>
+      <span className="bg-foreground text-background flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
+        {name.charAt(0)}
+      </span>
+      <span className="flex min-w-0 flex-1 items-center gap-1 text-sm">
+        <span
+          className="max-w-[42%] min-w-0 truncate font-semibold"
+          title={email ?? name}
+        >
+          {name}
+        </span>
+        <BadgeCheck className="size-4 shrink-0 text-sky-500" aria-hidden />
+        <span
+          className="text-muted-foreground min-w-0 flex-1 truncate"
+          title={`@${handle}`}
+        >
+          @{handle}
+        </span>
+        <span className="text-muted-foreground shrink-0">· now</span>
+      </span>
+    </>
+  );
+}
+
 function formatResetDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -85,6 +115,7 @@ export function RightPanel({
     (state) => state.scene.background.kind === "video",
   );
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [postText, setPostText] = useState("");
   const [prompt, setPrompt] = useState("");
   const [chatInput, setChatInput] = useState("");
@@ -100,6 +131,28 @@ export function RightPanel({
   const actionRef = useRef(false);
   const streamRef = useRef(false);
   const resetAt = useCreditsStore((state) => state.resetAt);
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    const supabase = createSupabaseBrowserClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) setEmail(session?.user.email ?? null);
+    });
+    void supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (active) setEmail(data.user?.email ?? null);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -315,124 +368,147 @@ export function RightPanel({
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-5">
           <div className="ai-section-caption">
-            Post preview
-            <DialogTrigger asChild>
+            <span>X Preview</span>
+            <span className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="tracking-normal normal-case"
+                disabled={busy}
+                aria-expanded={editorOpen}
+                onClick={() => setEditorOpen((value) => !value)}
+              >
+                <Pencil aria-hidden />
+                {editorOpen ? "Close editor" : "Edit & format"}
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="Expand post preview"
-                title="Expand post preview"
+                aria-label="Copy post text"
+                disabled={!postText.trim()}
+                onClick={() => void onCopy()}
               >
-                <Maximize2 aria-hidden />
+                <Copy aria-hidden />
               </Button>
-            </DialogTrigger>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Refresh preview"
+                disabled={previewBusy || !hasScreenshot}
+                onClick={() => void onCapturePreview()}
+              >
+                <RefreshCw
+                  className={previewBusy ? "animate-spin" : ""}
+                  aria-hidden
+                />
+              </Button>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Expand post preview"
+                  title="Expand post preview"
+                >
+                  <Maximize2 aria-hidden />
+                </Button>
+              </DialogTrigger>
+            </span>
           </div>
+          {editorOpen ? (
+            <div className="rounded-2xl border p-3">
+              <PostTextEditor
+                value={postText}
+                onChange={setPostText}
+                disabled={busy}
+                defaultEditing
+                onDone={() => setEditorOpen(false)}
+              />
+            </div>
+          ) : null}
           <div
-            className="bg-card/40 rounded-2xl border p-4"
+            className="bg-background rounded-2xl border p-4"
             aria-label="X preview"
           >
             <div className="flex items-start gap-2">
-              <span className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
-                You
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-1 text-sm">
-                  <span className="truncate font-semibold">Your Name</span>
-                  <BadgeCheck
-                    className="size-4 shrink-0 text-sky-500"
-                    aria-hidden
-                  />
-                  <span className="text-muted-foreground truncate">
-                    @yourhandle
-                  </span>
-                  <span className="text-muted-foreground shrink-0">· now</span>
-                </span>
-                <span className="text-muted-foreground block text-[11px]">
-                  Preview your post before sharing
-                </span>
-              </span>
+              <PreviewIdentity email={email} />
               <MoreHorizontal
                 className="text-muted-foreground size-4 shrink-0"
                 aria-hidden
               />
             </div>
 
-            <PostTextEditor
-              value={postText}
-              onChange={setPostText}
-              disabled={busy}
-            />
+            <div className="ml-12">
+              <p className="mt-1 text-sm leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap">
+                {postText || (
+                  <span className="text-muted-foreground">
+                    Your post will appear here. Tap Generate post, then refine
+                    it with the AI chat.
+                  </span>
+                )}
+              </p>
 
-            {!hasScreenshot ? (
-              <div className="text-muted-foreground mt-3 flex h-40 items-center justify-center rounded-xl border border-dashed p-5 text-center text-sm">
-                Upload or capture a screenshot to preview your post.
-              </div>
-            ) : videoBackground ? (
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className="focus-visible:outline-ring block w-full cursor-zoom-in rounded-xl text-left focus-visible:outline-2"
-                  aria-label="Open post preview"
-                >
-                  <LivePostPreview />
-                </button>
-              </DialogTrigger>
-            ) : previewBusy && !previewImage ? (
-              <div className="bg-muted/40 mt-2 flex h-40 items-center justify-center rounded-lg border">
-                <Loader2
-                  className="text-muted-foreground size-4 animate-spin"
-                  aria-hidden
-                />
-              </div>
-            ) : previewImage ? (
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className="focus-visible:outline-ring block w-full cursor-zoom-in rounded-xl focus-visible:outline-2"
-                  aria-label="Open post preview"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={previewImage}
-                    alt="Rendered post preview. Click to enlarge"
-                    className="bg-muted/20 mt-3 max-h-56 w-full rounded-xl border object-contain"
+              {!hasScreenshot ? (
+                <div className="text-muted-foreground mt-3 flex h-40 items-center justify-center rounded-xl border border-dashed p-5 text-center text-sm">
+                  Upload or capture a screenshot to preview your post.
+                </div>
+              ) : videoBackground ? (
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="focus-visible:outline-ring block w-full cursor-zoom-in rounded-xl text-left focus-visible:outline-2"
+                    aria-label="Open post preview"
+                  >
+                    <LivePostPreview />
+                  </button>
+                </DialogTrigger>
+              ) : previewBusy && !previewImage ? (
+                <div className="bg-muted/40 mt-2 flex h-40 items-center justify-center rounded-lg border">
+                  <Loader2
+                    className="text-muted-foreground size-4 animate-spin"
+                    aria-hidden
                   />
+                </div>
+              ) : previewImage ? (
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="focus-visible:outline-ring block w-full cursor-zoom-in rounded-xl focus-visible:outline-2"
+                    aria-label="Open post preview"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={previewImage}
+                      alt="Rendered post preview. Click to enlarge"
+                      className="bg-muted/20 mt-3 max-h-56 w-full rounded-xl border object-contain"
+                    />
+                  </button>
+                </DialogTrigger>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void onCapturePreview()}
+                  className="text-muted-foreground hover:border-ring mt-2 flex h-40 w-full items-center justify-center rounded-lg border border-dashed text-xs"
+                >
+                  Load preview image
                 </button>
-              </DialogTrigger>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void onCapturePreview()}
-                className="text-muted-foreground hover:border-ring mt-2 flex h-40 w-full items-center justify-center rounded-lg border border-dashed text-xs"
-              >
-                Load preview image
-              </button>
-            )}
+              )}
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              className={hasScreenshot ? "mt-2" : "hidden"}
-              disabled={previewBusy || !hasScreenshot}
-              onClick={() => void onCapturePreview()}
-            >
-              <RefreshCw
-                className={previewBusy ? "animate-spin" : ""}
-                aria-hidden
-              />
-              {previewBusy ? "Updating preview" : "Refresh preview"}
-            </Button>
-            <div className="text-muted-foreground mt-3 flex items-center justify-between">
-              <MessageCircle className="size-4" aria-hidden />
-              <Repeat2 className="size-4" aria-hidden />
-              <Heart className="size-4" aria-hidden />
-              <BarChart2 className="size-4" aria-hidden />
-              <Bookmark className="size-4" aria-hidden />
-              <Share className="size-4" aria-hidden />
+              <div className="text-muted-foreground mt-3 flex items-center justify-between">
+                <MessageCircle className="size-4" aria-hidden />
+                <Repeat2 className="size-4" aria-hidden />
+                <Heart className="size-4" aria-hidden />
+                <BarChart2 className="size-4" aria-hidden />
+                <Bookmark className="size-4" aria-hidden />
+                <Share className="size-4" aria-hidden />
+              </div>
             </div>
+          </div>
 
+          <div>
             <div className="mt-3 flex flex-wrap gap-1.5">
               <Button
                 type="button"
@@ -643,59 +719,79 @@ export function RightPanel({
         <DialogDescription className="sr-only">
           Edit and format your post, then copy it or open it in X.
         </DialogDescription>
+        <Button
+          type="button"
+          variant="ghost"
+          className="mb-3"
+          disabled={busy}
+          aria-expanded={editorOpen}
+          onClick={() => setEditorOpen((value) => !value)}
+        >
+          <Pencil aria-hidden />
+          {editorOpen ? "Close editor" : "Edit & format"}
+        </Button>
+        {editorOpen ? (
+          <div className="mb-3 rounded-xl border p-3">
+            <PostTextEditor
+              value={postText}
+              onChange={setPostText}
+              disabled={busy}
+              defaultEditing
+              onDone={() => setEditorOpen(false)}
+            />
+          </div>
+        ) : null}
         <article className="bg-background rounded-2xl border p-4 sm:p-5">
           <div className="flex items-center gap-3">
-            <span className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
-              You
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">
-                Your Name{" "}
-                <span className="text-muted-foreground font-normal">
-                  @yourhandle · now
-                </span>
-              </p>
-            </div>
+            <PreviewIdentity email={email} />
             <MoreHorizontal
               className="text-muted-foreground size-4"
               aria-hidden
             />
           </div>
-          <PostTextEditor
-            value={postText}
-            onChange={setPostText}
-            disabled={busy}
-            label="Expanded post text"
-          />
-          {videoBackground ? (
-            <LivePostPreview expanded />
-          ) : previewImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewImage}
-              alt="Full post artwork"
-              className="bg-muted/20 mt-3 max-h-[52dvh] w-full rounded-2xl border object-contain"
-            />
-          ) : (
-            <p className="text-muted-foreground py-12 text-center text-sm">
-              No image preview available.
+          <div className="ml-[52px]">
+            <p className="mt-1 text-sm leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap">
+              {postText || (
+                <span className="text-muted-foreground">
+                  Your post will appear here. Tap Generate post, then refine it
+                  with the AI chat.
+                </span>
+              )}
             </p>
-          )}
-          <div
-            className="text-muted-foreground mt-4 flex items-center justify-between"
-            aria-hidden
-          >
-            <MessageCircle className="size-4" />
-            <Repeat2 className="size-4" />
-            <Heart className="size-4" />
-            <BarChart2 className="size-4" />
-            <Bookmark className="size-4" />
-            <Share className="size-4" />
+            {videoBackground ? (
+              <LivePostPreview expanded />
+            ) : previewImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewImage}
+                alt="Full post artwork"
+                className="bg-muted/20 mt-3 max-h-[52dvh] w-full rounded-2xl border object-contain"
+              />
+            ) : (
+              <p className="text-muted-foreground py-12 text-center text-sm">
+                No image preview available.
+              </p>
+            )}
+            <div
+              className="text-muted-foreground mt-4 flex items-center justify-between"
+              aria-hidden
+            >
+              <MessageCircle className="size-4" />
+              <Repeat2 className="size-4" />
+              <Heart className="size-4" />
+              <BarChart2 className="size-4" />
+              <Bookmark className="size-4" />
+              <Share className="size-4" />
+            </div>
           </div>
         </article>
-        <p className={`mt-3 text-xs ${stats.overLimit ? "text-destructive" : "text-muted-foreground"}`}>
+        <p
+          className={`mt-3 text-xs ${stats.overLimit ? "text-destructive" : "text-muted-foreground"}`}
+        >
           {stats.weightedLength}/{limit} weighted characters
-          {stats.overLimit ? " — Shorten your post or enable Long post in the panel." : ""}
+          {stats.overLimit
+            ? " — Shorten your post or enable Long post in the panel."
+            : ""}
         </p>
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button

@@ -29,6 +29,8 @@ interface PostTextEditorProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   label?: string;
+  defaultEditing?: boolean;
+  onDone?: () => void;
 }
 
 interface TextSelection {
@@ -77,13 +79,15 @@ export function PostTextEditor({
   onChange,
   disabled = false,
   label = "Post text",
+  defaultEditing = false,
+  onDone,
 }: PostTextEditorProps) {
   const id = useId();
   const textareaId = `${id}-text`;
   const hintId = `${id}-hint`;
   const warningId = `${id}-warning`;
   const emojiId = `${id}-emoji`;
-  const [editing, setEditing] = useState(() => value.length === 0);
+  const [editing, setEditing] = useState(defaultEditing);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiTriggerRef = useRef<HTMLButtonElement>(null);
@@ -201,6 +205,7 @@ export function PostTextEditor({
       rememberSelection();
       pendingSelectionRef.current = null;
       setEditing(false);
+      onDone?.();
     } else {
       pendingSelectionRef.current = currentSelection();
       setEditing(true);
@@ -208,7 +213,7 @@ export function PostTextEditor({
   }
 
   return (
-    <div className="mt-3 min-w-0 max-w-full space-y-2">
+    <div className="mt-3 max-w-full min-w-0 space-y-2">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <label
           htmlFor={editing ? textareaId : undefined}
@@ -239,24 +244,28 @@ export function PostTextEditor({
               if (event.button === 0) event.preventDefault();
             }}
           >
-            {FORMAT_BUTTONS.map(({ format, label: buttonLabel, icon: Icon }) => (
-              <Button
-                key={format}
-                type="button"
-                variant="ghost"
-                size="icon"
-                className={TOOL_BUTTON_CLASS}
-                aria-label={buttonLabel}
-                title={buttonLabel}
-                disabled={disabled}
-                onClick={() => applyFormat(format)}
-              >
-                <Icon
-                  aria-hidden
-                  className={format === "boldItalic" ? "-skew-x-12" : undefined}
-                />
-              </Button>
-            ))}
+            {FORMAT_BUTTONS.map(
+              ({ format, label: buttonLabel, icon: Icon }) => (
+                <Button
+                  key={format}
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className={TOOL_BUTTON_CLASS}
+                  aria-label={buttonLabel}
+                  title={buttonLabel}
+                  disabled={disabled}
+                  onClick={() => applyFormat(format)}
+                >
+                  <Icon
+                    aria-hidden
+                    className={
+                      format === "boldItalic" ? "-skew-x-12" : undefined
+                    }
+                  />
+                </Button>
+              ),
+            )}
             <Button
               type="button"
               variant="ghost"
@@ -309,7 +318,7 @@ export function PostTextEditor({
             disabled={disabled}
             rows={5}
             placeholder="Write your post here…"
-            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 block min-h-36 w-full min-w-0 max-w-full resize-y rounded-xl border px-3 py-3 text-base leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere] outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-70"
+            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 block min-h-36 w-full max-w-full min-w-0 resize-y rounded-xl border px-3 py-3 text-base leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-70"
             onChange={(event) => {
               if (disabled) return;
               rememberSelection();
@@ -326,7 +335,6 @@ export function PostTextEditor({
               rememberSelection();
             }}
           />
-
 
           {emojiOpen && !disabled ? (
             <div
@@ -352,7 +360,7 @@ export function PostTextEditor({
                     ref={index === 0 ? firstEmojiRef : undefined}
                     type="button"
                     variant="ghost"
-                    className="size-11 min-h-11 min-w-11 text-xl hover:bg-primary/10"
+                    className="hover:bg-primary/10 size-11 min-h-11 min-w-11 text-xl"
                     aria-label={emoji.label}
                     title={emoji.label}
                     onClick={() => insertText(emoji.text)}
@@ -364,13 +372,16 @@ export function PostTextEditor({
             </div>
           ) : null}
 
-          <p id={hintId} className="text-muted-foreground text-xs leading-relaxed">
-            Select text to format just those words. With nothing selected, styles
-            apply to the whole post and lists apply to the current line.
+          <p
+            id={hintId}
+            className="text-muted-foreground text-xs leading-relaxed"
+          >
+            Select text to format just those words. With nothing selected,
+            styles apply to the whole post and lists apply to the current line.
           </p>
         </div>
       ) : (
-        <p className="text-foreground min-w-0 max-w-full text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
+        <p className="text-foreground max-w-full min-w-0 text-sm leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap">
           {value || (
             <span className="text-muted-foreground">
               Your post preview will appear here.
@@ -382,10 +393,10 @@ export function PostTextEditor({
       {formatted ? (
         <p
           id={warningId}
-          className="text-muted-foreground rounded-lg bg-muted/50 px-3 py-2 text-xs leading-relaxed"
+          className="text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 text-xs leading-relaxed"
         >
-          Unicode styling carries over to X, but can be harder for screen readers
-          to read and may affect search.
+          Unicode styling carries over to X, but can be harder for screen
+          readers to read and may affect search.
         </p>
       ) : null}
     </div>
