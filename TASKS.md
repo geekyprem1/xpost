@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Based on | `PRD.md` v1.4, `ARCHITECTURE.md` v1.3 |
-| Date | 16 Oct 2026 |
-| Timeline | 12 weeks (M1–M6) |
+| Based on | `PRD.md` v1.7, `ARCHITECTURE.md` v1.4 |
+| Date | 17 Oct 2026 |
+| Timeline | 12 weeks (M1–M6) + v1.7 milestones M7–M10 |
 
 **Legend:** `[ ]` todo · `[x]` done · **[USER]** = aapko khud karna hai (accounts, keys, payments) · Refs = PRD requirement IDs / ARCHITECTURE sections.
 
@@ -15,12 +15,18 @@
 | Milestone | Weeks | Status |
 |---|---|---|
 | M0 — Accounts & setup (USER) | Week 1 ke saath | Not started |
-| M1 — Foundation + POC | 1–2 | In progress |
-| M2 — Editor | 3–5 | In progress |
-| M3 — Export | 6 | Not started |
-| M4 — AI Studio | 7–8 | Not started |
-| M5 — X Integration | 9–10 | Not started |
-| M6 — Launch | 11–12 | Not started |
+| M1 — Foundation + POC | 1–2 | ✅ Complete (T1.7 CI pending) |
+| M2 — Editor | 3–5 | ✅ Complete |
+| M3 — Export | 6 | ✅ Complete |
+| M4 — AI Studio | 7–8 | Mostly done (T4.4 live review, T4.5 pending; T4.8 → T9.10) |
+| M5 — X Share (no API) | 9 | ✅ Complete |
+| M7 — Quick wins | ~1 week | Not started — M8 ke baad |
+| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0 approved (17 Oct); T8.1 in progress |
+| M9 — Differentiators | ~2–3 weeks | Not started |
+| M6 — Launch | M9 ke baad | Not started (T6.1 done; T6.4 PostHog → T7.9) |
+| M10 — Growth + Pro | Launch ke baad | Not started |
+
+**Order (v1.7):** ~~M7 → M8~~ → **M8 (layers) pehle, phir M7** (17 Oct, user decision — layers ka M7 pe hard dependency nahi) → M9 → M6 Launch → M10. Note: T7.3 (post versions) baad mein LocalDraft ka agla version banayega — chhota kaam.
 
 ## Definition of Done (har task ke liye)
 
@@ -53,6 +59,9 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 | U13 | GitHub Actions secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_ID` | T1.7 |
 | U14 | Custom SMTP provider (auth emails) — default Supabase SMTP sirf 2 emails/hour aur sirf team members ko bhejta hai | T6.7 |
 | U15 | Launch se pehle Supabase Pro plan (pausing nahi + daily backups) | T6.7 |
+| U16 | Chrome Web Store developer account (one-time registration fee) | T10.2 |
+| U17 | Payment provider account (Razorpay / Lemon Squeezy / Paddle) + KYC | T10.4 |
+| U18 | Watermark policy + default language decide karo (PRD §15 Q5, Q6) | T7.6, T8.7 |
 
 ---
 
@@ -133,6 +142,7 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 - [ ] Project load by `/editor/[projectId]` — same dependency
 
 **Done when:** Upload ke baad image canvas pe dikhe; page reload pe project wapas load ho. — image canvas pe ✓ (pixel + visual + undo/redo verify); reload-persistence auth pe pending
+**v1.7:** Bacha hua upload / project-load kaam ab **T8.10** (Projects & cloud save) mein.
 **Refs:** PRD ED-1, ED-6
 
 ### T1.7 CI + environments
@@ -353,7 +363,7 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 **Done when:** PRD AI-9, ED-7 pure. — ✓ browser (mocked): done credits 5 → badge **"5 credits"** live; 429 → badge **"0 credits"** + "AI credits khatam ho gaye" box; reset date 404 pe path simple hai (auth on hote hi profiles se aayega)
 
 ### T4.8 (Nice-to-have) Alt text
-- [ ] AI-generated alt text, editable
+- [ ] AI-generated alt text, editable — **v1.7: T9.10 mein moved (PRD AI-17)**
 
 **Done when:** PRD AI-13 pura.
 
@@ -380,7 +390,308 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 ### Dropped (16 Oct, user decision)
 - ~~T5.1 Crypto util~~, ~~T5.2 OAuth routes~~, ~~T5.3 Token service~~, ~~T5.4 X media upload~~, ~~T5.5 /api/x/post~~, ~~T5.6 Post UI (API)~~ — X API cost/complexity ke liye. PRD archive mein detail; DB: `x_accounts`/`posts` + X functions dormant.
 - ~~Real X posting test note~~ (API dropped)
-## M6 — Launch (Week 11–12)
+
+---
+
+## M7 — Quick Wins (~1 week) — v1.7
+
+Sab chhote, independent changes. Order: T7.1 → T7.7 (T7.7 T7.1 ke cache pe tika hai), baaki kisi bhi order mein.
+
+### T7.1 Share image quality
+- [ ] `lib/editor/share-image.ts`: scene → X-preset JPEG (2× → step-down ≤ 5 MB, `encodeWithinLimit`) + clipboard PNG (2× → 1.5× → 1×, ≤ 5 MB); worker export path
+- [ ] Cache: scene / image change pe invalidate; AI panel open + 600ms idle pe pre-render
+- [ ] `right-panel.tsx`: Copy image / Download image is render se; `capturePostImageForAi` (1024px) sirf AI calls ke liye
+- [ ] Unit tests: step-down sequence, cache invalidation
+
+**Done when:** Share image 1500 base pe ≥ 3000px wide (ya step-down ke baad sabse bada jo ≤ 5 MB ho), `X-ready ✓`; AI request mein ab bhi 1024px image jaaye.
+**Refs:** PRD QW-1, EX-8, AI-11
+
+### T7.2 Motion share
+- [ ] Video bg (aur baad mein CM) pe share row mein "Download MP4" / "Download GIF" — existing worker export, X caps
+- [ ] Copy image pe "video clipboard mein nahi jaata" note
+
+**Done when:** Motion bg pe share se MP4 download ho aur X-ready check pass ho.
+**Refs:** PRD QW-2, XF-4
+
+### T7.3 Post versions
+- [ ] Editor store: `postVersions: string[]`, `versionIndex`; AI action se pehle manual edit ko snapshot; har AI result push (max 20)
+- [ ] AI Studio: ← → + "v3 / 5" label (aria-labels)
+- [ ] `LocalDraft` version 2 (postVersions) + v1 → v2 parse migration; tests
+
+**Done when:** Refine ke baad ← se pichla text wapas aaye, reload ke baad bhi; switch pe koi API call nahi.
+**Refs:** PRD QW-3
+
+### T7.4 Preview identity
+- [ ] AI Studio "Edit profile" popover: name, handle, avatar upload (→ 128px WebP), verified toggle
+- [ ] localStorage persist (cloud sync T8.10 ke saath `profiles.preview_identity`)
+- [ ] `PreviewIdentity` ise use kare; default email se
+
+**Done when:** Set ki gayi identity preview card + expanded preview dono mein dikhe, reload ke baad bhi.
+**Refs:** PRD QW-4
+
+### T7.5 Guest mode
+- [ ] `proxy.ts`: `/editor` protected list se hatao (`/account` protected rahe); route-guard tests update
+- [ ] `use-local-draft.ts`: no user → key `guest`
+- [ ] AI Studio guest state: "Sign in to write with AI — 30 free credits" CTA (`/login?next=/editor`); credits badge guest pe "Sign in"; top-bar mein Sign in button
+- [ ] Login ke baad guest draft mila to "Is draft ko apne account mein le jaayein?" → user key mein copy, guest key clear
+- [ ] Verify: Edge Functions bina JWT 401 (koi bypass nahi)
+
+**Done when:** Logged-out browser mein upload → edit → export → open X poora chale; AI pe CTA aaye; login ke baad draft import ho; `/account` logged-out pe `/login` bheje.
+**Refs:** PRD QW-5, AUTH-1
+
+### T7.6 Post language
+- [ ] AI Studio selector: English / Hinglish / Hindi / Match my prompt (localStorage)
+- [ ] `ai-generate` + `ai-refine` zod: `language` enum; `_shared/prompts.ts` language rules (hardcoded "Always write in English" hatao)
+- [ ] Hindi pe Bold / Italic disabled + hint
+- [ ] Deno tests: har language ka prompt; invalid enum → 422
+- [ ] **[USER]** default language decide (U18) + functions deploy
+
+**Done when:** Hinglish select karke generate → Roman Hinglish output (live check); English default unchanged.
+**Refs:** PRD QW-6, AI-6
+
+### T7.7 Copy image & open X
+- [ ] Primary button: cached share PNG (T7.1) → `ClipboardItem` + `window.open(intent)` same gesture mein
+- [ ] Clipboard fail → auto download + hint; Ctrl+V / ⌘V hint
+- [ ] Image ready na ho to button "Preparing…" disabled
+
+**Done when:** Chrome + Safari pe ek click mein X tab khule aur compose mein paste se image aaye; popup block na ho.
+**Refs:** PRD QW-7, XF-1, XF-3
+
+### T7.8 Try a sample
+- [ ] 3 sample screenshots banao (dashboard, mobile app, code) → `public/samples/` (WebP, ≤ 300 KB each)
+- [ ] Empty state pe "Try a sample" chips → normal upload path se load
+
+**Done when:** Ek click mein sample canvas pe; undo / export / AI sab normal chalein.
+**Refs:** PRD QW-8
+
+### T7.9 PostHog analytics
+- [ ] **[USER]** PostHog project (U11), keys `.env.local` + Vercel
+- [ ] `lib/analytics/` wrapper: no-op jab key na ho, PII / post text kabhi nahi
+- [ ] PRD §13 events (v1 + v1.7 jo abhi exist karte hain); baaki events apne features ke saath
+- [ ] CSP `connect-src` mein PostHog host (T6.5 ke saath consistent)
+
+**Done when:** Events PostHog dashboard mein dikhein; funnel: editor open → export → AI generate → share.
+**Refs:** PRD QW-9, §13; ARCH §10
+
+### T7.10 Docs + test checklist
+- [ ] `TESTING.md` mein M7 checks (guest flow, versions, share quality, language)
+- [ ] `ARCHITECTURE.md` §4.1 (guest routes), §8.1 / §8.3 flows update
+
+**Done when:** Docs PRD v1.7 se match karein.
+
+---
+
+## M8 — Layers + Projects (~3 weeks) — v1.7
+
+T8.0 → T8.1 → T8.2 baaki sab ke blocker hain. T8.10 (projects) T8.1 ke baad parallel chal sakta hai.
+
+### T8.0 Architecture: Scene v2
+- [x] `ARCHITECTURE.md` v1.5: Scene v2 types (§4.4 — layers; crop / platform size / motion apne tasks T8.6 / T8.8 / T9.1 mein add honge), canvas vs image space (PRD LY-2), render pipeline (§5.1 v1.5 order), layers rendering + export protocol + hit testing (§5.7)
+- [x] Decision records: AD-13 (Canvas2D raster → textures), AD-14 (raster sirf main thread), AD-15 (redact source pe bake); risks §14
+- [x] **[USER]** Design review + approve — approved 17 Oct 2026
+
+**Done when:** Doc review ho (user approve) — implementation isi pe.
+**Refs:** PRD LY-1, LY-2
+
+### T8.1 Scene v2 + layer store
+- [ ] `lib/scene`: v2 types + zod + migration v1 → v2 (unit tests, purane drafts load hon)
+- [ ] `local-draft.ts`: `sceneSchema.parse` → `migrateScene` (v1 draft fixture test)
+- [ ] Store: add / update / remove / reorder layer, selection (uiStore — history mein nahi), gesture API (drag = 1 entry)
+- [ ] LocalDraft + autosave v2 compatible
+
+**Done when:** v1 draft v2 mein load ho; layer ops undo / redo hon; tests green.
+**Refs:** PRD LY-1, ED-5
+
+### T8.2 Layer interaction + layers panel
+- [ ] Canvas overlay (DOM / SVG) selection box, handles, drag, resize; image-space ke liye inverse homography hit test
+- [ ] Shortcuts: Delete, Ctrl+D, arrows (Shift ×10), Esc, bring forward / send back
+- [ ] Layers list: reorder, hide, lock, rename — keyboard accessible
+- [ ] Geometry unit tests (inverse mapping, tilt ke saath)
+
+**Done when:** Tilt 20° pe bhi annotation sahi jagah select / drag ho; axe 0 serious issues.
+**Refs:** PRD LY-3, LY-4
+
+### T8.3 Text layers
+- [ ] 8 OFL fonts self-hosted `public/fonts/` + licence files; lazy `FontFace` load (**[USER]** final list — PRD §15 Q10)
+- [ ] Presets: Headline / Subheadline / Badge / Caption; properties panel (TX-2)
+- [ ] Inline edit (double-click textarea overlay), multi-line, emoji
+- [ ] Renderer: Canvas2D raster → texture, font-ready gate; worker export path
+- [ ] Text-aware layout presets (TX-5)
+- [ ] Visual fixtures: preview vs export
+
+**Done when:** Har font export mein sahi aaye (fixture diff ≤ 4 mean); text 1× / 2× / 3× sharp.
+**Refs:** PRD TX-1…TX-5
+
+### T8.4 Annotations
+- [ ] Tools: arrow (straight + curved), rectangle, ellipse, highlight, numbered badge (auto increment), emoji sticker
+- [ ] Style: color (palette + brand colors), stroke, arrow head
+- [ ] Image-space bake (tilt / zoom ke saath chalein); shortcuts A / R / H / N
+- [ ] Fixtures
+
+**Done when:** Annotations tilt + zoom + drag ke saath screenshot se chipke rahein; export = preview.
+**Refs:** PRD AN-1…AN-3
+
+### T8.5 Manual redact
+- [ ] Region tool: Pixelate / Blur / Solid + strength
+- [ ] Bake source texture pe — export **aur** AI capture (`capturePostImageForAi`) dono mein
+- [ ] Test: redact region ke output pixels mein original content na ho (solid exact color; pixelate block uniform)
+- [ ] UI hint (weak blur warning)
+
+**Done when:** Redacted area ka original data na export mein na AI request mein ho (test se verify).
+**Refs:** PRD RD-1, RD-2
+
+### T8.6 Crop + auto-trim
+- [ ] `scene.image.crop` normalized rect; renderer UV crop; crop mode UI (handles, aspect lock, reset)
+- [ ] Auto-trim: border uniform color detect (tolerance) → crop rect; unit tests
+
+**Done when:** Crop undoable, export mein sahi; white-margin screenshot ek click mein trim.
+**Refs:** PRD CR-1, CR-2
+
+### T8.7 Brand kit
+- [ ] Save / apply / rename / delete style (BK-1) — guest localStorage, user `user_styles` (T8.9)
+- [ ] Custom watermark: logo / text, corner, opacity, size (BK-2) — renderer watermark layer extend
+- [ ] Brand colors (BK-3) pickers mein
+- [ ] **[USER]** watermark policy (U18)
+
+**Done when:** Saved style kisi bhi naye screenshot pe ek click mein same look de; custom watermark export mein.
+**Refs:** PRD BK-1…BK-3
+
+### T8.8 Platform sizes
+- [ ] Layout panel "Platform" group (PS-1), exact-pixel output (PS-2), custom size input (PS-3)
+- [ ] `computeOutputSize` tests: har preset exact pixels
+
+**Done when:** Product Hunt preset 1× export = 1270×760 exact.
+**Refs:** PRD PS-1…PS-3
+
+### T8.9 DB migrations (v1.7 part 1)
+- [ ] Migration: `projects` + `post_versions`, `thumbnail_path`; `profiles` + `preview_identity`; `user_styles` table; column grants; `app_config` keys (`limits.projects_max`, `limits.brand_styles_max`)
+- [ ] pgTAP: RLS isolation (`user_styles`), client `bonus_credits` update nahi kar sakta (column abhi na ho to T10.3 mein), limit checks
+- [ ] **[USER]** SQL Editor mein apply (order batana hai)
+
+**Done when:** pgTAP green; Dashboard mein columns / table + policies.
+**Refs:** PRD §10.3
+
+### T8.10 Projects & cloud save
+- [ ] `/projects` dashboard: grid + thumbnail, New / Open / Rename / Duplicate / Delete (PJ-1)
+- [ ] Save: `projects` row + `uploads/{uid}/{projectId}/source.{ext}` + `thumb.webp`; autosave controller ka Supabase save fn (PJ-2)
+- [ ] `/editor/[projectId]` load + 404 (PJ-3); `/editor` pehle upload pe row create
+- [ ] IndexedDB cache + `updated_at` conflict prompt (PJ-4)
+- [ ] Guest import → project (PJ-5); limit 50 (PJ-6); post text + versions (PJ-7)
+- [ ] Preview identity cloud sync (T7.4)
+- [ ] Delete account flow nayi files bhi hataye (verify)
+
+**Done when:** Do projects banao → doosre browser mein login → dono khulein same look ke saath; reload persistence ✓ (T1.6 closed).
+**Refs:** PRD PJ-1…PJ-7, ED-6, AUTH-5
+
+### T8.11 M8 QA
+- [ ] Visual fixtures update (text, annotation, redact, crop)
+- [ ] Performance: 20 layers ke saath slider drag 60fps, 2× export < 3s
+- [ ] `TESTING.md` M8 checklist
+
+**Done when:** Fixtures pass; perf targets (PRD §8) bane rahein.
+
+---
+
+## M9 — Differentiators (~2–3 weeks) — v1.7
+
+### T9.1 Camera motion engine
+- [ ] `lib/motion/`: pure `transformAt(scene, timeSec)` — presets CM-1, params CM-2 (easing, intensity, loop / ping-pong)
+- [ ] Unit tests: t=0 / t=end / ping-pong symmetry, determinism
+
+**Done when:** Same input → same transform; tests green.
+**Refs:** PRD CM-1, CM-2, CM-5
+
+### T9.2 Camera motion UI + preview
+- [ ] Toolbar "Motion" panel: presets (thumbnail loops), duration, easing, intensity
+- [ ] Canvas play / pause + scrub; rAF loop sirf jab motion ho; reduced-motion pe autoplay nahi
+
+**Done when:** Static scene pe idle CPU ~0 bana rahe; preview smooth (60fps target).
+**Refs:** PRD CM-3
+
+### T9.3 Camera motion export
+- [ ] Worker: per-frame `transformAt` (static bg + video bg dono); EX-2 hint update
+- [ ] MP4 + GIF, X caps; duration CM se
+- [ ] Share row (T7.2) CM pe bhi
+
+**Done when:** Gradient bg + Zoom in → MP4 6s, X-ready ✓, frames preview se match.
+**Refs:** PRD CM-4, EX-2, XF-4
+
+### T9.4 Text entrance animations
+- [ ] Per text layer: None / Fade / Slide up / Pop + delay (sirf video / GIF)
+
+**Done when:** MP4 mein headline slide up ho, PNG export mein final state.
+**Refs:** PRD CM-6
+
+### T9.5 Templates
+- [ ] Template schema (zod) + loader `lib/templates/*.json` (TP-3)
+- [ ] 6 build-in-public templates (TP-1) + gallery (toolbar + empty state), real-renderer thumbnails
+- [ ] Apply: screenshot slot preserve, placeholders editable (TP-2)
+- [ ] (Nice-to-have) AI fill (TP-4) — 1 credit, ai-generate mode
+
+**Done when:** Naya template sirf JSON se add ho; har template export-ready.
+**Refs:** PRD TP-1…TP-4
+
+### T9.6 Text card mode
+- [ ] Bina screenshot canvas mode: quote style + X-post style card (identity T7.4)
+- [ ] AI Studio "Make a card" (TC-2)
+
+**Done when:** Empty editor se text card banke export ho; current post ek click mein card.
+**Refs:** PRD TC-1…TC-3
+
+### T9.7 Code → image
+- [ ] Code input dialog: paste, language auto / select, 6 themes, line numbers, title, highlighted lines; lazy-loaded highlighter (exact version pin)
+- [ ] Output → screenshot slot (frames / bg / motion sab chalein), default Terminal frame
+- [ ] Limits CD-2 + bundle check (editor initial JS na badhe)
+
+**Done when:** TS / Python / Bash snippet sahi highlight ho; editor LCP < 2.5s bana rahe.
+**Refs:** PRD CD-1, CD-2, §8 Bundle
+
+### T9.8 AI variants + post type
+- [ ] `ai-generate`: `variants: 1 | 3`, `postType`; JSON / delimited output parse + cleanup per variant; credit 1 (`credits.cost_generate_variants`)
+- [ ] UI: 3 cards → pick → post + version (T7.3)
+- [ ] Deno tests (parse, partial output pe refund rules); T4.5 ke saath cost check
+
+**Done when:** Ek click, 1 credit, 3 alag hooks; pick ke baad refine normal.
+**Refs:** PRD AI-14, AI-15
+
+### T9.9 My voice
+- [ ] Migration: `profiles.voice_samples` + column grant
+- [ ] Settings UI (AI Studio / account): 3–5 samples, limits
+- [ ] `ai-generate` `useVoice`: samples server pe padho, alag reference message; prompt-injection test
+
+**Done when:** Voice on vs off output style mein farak (manual review); sample mein "ignore instructions" jaisa text rules na tode.
+**Refs:** PRD AI-16, §12
+
+### T9.10 Alt text
+- [ ] Edge Function `ai-alt-text` (shared ai-flow, credit `credits.cost_alt_text`, refund on fail)
+- [ ] UI: generate, edit, copy + X hint; redacted image use (RD-2)
+
+**Done when:** Alt text ≤ 1,000 chars, editable, ledger + `ai_generations` log.
+**Refs:** PRD AI-17 (ex AI-13 / T4.8)
+
+### T9.11 Post checklist
+- [ ] `lib/editor/post-checklist.ts` (pure) — AI-18 rules + tests
+- [ ] AI Studio mein ticks / hints
+
+**Done when:** Har rule ke unit tests; koi network call nahi.
+**Refs:** PRD AI-18
+
+### T9.12 Auto-redact (OCR)
+- [ ] **Decision:** OCR library (PRD §15 Q7) — size vs accuracy POC
+- [ ] Lazy-loaded OCR (worker) → regex detectors (email, phone, card + Luhn, API key patterns, IP) + tests
+- [ ] Suggested boxes → user confirm → T8.5 redact layers
+
+**Done when:** Sample dashboard screenshot pe email + API key detect hon; image kahin upload na ho (network check).
+**Refs:** PRD RD-3
+
+### T9.13 M9 QA + docs
+- [ ] Fixtures (motion frames, templates, code), cross-browser MP4 (Chrome, Safari, Firefox)
+- [ ] `TESTING.md` + `ARCHITECTURE.md` (motion, templates, new function) update
+
+**Done when:** M9 checklist green → M6 Launch shuru.
+
+---
+## M6 — Launch (M9 ke baad — v1.7 order)
 
 ### T6.1 Scheduled jobs
 - [x] pg_cron: `reset_monthly_credits` (daily 00:30), `cleanup_housekeeping` (hourly) — migration `20261016090500_cron.sql` **run ho chuki** (Management API se) ✓
@@ -401,7 +712,7 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 **Done when:** Pages live aur footer se linked.
 
 ### T6.4 Analytics + monitoring
-- [ ] PostHog events (PRD §13), Sentry (Next.js + Edge Functions)
+- [ ] PostHog events (PRD §13), Sentry (Next.js + Edge Functions) — **v1.7: PostHog part T7.9 mein pehle; yahan sirf Sentry + cost views**
 - [ ] `admin` schema cost views (ARCH §10)
 
 **Done when:** Events dashboard mein dikhein; test error Sentry mein aaye; daily cost view kaam kare.
@@ -438,3 +749,43 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 - [ ] Pehle hafte daily cost + error review
 
 **Done when:** Public beta live 🚀
+
+
+---
+
+## M10 — Growth + Pro (launch ke baad) — v1.7
+
+### T10.1 Multi-image
+- [ ] Scene: `images[]` (2–4), per-image frame; layouts Side by side / Overlap / Grid 2×2 / Stagger (MI-1)
+- [ ] Before / After layout + labels + divider (MI-2) + template
+- [ ] X 4-image set: 4 slides → zip (`fflate` devDependencies se dependencies mein, exact pin) (MI-3)
+
+**Done when:** 4 slides ek style mein zip download; renderer perf targets bane rahein.
+**Refs:** PRD MI-1…MI-3
+
+### T10.2 Chrome extension
+- [ ] **[USER]** Chrome Web Store developer account (U16)
+- [ ] MV3 extension (`activeTab`): visible tab + region capture → editor khule, image direct messaging se (server nahi) (CE-1)
+- [ ] (Nice-to-have) full-page capture (CE-2)
+- [ ] Store listing assets (Shotlark se bane)
+
+**Done when:** Kisi bhi tab se 2 click mein screenshot editor mein; network mein image upload nahi.
+**Refs:** PRD CE-1, CE-2
+
+### T10.3 Referral
+- [ ] **[USER]** Turnstile (U7) on (PRD §15 Q9)
+- [ ] Migration: `profiles.bonus_credits`, `referral_code`; `referrals` table; `claim_referral()`; `consume_credits` bucket order; `app_config` referral keys; pgTAP (cap, double-claim, self-referral)
+- [ ] `/r/{code}` landing → signup attribution cookie; `ai-generate` pehle success pe claim (RF-2)
+- [ ] Account page: invite link + rewards
+
+**Done when:** Invitee ke pehle generate pe dono ko +10; monthly reset bonus na mitaye; cap tests green.
+**Refs:** PRD RF-1, RF-2, §10.3
+
+### T10.4 Pro plan + billing
+- [ ] **[USER]** Plan + price final (PRD PR-1, §15 Q5), payment provider (U17)
+- [ ] `purchases` / subscription tables, webhook (signature + idempotency), purchased credits bucket (PR-2)
+- [ ] Feature gates (`app_config` driven), Pricing page, Refund Policy
+- [ ] Early-user deal (PR-3)
+
+**Done when:** Test mode mein purchase → Pro features unlock; webhook replay se double credit nahi.
+**Refs:** PRD PR-1…PR-3, §14 v2

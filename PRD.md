@@ -3,11 +3,13 @@
 | Field | Value |
 |---|---|
 | Product | Shotlark |
-| Version | v1.6 (MVP) |
-| Date | 16 Oct 2026 |
+| Version | v1.7 (MVP + growth roadmap) |
+| Date | 17 Oct 2026 |
 | Status | Draft |
-| Scope | Free beta — billing / paid plans v2 mein (§14) |
+| Scope | Free beta — billing / paid plans v2 mein (§7.20, §14) |
 | Stack | Next.js 16 + Supabase + OpenRouter |
+
+> **v1.7 changes (17 Oct 2026):** Positioning (§1.1); naye requirement groups §7.13–§7.20 — Quick wins (QW), Editor layers (LY/TX/AN/RD), Crop (CR), Brand kit (BK), Platform sizes (PS), Projects (PJ), Camera motion (CM), Templates & cards (TP/TC/CD), AI upgrades (AI-14…AI-18), Multi-image (MI), Growth (CE/RF), Pro plan draft (PR). Saath mein §4, §5, §6, AUTH-1, EX-2, §8, §10.3, §11, §13, §14, §15 update. Milestones M7–M10 (TASKS.md).
 
 > **Launch se pehle pending:** `shotlark.com` / `shotlark.app` kharidna (16 Oct 2026 ko dono unregistered the), X handle availability, aur trademark search (USPTO + IP India). Doc mein domain ki jagah `<APP_URL>` placeholder hai.
 
@@ -22,6 +24,12 @@ Shotlark ek web SaaS hai jo creators ko 3 kaam ek jagah karne deta hai:
 3. **Publish** — connected X account pe image + text seedha post karna, ya PNG/JPG/WebP/GIF/MP4 download karna.
 
 **One-liner:** "Screenshot se scroll-stopping X post tak — ek hi jagah."
+
+### 1.1 Positioning (v1.7)
+
+Screenshot beautify karna ab commodity hai — Pika free hai aur bina account ke chalta hai, Shots.so multi-item canvas + animated mockups deta hai, Xnapper sensitive info auto-redact karta hai. Shotlark sirf "aur frames / backgrounds" se nahi jeetega. Edge = **"screenshot → X post" ka poora loop**, khaaskar **build-in-public creators / indie hackers** ke liye: visual + text + motion + AI caption ek jagah, X ke hisaab se tuned.
+
+Har naye feature ka filter: **kya isse X post better ya fast banta hai?**
 
 ## 2. Problem
 
@@ -48,8 +56,11 @@ Shotlark ek web SaaS hai jo creators ko 3 kaam ek jagah karne deta hai:
 | Retention | Week-4 retention (signup ke 4 hafte baad active) | ≥ 20% |
 | Unit cost | X API + OpenRouter spend / active user / month | Track weekly, budget alert |
 | Performance | Editor load (LCP) | < 2.5s |
+| Guest activation (v1.7) | Editor kholne wale guests → first export | ≥ 40% (initial target — PostHog data ke baad revise) |
+| Guest → signup (v1.7) | Guests jo signup karein (AI / save ke liye) | ≥ 15% (initial target) |
+| Motion adoption (v1.7) | Exports jo GIF / MP4 hon (camera motion ya motion bg) | Track (baseline M9 ke baad) |
 
-**Non-goals (v1):** Billing / paid plans (v2), scheduling, multi-platform posting (LinkedIn/IG), team workspaces, mobile app, threads (multi-post), "Sign in with X".
+**Non-goals (v1):** Billing / paid plans (v2 — draft §7.20), scheduling, multi-platform **posting** (LinkedIn/IG) — lekin multi-platform **export sizes** (PS) in scope hain, team workspaces, mobile app, threads (multi-post), "Sign in with X", doosron ke tweets fetch karke card banana (TC-3).
 
 ## 5. Plans & Usage Limits (v1: free beta)
 
@@ -64,6 +75,10 @@ v1 mein koi payment ya paid plan nahi hai. Saare editor features sab users ke li
 | AI credits | 30 / month |
 | Post to X via API | 10 posts / month |
 | Share to X (manual) | Unlimited (koi API cost nahi) |
+| Guest (bina login, v1.7 — QW-5) | Editor, export, share — sab; AI aur cloud save nahi; draft sirf browser mein |
+| Cloud projects (PJ) | 50 per user (`limits.projects_max`) |
+| Saved brand styles (BK) | 10 per user (`limits.brand_styles_max`) |
+| Referral bonus (RF, M10) | Invite pe dono ko +10 bonus credits, max 10 referrals / month — bonus credits monthly reset mein nahi mitte |
 
 - Saare limits `app_config` table mein hain, taaki bina deploy change ho sakein.
 - Credit cost: **Generate = 1 credit**, **Refine (chip / chat) = 1 credit**.
@@ -105,13 +120,26 @@ Landing → Sign in (Google / Email magic link)
      OR  Download  /  Share to X (manual)
 ```
 
+**v1.7 flow** (guest mode + X API drop ke baad — ye current flow hai):
+
+```
+Landing → "Open editor" (login nahi)
+  → Editor (empty state: Drop / Paste / Capture / Try a sample / Template)
+  → Customize (Background, Frame, Style, Position, Layout, Sunlight, Auto,
+               Text, Annotate, Redact, Crop, Camera motion)
+  → AI Post Studio ── guest? → "Sign in — 30 free credits" → login → draft import
+       (generate variants → pick → refine → versions)
+  → Share: "Copy image & open X" / Copy text / Download (PNG/JPG/WebP/GIF/MP4)
+  → (logged in) Project cloud mein save → /projects dashboard
+```
+
 ## 7. Functional Requirements
 
 ### 7.1 Auth & Account
 
 | ID | Requirement |
 |---|---|
-| AUTH-1 | Supabase Auth: Google OAuth, Email magic link. Signup/login pe CAPTCHA (Cloudflare Turnstile — Supabase Auth mein built-in support). X sirf posting ke liye alag "Connect X" (§7.11) se — login ke liye nahi. |
+| AUTH-1 | Supabase Auth: Google OAuth, Email magic link. Signup/login pe CAPTCHA (Cloudflare Turnstile — Supabase Auth mein built-in support). X sirf posting ke liye alag "Connect X" (§7.11) se — login ke liye nahi. **v1.7:** login sirf AI, cloud save (PJ) aur `/account` ke liye; editor guest ke liye bhi khula (QW-5). |
 | AUTH-2 | Signup pe `profiles` row auto-create (DB trigger, §10); `ai_credits` = `app_config` ki monthly limit. |
 | AUTH-3 | Top bar: avatar, username, credits badge, theme toggle (light/dark). |
 | AUTH-4 | Account page (`/account`): AI credits left + reset date, credits history (`credit_transactions`), AI generations history (`ai_generations`), profile. X posts/connected-X wale parts API drop ke saath hate (PRD §7.11). |
@@ -126,7 +154,7 @@ Landing → Sign in (Google / Email magic link)
 | ED-3 | Bottom floating toolbar: Replace image, Remove, Background, Frame, Style, Position, Layout, Sunlight, Auto, AI Post Generator. |
 | ED-4 | Har tool ek popover panel kholta hai; ek waqt pe ek panel open. |
 | ED-5 | Undo/Redo (Ctrl+Z / Ctrl+Shift+Z), min 50 steps. |
-| ED-6 | Editor state autosave `projects` table mein (debounce 2s). |
+| ED-6 | Editor state autosave `projects` table mein (debounce 2s). Guest: sirf browser (IndexedDB). Detail: PJ-2, PJ-4. |
 | ED-7 | v1 mein koi PRO lock nahi. AI credits ya X post limit khatam hone pe clear message + reset date. |
 
 ### 7.3 Background
@@ -212,7 +240,7 @@ Landing → Sign in (Google / Email magic link)
 | AI-10 | Provider error / empty output pe credit refund. |
 | AI-11 | AI ke liye image **client-side** compress (max 1024px JPEG) karke bhejo — Edge Function ka CPU limit 2s/request hai, server pe image processing nahi. |
 | AI-12 | Post mein URL ho to "Link post" badge + X limit weight (5×) dikhao. |
-| AI-13 | (Nice-to-have) AI-generated **alt text** image ke liye, user edit kar sake; X pe media metadata ke saath bhejo. |
+| AI-13 | (Nice-to-have) AI-generated **alt text** image ke liye, user edit kar sake; X pe media metadata ke saath bhejo. **v1.7:** promoted → AI-17. |
 
 **Prompt design (system prompt outline):**
 - Role: expert X ghostwriter.
@@ -259,13 +287,130 @@ Landing → Sign in (Google / Email magic link)
 | ID | Requirement |
 |---|---|
 | EX-1 | Download modal: Type (Image / GIF / Video), Format (PNG / JPG / WebP), Scale (1× / 2× / 3× — sirf images; GIF/MP4 apni fixed limits se encode hote hain), Watermark toggle (`scene.watermark` ko set karta hai). |
-| EX-2 | GIF & Video sirf motion background pe; warna disabled + hint "GIF and video need a motion background". |
+| EX-2 | GIF & Video sirf motion background **ya camera motion (CM-4, v1.7)** pe; warna disabled + hint "GIF and video need a motion background or camera motion". |
 | EX-3 | **Renderer:** Recommended — ek hi **WebGL2** compositor jo preview aur export dono kare (deterministic output); Canvas 2D perspective tilt / fast glass blur nahi kar sakta. DOM capture (`html-to-image`) mein glass (`backdrop-filter`), 3D tilt, blend modes aur `<video>` frames browser-to-browser alag ya slow render ho sakte hain — sirf fallback. M1 POC (T1.5) mein compare karke final. |
 | EX-4 | **Video:** WebCodecs `VideoEncoder` + MP4 muxer (e.g. Mediabunny), frame-by-frame canvas render, Web Worker mein. **GIF:** palette quantization encoder (e.g. gifenc). Fallback: `ffmpeg.wasm` single-thread (multi-thread build ke liye cross-origin isolation / COOP+COEP chahiye, jo third-party images/videos load hona tod sakta hai). 5–10s loop. |
 | EX-5 | Watermark: chhota "Made with Shotlark" badge (logo + name, bottom-right). Default ON; `scene.watermark` single source of truth — Download modal ka toggle wahi set karta hai. |
 | EX-6 | Filename: `shotlark-{timestamp}.{ext}`. |
 | EX-7 | Copy to clipboard (PNG). |
 | EX-8 | **X post render** automatic: X-6/X-7/X-8 ki limits ke hisaab se alag encode (size, resolution, format), download settings se independent. |
+
+### 7.13 Quick Wins (v1.7 — M7)
+
+Current code mein mili kamiyan + sabse sasta activation lever.
+
+| ID | Requirement |
+|---|---|
+| QW-1 | **Share image quality:** AI Studio ke "Copy image" / "Download image" ab AI wala 1024px JPEG (AI-11) use **nahi** karenge. Alag X-preset render: JPG 2× → step-down ≤ 5 MB (EX-8, `encodeWithinLimit`). Clipboard ke liye PNG chahiye — PNG bhi ≤ 5 MB (scale 2× → 1.5× → 1× step-down). AI capture sirf AI calls ke liye rahega. |
+| QW-2 | **Motion share:** background video ya camera motion (CM) ho to share row mein "Download MP4" / "Download GIF" (XF-4 limits). Image copy pe note: "Video clipboard mein copy nahi hota — download karke attach karo." |
+| QW-3 | **Post versions:** har AI result (generate / refine / chat / variant pick) ek version. AI action shuru hone se pehle current text (agar last version se alag ho — manual edit) bhi version ban jaata hai. ← → switcher + "v3 / 5" label, max 20 per project, draft / project ke saath persist (PJ-7). Version switch credit nahi leta. |
+| QW-4 | **Preview identity:** X preview card ka name, handle, avatar (upload → 128px WebP), verified badge on/off user khud set kare. Default: email se (abhi wala). Guest: localStorage; logged-in: `profiles.preview_identity` (§10.3). TC-1 bhi yahi identity use karta hai. |
+| QW-5 | **Guest mode:** `/editor` bina login — upload, capture, edit, export, copy text, open X sab chalega (sab client-side, server cost zero). Login sirf: AI (generate / refine / chat / alt text), cloud save (PJ), `/account`. AI button guest pe "Sign in to write with AI — 30 free credits" CTA. Guest draft IndexedDB key `guest`; login ke baad "Is draft ko apne account mein le jaayein?" → user draft / project ban jaata hai. Edge Functions pehle jaisa JWT maangenge (koi bypass nahi). |
+| QW-6 | **Post language:** English (default), Hinglish (Roman script), Hindi (Devanagari), "Match my prompt". Selector AI Studio mein, choice localStorage mein. Server pe zod enum; prompt rule language ke hisaab se (abhi "Always write in English" hardcoded hai). Bold / italic (AI-6) sirf Latin letters pe kaam karta hai — Hindi pe bold button disabled + hint. |
+| QW-7 | **"Copy image & open X":** ek primary button — X-preset image clipboard mein + intent tab (XF-1) text ke saath. Popup blocker se bachne ke liye image pehle se render / cached (panel open + scene idle pe), click pe `ClipboardItem` aur `window.open` dono usi user gesture mein. Clipboard fail → auto download + hint. Hint: "X compose mein Ctrl+V / ⌘V dabao". |
+| QW-8 | **Try a sample:** empty state pe 3 bundled sample screenshots (dashboard, mobile app, code) — khud ke banaye, kisi real brand ka UI nahi. `public/samples/`. |
+| QW-9 | **Analytics pehle:** PostHog events (§13) M6 se pehle M7 mein — naye features ka asar naapne ke liye. Properties mein PII / post text nahi. |
+
+### 7.14 Editor Layers — Text, Annotate, Redact (v1.7 — M8)
+
+| ID | Requirement |
+|---|---|
+| LY-1 | **Scene v2:** `layers[]` (kind: text / annotation / redact), z-order, `visible`, `locked`. `version: 2` + v1 → v2 migration (empty layers). Undo / redo mein layers shamil (ED-5). |
+| LY-2 | **Do coordinate spaces:** *canvas space* (text — background ke upar, aspect change pe normalized 0–1 position) aur *image space* (annotation, redact — screenshot ke saath zoom / tilt / drag pe chalte hain; screenshot texture pe tilt se pehle bake). |
+| LY-3 | **Interaction:** click select, drag move, resize handles, Delete / Backspace, Ctrl+D duplicate, bring forward / send back, arrow keys nudge (Shift = ×10), Esc deselect. Tilt ke saath image-space hit testing (inverse homography). |
+| LY-4 | **Layers list:** chhota panel — reorder, hide, lock, rename. Keyboard accessible (WCAG, §8). |
+| TX-1 | **Text layer:** presets Headline / Subheadline / Badge (pill) / Caption. Toolbar mein "Text" tool. |
+| TX-2 | **Text properties:** font (8 curated, self-hosted, OFL licence — sans, serif, mono, handwritten), weight, size, color, align, line height, letter spacing, optional background pill (color, radius, padding), text shadow. |
+| TX-3 | **Inline edit:** canvas pe double-click se edit, multi-line, emoji. |
+| TX-4 | **Render:** Canvas2D se rasterize → WebGL texture; font `FontFace` / `document.fonts` load hone ke baad hi render (watermark jaisa). Preview = export (visual fixtures). |
+| TX-5 | **Text-aware layout presets:** "Headline top + screenshot", "Headline left + screenshot right", "Badge + screenshot" — screenshot ka anchor / padding / zoom adjust taaki text overlap na ho. |
+| AN-1 | **Annotation tools:** arrow (straight + curved), rectangle, ellipse, highlight marker (semi-transparent), numbered step badge (auto 1, 2, 3…), emoji sticker. |
+| AN-2 | **Style:** color (palette + brand colors BK-3 + custom), stroke width, arrow head on/off. |
+| AN-3 | **Shortcuts:** A arrow, R rectangle, H highlight, N number, T text, B blur. |
+| RD-1 | **Manual redact:** region select → Pixelate / Blur / Solid box; strength slider. |
+| RD-2 | **Irreversible:** export **aur AI capture** dono mein redaction baked — original pixels output mein kabhi na jaayein (AI ko bhi sensitive data na jaaye). UI hint: "Sensitive text ke liye Solid ya strong Pixelate use karo — halka blur kabhi-kabhi padha ja sakta hai." |
+| RD-3 | **Auto-detect (M9):** client-side OCR (lazy-loaded, koi server nahi) → regex: email, phone, card number (Luhn), API keys (`sk_live_`, `ghp_`, `AKIA…` jaise patterns), IP address → suggested redact boxes; user confirm kare tabhi apply. |
+
+### 7.15 Crop, Brand Kit, Platform Sizes (v1.7 — M8)
+
+| ID | Requirement |
+|---|---|
+| CR-1 | **Crop:** screenshot pe drag handles, aspect lock (Free, 16:9, 1:1, 4:3, 9:16), reset. Non-destructive (`scene.image.crop`, normalized rect), undoable. (Abhi crop sirf screen capture ke waqt hai.) |
+| CR-2 | **Auto-trim:** ek click se ek-rang ke borders (white / black margins) hata do. |
+| BK-1 | **Saved styles:** current look (background, frame, style, position, layout, sunlight — image / text content nahi) "My style" ke naam se save; one-click apply, rename, delete. Max `limits.brand_styles_max` (10). Guest: localStorage; logged-in: `user_styles` table. |
+| BK-2 | **Custom watermark:** apna logo (PNG / SVG ≤ 500 KB) aur / ya text (`@handle`), corner position, opacity, size — "Made with Shotlark" ki jagah. Beta mein free; Pro mein shift karna hai ya nahi — Open Q §15. |
+| BK-3 | **Brand colors:** max 6 colors — background picker, text aur annotation palette mein sabse upar. |
+| PS-1 | **Platform presets** (Layout panel, naam ke saath): X 16:9 / 1:1 / 4:5, LinkedIn 1200×627, Instagram 1080×1350 / 1080×1080 / Story 1080×1920, Product Hunt 1270×760, OG image 1200×630, YouTube thumbnail 1280×720. |
+| PS-2 | **Exact pixels:** platform preset pe 1× export bilkul wahi size (e.g. 1270×760); 2× / 3× uske multiples. |
+| PS-3 | **Custom size:** width × height input (200–4096 px). |
+
+### 7.16 Projects & Cloud Save (v1.7 — M8)
+
+Abhi har user ka sirf **ek** local draft hai (IndexedDB) — naya screenshot purana kaam overwrite karta hai, doosre device pe kuch nahi milta. T1.6 ka bacha kaam yahi poora karta hai.
+
+| ID | Requirement |
+|---|---|
+| PJ-1 | **Dashboard `/projects`:** thumbnails grid, title, last edited; New, Open, Rename, Duplicate, Delete (confirm). Recent first. |
+| PJ-2 | **Cloud save (logged-in):** `projects` row + source image `uploads/{uid}/{projectId}/source.{ext}` + thumbnail `…/thumb.webp` (≤ 480px) + layer assets (logos, avatars) `uploads/{uid}/…`. Autosave debounce 2s (ED-6), status indicator Saved / Saving / Unsaved. |
+| PJ-3 | **Routes:** `/editor` = naya project (pehle upload pe row create), `/editor/[projectId]` = load. Kisi aur ka project id → 404 (RLS). |
+| PJ-4 | **Local cache:** IndexedDB offline cache; save pe `updated_at` check — conflict pe "Ye project doosri tab / device pe badla hai — reload ya overwrite?" |
+| PJ-5 | **Guest import:** QW-5 ka guest draft login ke baad naya project. |
+| PJ-6 | **Limit:** `limits.projects_max` (50); limit pe clear message. |
+| PJ-7 | **Post data:** `post_text` + `post_versions` (QW-3) project ke saath save. |
+
+### 7.17 Camera Motion (v1.7 — M9)
+
+Static screenshot ko video banana — **kisi bhi background pe** (abhi GIF / MP4 sirf motion background pe hai). Renderer pehle se `timeSec` leta hai aur MP4 / GIF pipeline ready hai.
+
+| ID | Requirement |
+|---|---|
+| CM-1 | **Presets:** Zoom in, Zoom out, Pan (L→R, R→L), Scroll (top→bottom — lambe page screenshots ke liye), Tilt swing, Ken Burns, Float (halka up-down). "None" default. |
+| CM-2 | **Params:** duration 3–10s (default 6), easing (ease-in-out / linear), intensity, loop mode (once + hold / ping-pong — GIF loop ke liye). |
+| CM-3 | **Preview:** canvas pe play / pause + scrub bar; `prefers-reduced-motion` pe auto-play nahi (§8). |
+| CM-4 | **Export:** camera motion ya motion bg — dono mein se koi bhi ho to MP4 + GIF enabled (EX-2). Dono saath bhi chalein. Limits XF-4. Duration camera motion se. |
+| CM-5 | **Deterministic:** transform = pure function `(scene, timeSec)` — preview aur export same frames; unit tests. |
+| CM-6 | **Text entrance (optional per text layer):** None / Fade / Slide up / Pop, delay setting — sirf video / GIF mein. |
+
+### 7.18 Templates & Cards (v1.7 — M9)
+
+| ID | Requirement |
+|---|---|
+| TP-1 | **Template gallery** (toolbar "Templates" + empty state): build-in-public set — Launch ("Introducing …"), Milestone (MRR / users big number), Day N of building, Changelog (version + bullets), Big stat, Testimonial (quote + name + avatar). |
+| TP-2 | **Template = scene preset + text layers with placeholders.** Apply karne pe current screenshot slot mein rehta hai; placeholders editable. |
+| TP-3 | **Data-driven:** `lib/templates/*.json`, zod validated; naya template bina code change. Thumbnails asli renderer se. |
+| TP-4 | **AI fill (nice-to-have):** template ke placeholders screenshot dekh ke AI se fill — 1 credit. |
+| TC-1 | **Text card mode:** bina screenshot ke — text likho → card (quote style ya X-post style: avatar + name + handle QW-4 se). Baaki tools (background, style, export) same. |
+| TC-2 | **Post → card:** AI Studio ke current post ko one-click card (LinkedIn / IG pe repurpose ke liye). |
+| TC-3 | Sirf user ka diya text — doosron ke tweets fetch / scrape nahi (X ToS + copyright). |
+| CD-1 | **Code → image:** code paste, language auto-detect / select, 6 themes, line numbers on/off, mono font (OFL), window title, highlighted lines. Syntax highlighting client-side, lazy-loaded; result "screenshot" slot mein jaata hai taaki frames / backgrounds / motion sab kaam karein. Default frame Terminal. |
+| CD-2 | Limits: 80 lines, 120 columns; zyada ho to clear message. |
+
+### 7.19 AI Upgrades (v1.7 — M9)
+
+AI-1…AI-13 (§7.10) ke aage.
+
+| ID | Requirement |
+|---|---|
+| AI-14 | **Variants:** Generate ek call mein 3 alag hook styles ke posts deta hai — **1 credit** (`credits.cost_generate_variants`). UI pe 3 cards, pick karo → post + version (QW-3). Toggle: 1 ya 3. |
+| AI-15 | **Post type:** None (default), Launch, Milestone, Tip, Hot take, Question, Story — har type ki prompt guidance. |
+| AI-16 | **My voice:** 3–5 sample posts (har ≤ 600 chars, total ≤ 3,000) `profiles.voice_samples` mein save; toggle "Use my voice". Prompt mein reference data ki tarah alag message (instructions nahi — prompt injection guard, §12). |
+| AI-17 | **Alt text** (AI-13 promoted): image se descriptive alt text ≤ 1,000 chars, editable, copy button + hint "X compose mein image pe 'Add description'". 1 credit (`credits.cost_alt_text`). Redaction baked image se (RD-2). |
+| AI-18 | **Post checklist (client-side, free):** hook line length, lambe post mein line breaks, hashtags ≤ 2, emojis ≤ 3, link present warning, Unicode bold > 3 words warning (AI-6), over-limit. "Best-practice hints" — X algorithm ki guarantee nahi. |
+
+### 7.20 Multi-image, Growth, Pro Plan (v1.7 — M10, launch ke baad)
+
+| ID | Requirement |
+|---|---|
+| MI-1 | **Multi-image canvas:** 2–4 images ek canvas pe; layouts: Side by side, Overlap (phone over laptop), Grid 2×2, Stagger. Per-image frame. |
+| MI-2 | **Before / After:** 2 images + labels + divider. Template TP set mein bhi. |
+| MI-3 | **X 4-image set:** 4 slides same style mein → zip download (ya 4 files). |
+| CE-1 | **Chrome extension (MV3):** visible tab / region capture → Shotlark editor mein khule. Image kabhi server pe nahi jaati (extension ↔ editor direct messaging). Minimal permissions (`activeTab`). |
+| CE-2 | (Nice-to-have) Full-page scrolling capture. |
+| RF-1 | **Referral:** har user ka invite link `/r/{code}`; reward dono ko +10 bonus credits (`referral.bonus_credits`), max 10 / month (`referral.max_monthly`). |
+| RF-2 | **Reward trigger server pe:** invitee ka pehla successful AI generate (server observe karta hai) — client-reported export pe nahi. Bonus credits alag bucket (`profiles.bonus_credits`) — monthly reset nahi mitata; consume order: pehle monthly, phir bonus. Launch se pehle Turnstile (U7) on hona zaroori. |
+| PR-1 | **Pro plan (draft — final §15):** Free = saare editor features, 30 credits / month, watermark (removal policy Open Q), 10 brand styles. Pro = custom / no watermark, unlimited brand styles, 4K export, longer camera-motion video, zyada credits. Pexels / Pixabay content kabhi paywall ke peeche nahi (§5). |
+| PR-2 | **Billing:** §14 v2 wala plan — Razorpay / Lemon Squeezy / Paddle, webhook signature + idempotency, purchased credits alag bucket. |
+| PR-3 | **Early users:** beta users ke liye lifetime / discounted deal (grandfathering). |
 
 ## 8. Non-Functional Requirements
 
@@ -279,6 +424,8 @@ Landing → Sign in (Google / Email magic link)
 | Reliability | AI/X calls pe retry with backoff (sirf idempotent steps); 99.5% uptime target. |
 | Privacy | Uploads private bucket mein; 30 din baad unsaved uploads auto-delete (cron). Images OpenRouter + upstream model providers ko jaati hain → Privacy Policy mein disclose; OpenRouter settings mein training / data-logging wale providers disable. |
 | Legal | Launch se pehle Privacy Policy + Terms of Service. |
+| Bundle (v1.7) | Bhari features (code highlighting CD-1, OCR RD-3, zip MI-3, fonts TX-2) sirf zarurat pe dynamic import — editor LCP < 2.5s bana rahe. Naye packages exact versions pe pinned. |
+| Fonts (v1.7) | Sirf OFL / open licence fonts, self-hosted (`public/fonts/`), licence files ke saath. |
 
 ## 9. Tech Stack
 
@@ -595,6 +742,24 @@ create policy "storage: own files" on storage.objects
 
 Note: `x_accounts` pe client ko columns explicitly select karne honge (`select('username, display_name, avatar_url, verified')`); `select *` permission error dega — ye intended hai.
 
+### 10.3 Data Model Changes (v1.7)
+
+Har change backward-compatible migration (ARCH §11.1 expand → contract), RLS + explicit grants ke saath.
+
+| Object | Change | For |
+|---|---|---|
+| `projects` | + `post_versions jsonb not null default '[]'`, + `thumbnail_path text`; `editor_state` ab Scene v2 | QW-3, PJ |
+| `profiles` | + `preview_identity jsonb` (name, handle, avatar_path, verified) | QW-4 |
+| `profiles` | + `voice_samples jsonb not null default '[]'` | AI-16 |
+| `profiles` | + `bonus_credits int not null default 0 check (bonus_credits >= 0)`, + `referral_code text unique` | RF |
+| `user_styles` (new) | `id, user_id, name, style jsonb, created_at` — own CRUD (RLS), limit `limits.brand_styles_max` | BK-1 |
+| `referrals` (new) | `id, referrer_id, invitee_id unique, status (pending / rewarded / rejected), created_at, rewarded_at` — client read own (referrer), write sirf service role | RF |
+| Column grants | `profiles` pe client update: `full_name, avatar_url, preview_identity, voice_samples` — `bonus_credits` / `referral_code` nahi | QW-4, AI-16, RF |
+| `consume_credits` | Pehle `ai_credits`, phir `bonus_credits` se kaato (ledger mein bucket likho) | RF-2 |
+| `claim_referral(invitee)` (new) | Atomic: pending referral → rewarded + dono ko bonus (monthly cap check) | RF-2 |
+| Storage paths | `uploads/{uid}/{projectId}/thumb.webp`, `uploads/{uid}/brand/{file}`, `uploads/{uid}/profile/avatar.webp` | PJ, BK-2, QW-4 |
+| `app_config` | `limits.projects_max` 50, `limits.brand_styles_max` 10, `credits.cost_generate_variants` 1, `credits.cost_alt_text` 1, `referral.bonus_credits` 10, `referral.max_monthly` 10 | — |
+
 ## 11. Server API
 
 | Endpoint | Where | Auth | Purpose |
@@ -612,6 +777,16 @@ Note: `x_accounts` pe client ko columns explicitly select karne honge (`select('
 | `/api/account/delete` | Next.js Route Handler | Session | Files + X revoke + auth user delete. |
 
 Har endpoint: input validation (zod), per-user rate limit (AI: 20 req/min), structured error `{ code, message }`.
+
+**v1.7 API changes:**
+
+| Endpoint | Change |
+|---|---|
+| `ai-generate` | + `language` (QW-6), `postType` (AI-15), `variants: 1 \| 3` (AI-14), `useVoice` (AI-16 — samples server pe `profiles` se padhe jaate hain, client se nahi) |
+| `ai-refine` | + `language` (QW-6) |
+| `ai-alt-text` (new Edge Function) | Image → alt text (JSON, non-streaming), same credit / refund / log flow (AI-17) |
+| `ai-generate` (RF-2) | Invitee ke pehle successful generate pe `claim_referral` |
+| Sab `ai-*` | Guest (no JWT) → `UNAUTHENTICATED` 401 — client isse sign-in CTA dikhata hai (QW-5) |
 
 ## 12. Security
 
@@ -631,6 +806,8 @@ Har endpoint: input validation (zod), per-user rate limit (AI: 20 req/min), stru
 
 `signup`, `image_uploaded`, `tool_opened {tool}`, `ai_generate`, `ai_refine {action}`, `limit_reached {type}`, `x_connected`, `x_posted {media_type, has_url}`, `x_post_failed {reason}`, `share_intent_used`, `export {type, format, scale, watermark}`.
 
+**v1.7 events:** `guest_started`, `signin_prompt_shown {trigger}`, `guest_draft_imported`, `sample_used {id}`, `share_copy_open_x {media_type}`, `post_version_switched`, `language_selected {lang}`, `variant_picked {index}`, `layer_added {kind}`, `redact_applied {mode, auto}`, `crop_applied`, `brand_style_saved`, `platform_preset_used {id}`, `project_created`, `project_opened`, `camera_motion_set {preset}`, `template_applied {id}`, `text_card_created`, `code_image_created {language}`, `alt_text_generated`, `referral_link_copied`, `referral_rewarded`. Properties mein PII / post text / code nahi.
+
 ## 14. Roadmap
 
 | Phase | Duration | Scope |
@@ -641,6 +818,15 @@ Har endpoint: input validation (zod), per-user rate limit (AI: 20 req/min), stru
 | **M4 — AI Studio** | Week 7–8 | OpenRouter Edge Functions, credits system, X preview card, refine chips, chat |
 | **M5 — X Integration** | Week 9–10 | X OAuth + posting (image/GIF/video), limits, share fallback, account page |
 | **M6 — Launch** | Week 11–12 | Landing page, legal pages, analytics, Sentry, QA, accessibility pass, beta launch |
+
+**v1.7 milestones** (order: M7 → M8 → M9 → **M6 Launch** → M10):
+
+| Phase | Duration | Scope |
+|---|---|---|
+| **M7 — Quick wins** | ~1 week | QW-1…QW-9 (share quality, versions, identity, guest mode, language, copy & open X, samples, PostHog) |
+| **M8 — Layers + Projects** | ~3 weeks | Scene v2, LY, TX, AN, RD-1/2, CR, BK, PS, PJ |
+| **M9 — Differentiators** | ~2–3 weeks | CM, TP, TC, CD, AI-14…AI-18, RD-3 |
+| **M10 — Growth + Pro** | Launch ke baad | MI, CE, RF, PR |
 
 **v2 — Billing (baad mein):**
 - Paid plan decide karo (Lifetime / subscription) aur kaunse features paid honge.
@@ -663,6 +849,12 @@ Har endpoint: input validation (zod), per-user rate limit (AI: 20 req/min), stru
 2. **Long posts** — X Premium users ke liye API se long post support build ke waqt verify.
 3. **Pexels** — unlimited API access approval + CDN CORS (M1 POC).
 4. **Brand** — domain kharidna, X handle, trademark search (top note dekho).
+5. **Watermark policy (v1.7)** — beta mein free mein off hota hai. Pro (PR-1) mein shift karna hai to public launch se **pehle** decide karo (baad mein badalna users ko bura lagega).
+6. **Default language (QW-6)** — English default ya browser locale se auto?
+7. **OCR (RD-3)** — kaunsi client-side library (download size vs accuracy), ya browser ka built-in text detection jahan available ho.
+8. **Variants (AI-14)** — 3 variants 1 credit mein: token cost T4.5 model test ke saath verify.
+9. **Referral (RF)** — Turnstile (U7) on hone tak referral band rahe?
+10. **Fonts (TX-2)** — final 8 OFL fonts ki list.
 
 ## 16. Sources (verified 16 Oct 2026)
 
@@ -677,5 +869,6 @@ Har endpoint: input validation (zod), per-user rate limit (AI: 20 req/min), stru
 - Stripe India invite-only (v2 billing) — https://support.stripe.com/questions/stripe-accounts-are-invite-only-in-india
 - Next.js 16.4.1 security patch — https://thehackernews.com/2026/10/nextjs-ships-out-of-band-patch-for-two.html
 - iPhone 18 Pro / Pro Max launch — https://www.apple.com/newsroom/2026/09/apple-debuts-iphone-18-pro-and-iphone-18-pro-max/
+- Competitors (v1.7 positioning, verified 17 Oct 2026): Pika editor (no account) — https://pika.style/templates/screenshot-editor · Pika arrows + layers — https://pika.style/blog/screenshot-editor-arrows-and-layers · Shots.so overview — https://www.bitdoze.com/shots-so-mockups/ · Xnapper auto-redact — https://xnapper.com/
 
 Content was rephrased for compliance with licensing restrictions.

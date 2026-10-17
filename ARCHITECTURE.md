@@ -2,10 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Version | v1.4 |
-| Date | 16 Oct 2026 |
-| Based on | `PRD.md` v1.5 |
-| Status | Draft — renderer decided: khud ka WebGL2 layer (T1.5 POC, AD-2) |
+| Version | v1.5 |
+| Date | 17 Oct 2026 |
+| Based on | `PRD.md` v1.7 |
+| Status | Draft — renderer decided: khud ka WebGL2 layer (T1.5 POC, AD-2). v1.5: Scene v2 + layers design (§4.4, §5.7, AD-13…AD-15) — **approved 17 Oct 2026 (T8.0)** |
 
 ---
 
@@ -74,6 +74,8 @@ shotlark/
 │  └─ export/                      # DownloadModal, ProgressDialog
 ├─ lib/
 │  ├─ scene/                       # Scene types, defaults, zod schema, migrations
+│  ├─ layers/                      # v1.5: raster.ts, text-layout.ts, composite.ts (main thread)
+│  ├─ fonts/                       # v1.5: OFL font registry + ensureFonts (files: public/fonts/)
 │  ├─ store/                       # zustand stores (editor, ui, ai)
 │  ├─ renderer/                    # Renderer interface + layers + implementation
 │  ├─ export/                      # image / gif / mp4 encoders, X presets
@@ -171,6 +173,79 @@ type MediaRef = {
 - `version` se purane projects migrate hote hain (`lib/scene/migrations.ts`).
 - Load pe zod validation; corrupt state → defaults + Sentry warning.
 
+### 4.4 Scene v2 — Layers (v1.5, PRD LY / TX / AN / RD)
+
+Scene v1 ke saare fields same rehte hain (v1 type upar thoda purana hai — source of truth `lib/scene/schema.ts`; e.g. `frame.fit`, `MediaRef.previewUrl`, provider `pixabay`). v2 sirf ye add karta hai:
+
+```ts
+type SceneV2 = Omit<SceneV1, 'version'> & {
+  version: 2;
+  layers: Layer[];                       // array order = z-order (pehla = sabse neeche)
+};
+
+type LayerBase = {
+  id: string;                            // crypto.randomUUID()
+  name?: string;                         // layers list mein; default kind se ("Text 1")
+  visible: boolean;
+  locked: boolean;
+};
+
+// ── Canvas space: background ke upar, screenshot / frame se independent ──
+type TextLayer = LayerBase & {
+  kind: 'text';
+  x: number; y: number;                  // box ka center, 0–1 (canvas width / height ka fraction)
+  width: number;                         // wrap width, 0–1 of canvas width; height content se nikalti hai
+  rotation: number;                      // degrees, -180…180
+  text: string;                          // ≤ 500 chars, multi-line, emoji ok
+  style: {
+    font: FontId;                        // lib/fonts registry (8 OFL fonts)
+    weight: 400 | 500 | 600 | 700 | 800;
+    size: number;                        // design px @ baseWidth 1500 (output scale ke saath scale)
+    color: string;
+    align: 'left' | 'center' | 'right';
+    lineHeight: number;                  // 0.8–2
+    letterSpacing: number;               // em, -0.1…0.5
+    background: { color: string; radius: number; padding: number } | null;   // badge / pill
+    shadow: { color: string; blur: number; y: number } | null;
+  };
+};
+
+// ── Image space: screenshot ke source pixels pe — zoom / tilt / drag / frame ke saath chalte hain ──
+// Coordinates 0–1 of UNCROPPED source image (crop CR-1 badalne pe annotations hilte nahi).
+// Lengths (stroke, size) = fraction of source image width.
+type AnnotationLayer = LayerBase & {
+  kind: 'annotation';
+  shape:
+    | { type: 'arrow'; from: Pt; to: Pt; bend: number /* -1…1, 0 = straight */; head: boolean }
+    | { type: 'rect'; x: number; y: number; w: number; h: number; radius: number }
+    | { type: 'ellipse'; x: number; y: number; w: number; h: number }
+    | { type: 'highlight'; x: number; y: number; w: number; h: number }  // semi-transparent marker
+    | { type: 'step'; x: number; y: number; size: number; n: number }     // numbered badge
+    | { type: 'emoji'; x: number; y: number; size: number; char: string };
+  color: string;
+  stroke: number;
+};
+
+type RedactLayer = LayerBase & {
+  kind: 'redact';
+  x: number; y: number; w: number; h: number;   // image space, 0–1
+  mode: 'pixelate' | 'blur' | 'solid';
+  strength: number;                              // 0–100
+  color: string;                                 // solid ke liye
+};
+
+type Layer = TextLayer | AnnotationLayer | RedactLayer;
+type Pt = { x: number; y: number };
+```
+
+**Rules:**
+- **Space kind se tay hota hai** (text → canvas, annotation / redact → image) — alag `space` field nahi, taaki invalid combos ban hi na sakein.
+- **Limits:** max 50 layers, text ≤ 500 chars; zod mein enforce.
+- **Migration v1 → v2:** `{ ...scene, version: 2, layers: [] }` (`SCENE_MIGRATIONS[1]`). Har load path `migrateScene()` se guzrega — **LocalDraft abhi seedha `sceneSchema.parse` karta hai, wo T8.1 mein `migrateScene` pe shift** (warna purane drafts toot jayenge). Projects (`editor_state`) bhi isi se.
+- **History:** layers scene ka hissa hain → zundo undo / redo automatically. Drag / resize / slider = gesture API (ek entry). Text typing = edit session (focus → blur / Esc) ek entry.
+- **Selection** (`selectedLayerId`, edit mode, active tool) `uiStore` mein — history / persist mein nahi.
+- `scene.image` remove karne pe image-space layers rehte hain (hidden), naya screenshot aane pe wapas — user confirm ("Annotations rakhein?") T8.4 mein.
+
 ## 5. Rendering & Export Engine
 
 ### 5.1 Layer pipeline (peeche → aage)
@@ -183,6 +258,16 @@ type MediaRef = {
 6. Sunlight — shadow map, blend mode, strength, angle, temperature
 7. Grain — noise
 8. Watermark — agar ON
+
+**v1.5 (Scene v2) — actual code order** (`renderer.ts` `render()`), layers ke saath:
+
+1. Glass background pass (sirf glass styles) → Background
+2. Shadow → Plate (style)
+3. Screenshot — ab **image composite** texture (source + redact + annotations, §5.7) — tilt mesh same
+4. Frame
+5. **Canvas layers (text)** — naya `drawLayers()`, z-order mein, per-layer quad (position, rotation, opacity)
+6. Sunlight → Grain (text pe bhi light / grain padta hai — photo jaisa look)
+7. Watermark (hamesha sabse upar)
 
 ### 5.2 Renderer
 
@@ -232,6 +317,53 @@ interface Renderer {
 - Curated motion videos (bade files): Storage `assets` bucket (public).
 - Pexels media: CDN se direct load (CORS M1 POC mein verify); fail ho to selected media `assets/pexels-cache/` mein copy.
 - Watermark text ke liye font `FontFace` API se load karke hi render.
+
+### 5.7 Layers rendering (v1.5)
+
+**Ek hi rasterizer, main thread pe** — `lib/layers/raster.ts` (Canvas2D; HTMLCanvas ya OffscreenCanvas dono). Fonts sirf main thread pe load hote hain; worker ko fonts kabhi nahi chahiye (AD-14).
+
+**A. Image composite (annotation + redact):**
+
+```
+source bitmap ──► redact layers (pixelate / blur / solid — source pixels pe)
+              ──► annotation layers (z-order)
+              ──► composite canvas ──► "screenshot" texture / BakedAssets.screenshot
+```
+
+- Renderer ko pata hi nahi ki annotations hain — wo bas screenshot texture use karta hai. Isliye zoom, tilt, frame, fit / fill, rounded corners sab automatically sahi.
+- **Redact irreversible (RD-2):** composite hi export **aur** AI capture (`capturePostImageForAi` → export path) mein jaata hai; original source sirf store mein rehta hai, kabhi output mein nahi.
+- **Resolution:** export pe source native resolution (max 4096 px longest side — texture limit safety). Preview / drag ke dauraan capped 2048 px (fast); pointerup pe full.
+- **Cache key:** source id + image-space layers ka JSON. Sirf image-space layer badle tabhi re-composite.
+- Layers na hon to composite skip — source seedha (zero overhead, aaj jaisa).
+
+**B. Canvas layers (text):**
+
+- Har text layer alag rasterize: apne box ka size × output scale (DPR / export scale) → texture / ImageBitmap. Height text measure se (`measureText` + line wrap, `lib/layers/text-layout.ts` — pure, tested).
+- **Cache key:** layer id + text + style + width + scale. **Move / rotate re-raster nahi karta** — sirf quad transform badalta hai (drag 60 fps).
+- `drawLayers()` per-layer quad: center (x · W, y · H), rotation, opacity (CM-6 entrance animation ke liye pehle se ready).
+- Font gate: `await ensureFonts(layers)` — font load hone se pehle raster nahi (warna fallback font export mein chala jaata). Export bhi isi ka wait karta hai.
+
+**C. Export protocol (`export-protocol.ts`):**
+
+```ts
+type BakedAssets = {
+  screenshot?: ImageBitmap | null;       // ab image composite (layers ho to)
+  // …existing fields…
+  layers?: Array<{ id: string; bitmap: ImageBitmap;
+                   cx: number; cy: number; width: number; height: number;  // output px
+                   rotation: number }>;
+};
+```
+
+Main thread export scale pe bake karta hai → transferables → worker `drawLayers()`. Video / GIF: har frame same bitmaps (CM-6 aane pe per-frame opacity / offset).
+
+**D. Interaction (`components/editor/layer-overlay.tsx`):**
+
+- Canvas ke upar DOM overlay — selection box, resize / rotate handles, inline text editor (`<textarea>` same font / size pe). Canvas pe kuch draw nahi hota selection ke liye (export clean).
+- **Hit testing:**
+  - Canvas space: inverse rotation → box test.
+  - Image space: pointer → `imageRect` ke tilted corners (`projectTiltedCorners`) se inverse homography → screenshot UV → shader jaisa fit / fill / device-screen mapping ulta → source UV. Ye mapping `geometry.ts` mein pure function `canvasToSourceUv()` — shader logic ka mirror, unit tests (tilt 0 / 20° / -30°, contain / cover).
+- Keyboard: Tab se layers cycle, arrows nudge, Delete, Ctrl+D, Esc — overlay elements focusable + `aria-label`.
 
 ## 6. Backend
 
@@ -525,6 +657,9 @@ CI mein real X / OpenRouter / Pexels kabhi call nahi (paise lagte hain) — sab 
 | AD-10 | Next.js 16 `proxy.ts` | `middleware.ts` deprecated | — |
 | AD-11 | Ek hi Supabase project (local + preview + production) | Simple setup, ek hi config / bill | Alag staging project |
 | AD-12 | DB tests CI ke temporary local Supabase pe | Ek project ke saath bhi migrations safely test hon; local Docker zaroori nahi | Live project pe testing |
+| AD-13 | **Layers Canvas2D se rasterize → textures** (text per-layer quad; annotation / redact screenshot composite mein bake) | Ek rasterizer preview + export dono ke liye (fidelity); renderer mein minimum change; image-space layers tilt / frame ke saath free mein sahi | WebGL SDF text (complex, emoji mushkil), DOM capture (browser-dependent — AD-2) |
+| AD-14 | **Layer raster sirf main thread pe**, worker ko ImageBitmaps | Worker / OffscreenCanvas mein fonts + 2D text support browsers mein uneven; watermark bhi aise hi bake hota hai | Worker mein `self.fonts` + OffscreenCanvas 2D |
+| AD-15 | **Redact source pixels pe bake** (composite), AI capture bhi composite se | Sensitive data na export mein na AI provider tak (RD-2); alag "privacy path" maintain nahi karna | Shader-time redaction (AI capture / export mein bhool sakte the) |
 
 ## 14. Risks
 
@@ -538,6 +673,9 @@ CI mein real X / OpenRouter / Pexels kabhi call nahi (paise lagte hain) — sab 
 | Free beta abuse | Medium | CAPTCHA, rate limits, monthly limits |
 | Edge Function CPU limit | Low | Server pe heavy processing nahi |
 | Ek hi Supabase project: galat migration ya test seedha live data pe | High | CI temp DB tests, backward-compatible migrations, Pro plan backups, test-data rules (§11.1) |
+| Bade screenshot ka image composite (memory / drag lag) | Medium | Preview 2048 px cap, full-res sirf export pe; layers na hon to composite skip (§5.7) |
+| Font load se pehle render → export mein galat font | Medium | `ensureFonts` gate preview + export dono mein; fixtures har font pe |
+| Scene v2 migration se purane drafts tootna | Medium | Har load path `migrateScene`; v1 fixtures ke saath migration tests (T8.1) |
 
 ## 15. Sources (verified 16 Oct 2026)
 
