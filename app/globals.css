@@ -351,6 +351,58 @@
 }
 .welcome-screen {
   overflow-y: auto;
+  isolation: isolate;
+}
+.welcome-screen > :not(.welcome-tiles) {
+  position: relative;
+  z-index: 1;
+}
+.welcome-tiles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.24;
+  mask-image: radial-gradient(ellipse 38% 60% at 50% 48%, transparent 40%, #000 100%);
+}
+.welcome-tiles-plane {
+  position: absolute;
+  inset: -180px -80px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: 150px;
+  gap: 18px;
+  transform: rotate(-12deg);
+  animation: welcome-tile-drift 32s ease-in-out infinite alternate;
+}
+.welcome-tile {
+  border: 1px solid color-mix(in srgb, var(--brand-wing), transparent 65%);
+  border-radius: 18px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 12px 36px #00000018;
+}
+@keyframes welcome-tile-drift {
+  from { transform: translate3d(-15px, -65px, 0) rotate(-12deg); }
+  to { transform: translate3d(15px, 65px, 0) rotate(-12deg); }
+}
+@keyframes welcome-shimmer {
+  0%, 20% { background-position: 120% 0; }
+  70%, 100% { background-position: -20% 0; }
+}
+@keyframes welcome-button-shimmer {
+  0%, 65% { transform: translateX(-160%) skewX(-20deg); }
+  90%, 100% { transform: translateX(300%) skewX(-20deg); }
+}
+@media (max-width: 640px) {
+  .welcome-tiles-plane {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: 110px;
+    gap: 12px;
+  }
+  .welcome-tiles {
+    opacity: 0.18;
+  }
 }
 .welcome-art {
   position: relative;
@@ -476,6 +528,13 @@
   margin-bottom: 13px;
 }
 .welcome-title {
+  color: var(--foreground);
+  background-image: linear-gradient(110deg, var(--foreground) 35%, var(--brand-wing) 46%, var(--brand-tint) 50%, var(--brand-wing) 54%, var(--foreground) 65%);
+  background-size: 260% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: welcome-shimmer 8s ease-in-out infinite;
   font-size: clamp(28px, 3.2vw, 44px);
   font-weight: 550;
   line-height: 1.13;
@@ -491,6 +550,8 @@
   max-width: 330px;
 }
 .empty-upload {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -511,6 +572,16 @@
   transition:
     background 160ms,
     transform 160ms;
+}
+.empty-upload::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 55%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, #ffffff38, transparent);
+  transform: translateX(-160%) skewX(-20deg);
+  animation: welcome-button-shimmer 7s ease-in-out infinite;
 }
 .empty-upload:hover {
   background: var(--primary-hover);
@@ -756,6 +827,18 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .welcome-tiles-plane,
+  .welcome-title,
+  .empty-upload::after {
+    animation: none;
+  }
+  .welcome-title {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+  .empty-upload::after {
+    display: none;
+  }
   .editor-shell *,
   .editor-shell *::before,
   .editor-shell *::after {

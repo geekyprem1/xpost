@@ -15,6 +15,8 @@ import {
 } from "@/lib/renderer";
 import { useEditorStore } from "@/lib/store";
 
+const WELCOME_TILES = [13, 23, 16, 12, 14, 30, 21, 24, 11, 28, 25, 20];
+
 export function EditorCanvas() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -415,6 +417,19 @@ export function EditorCanvas() {
       />
       {hasImage ? null : (
         <div className="welcome-screen pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-5">
+          <div className="welcome-tiles" aria-hidden="true">
+            <div className="welcome-tiles-plane">
+              {Array.from({ length: 36 }, (_, index) => (
+                <span
+                  key={index}
+                  className="welcome-tile"
+                  style={{
+                    backgroundImage: `url(/motion/loop-${String(WELCOME_TILES[index % WELCOME_TILES.length]).padStart(2, "0")}.webp)`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
           <div className="welcome-art" aria-hidden="true">
             <div className="art-orbit" />
             <div className="art-browser">
