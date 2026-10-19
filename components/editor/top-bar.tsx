@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Download, User, Undo2, Redo2 } from "lucide-react";
+import { Download, User, Undo2, Redo2, Sparkles } from "lucide-react";
 import { useStore } from "zustand";
 import { useEditorStore, undoEditor, redoEditor } from "@/lib/store";
 import { fetchCredits } from "@/lib/api/credits";
@@ -113,6 +113,17 @@ export function TopBar() {
           {credits === null ? "Loading" : `${credits} credits`}
           <span className="sr-only"> remaining</span>
         </Badge>
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="hidden h-9 rounded-xl md:inline-flex"
+        >
+          <Link href="/editor-v2" title="Open the Studio V2 preview">
+            <Sparkles aria-hidden />
+            V2
+          </Link>
+        </Button>
         <Button
           variant="default"
           size="sm"

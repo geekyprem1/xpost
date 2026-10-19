@@ -12,6 +12,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Auth callbacks manage their own session. Running getClaims() here first
+  // can tear down a stale session, which also deletes the PKCE code verifier
+  // cookie before /auth/callback gets to read it.
+  if (pathname.startsWith("/auth/")) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
   let cacheHeaders: Record<string, string> = {};
 

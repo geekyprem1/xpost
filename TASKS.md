@@ -28,6 +28,15 @@
 
 **Order (v1.7):** ~~M7 → M8~~ → **M8 (layers) pehle, phir M7** (17 Oct, user decision — layers ka M7 pe hard dependency nahi) → M9 → M6 Launch → M10. Note: T7.3 (post versions) baad mein LocalDraft ka agla version banayega — chhota kaam.
 
+## Studio V2 (separate track — `/editor-v2`)
+
+V1 `/editor` untouched. Same store/renderer/export engine; sirf naya shell + UX. Direction: editor-only, left tool rail + contextual inspector, collapsible AI drawer, dark pro.
+
+- [x] **Phase 1 — shell:** `/editor-v2` route, V2 dark tokens (violet primary + green success), top bar (project status, undo/redo, credits, AI, export, classic link), grouped left rail, contextual inspector for all panels, collapsible AI drawer, V1 ↔ V2 links.
+- [ ] **Phase 2 — panel UX pass:** Text, Annotate, Redact, Crop, Background, Frame, Style, Layout, Light, Auto — V2 hierarchy, progressive disclosure, better empty/disabled states.
+- [ ] **Phase 3 — command palette + polish:** ⌘K commands, shortcut map, toasts, motion, focus/keyboard pass, responsive drawers (rail compact, inspector overlay).
+- [ ] **Phase 4 — QA:** browser pass, V1/V2 screenshot comparison, axe WCAG pass, perf check.
+
 ## Definition of Done (har task ke liye)
 
 - Lint, typecheck, build pass.

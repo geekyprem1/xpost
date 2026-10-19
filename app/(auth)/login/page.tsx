@@ -23,14 +23,12 @@ export default async function LoginPage({
           />
           <h1 className="text-xl font-semibold">Shotlark</h1>
           <p className="text-muted-foreground text-sm">
-            Sign in or create an account with your email and password.
+            Sign in with your Google account to continue.
           </p>
         </div>
         <LoginForm
           initialError={
-            error === "link"
-              ? "This link is invalid or expired. Request a new sign-in link."
-              : null
+            error ? "Sign-in didn't complete. Please try again." : null
           }
         />
       </div>

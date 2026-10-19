@@ -1,210 +1,99 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-type Mode = "signin" | "signup" | "magic";
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.11A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.11V7.05H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.95l3.66-2.84Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38Z"
+      />
+    </svg>
+  );
+}
 
 export function LoginForm({ initialError }: { initialError: string | null }) {
-  const router = useRouter();
-  const [mode, setMode] = useState<Mode>("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(initialError);
 
-  function changeMode(next: Mode) {
-    setMode(next);
-    setPassword("");
-    setShowPassword(false);
-    setMessage(null);
-    setError(null);
-  }
-
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function signInWithGoogle() {
     if (busy) return;
     setBusy(true);
     setError(null);
-    setMessage(null);
     try {
       const supabase = createSupabaseBrowserClient();
-      const address = email.trim();
-      if (mode === "magic") {
-        const { error } = await supabase.auth.signInWithOtp({
-          email: address,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/confirm`,
-          },
-        });
-        if (error) throw error;
-        setMessage("Sign-in link sent. Check your inbox to continue.");
-      } else if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email: address,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
-        if (error) throw error;
-        setPassword("");
-        if (data.session) {
-          router.replace("/editor");
-          router.refresh();
-        } else {
-          setMessage(
-            "Check your inbox to confirm your email, then sign in with your password.",
-          );
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: address,
-          password,
-        });
-        if (error) throw error;
-        setPassword("");
-        router.replace("/editor");
-        router.refresh();
-      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      // On success the browser navigates to Google, so keep the busy state.
     } catch (reason) {
       setError(
         reason instanceof Error
           ? reason.message
           : "Unable to sign in. Please try again.",
       );
-    } finally {
       setBusy(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" aria-busy={busy}>
-      <div className="grid grid-cols-2 gap-2" aria-label="Account options">
-        <Button
-          type="button"
-          variant={mode !== "signup" ? "secondary" : "outline"}
-          className="h-11"
-          aria-pressed={mode !== "signup"}
-          disabled={busy}
-          onClick={() => changeMode("signin")}
-        >
-          Sign in
-        </Button>
-        <Button
-          type="button"
-          variant={mode === "signup" ? "secondary" : "outline"}
-          className="h-11"
-          aria-pressed={mode === "signup"}
-          disabled={busy}
-          onClick={() => changeMode("signup")}
-        >
-          Create account
-        </Button>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          className="h-11"
-          placeholder="you@example.com"
-          value={email}
-          disabled={busy}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-      </div>
-      {mode !== "magic" ? (
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              required
-              minLength={mode === "signup" ? 8 : undefined}
-              autoComplete={
-                mode === "signup" ? "new-password" : "current-password"
-              }
-              className="h-11 pr-12"
-              value={password}
-              disabled={busy}
-              aria-describedby={mode === "signup" ? "password-hint" : undefined}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              className="absolute top-0 right-0 h-11 w-11"
-              disabled={busy}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              aria-pressed={showPassword}
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
-            </Button>
-          </div>
-          {mode === "signup" ? (
-            <p id="password-hint" className="text-muted-foreground text-xs">
-              Use at least 8 characters.
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+    <div className="space-y-4" aria-busy={busy}>
+      <Button
+        type="button"
+        variant="outline"
+        className="h-11 w-full"
+        disabled={busy}
+        onClick={signInWithGoogle}
+      >
+        {busy ? (
+          <Loader2 className="size-4 animate-spin" aria-hidden />
+        ) : (
+          <GoogleIcon />
+        )}
+        {busy ? "Redirecting to Google..." : "Continue with Google"}
+      </Button>
       {error ? (
         <p role="alert" className="text-destructive text-sm">
           {error}
         </p>
       ) : null}
-      {message ? (
-        <p role="status" className="rounded-lg border p-3 text-sm">
-          {message}
-        </p>
-      ) : null}
-      <Button type="submit" className="h-11 w-full" disabled={busy}>
-        {busy ? (
-          <>
-            <Loader2 className="size-4 animate-spin" aria-hidden />
-            Please wait...
-          </>
-        ) : mode === "signup" ? (
-          "Create account"
-        ) : mode === "magic" ? (
-          "Send sign-in link"
-        ) : (
-          "Sign in"
-        )}
-      </Button>
-      {mode !== "signup" ? (
-        <Button
-          type="button"
-          variant="ghost"
-          className="text-muted-foreground h-11 w-full"
-          disabled={busy}
-          onClick={() => changeMode(mode === "magic" ? "signin" : "magic")}
-        >
-          {mode === "magic"
-            ? "Use email and password"
-            : "Use a magic link instead"}
-        </Button>
-      ) : null}
+      <p className="text-muted-foreground text-center text-xs text-pretty">
+        By continuing, you agree to our{" "}
+        <Link href="/terms" className="underline underline-offset-4">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline underline-offset-4">
+          Privacy Policy
+        </Link>
+        .
+      </p>
       <p className="text-muted-foreground text-center text-xs">
         <Link href="/" className="underline-offset-4 hover:underline">
           Back to home
         </Link>
       </p>
-    </form>
+    </div>
   );
 }
