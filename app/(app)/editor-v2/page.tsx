@@ -17,10 +17,12 @@ import { useEditorStore, useUiStore } from "@/lib/store";
 import { useCreditsStore } from "@/lib/store/credits-store";
 import { useEditorShortcuts } from "@/lib/store/use-editor-shortcuts";
 import { useLocalDraft } from "@/lib/store/use-local-draft";
+import { useBrandKitLoader } from "@/lib/brand/use-brand-kit";
 
 export default function EditorV2Page() {
   useEditorShortcuts();
   const draft = useLocalDraft();
+  useBrandKitLoader();
   const [activeTool, setActiveTool] = useState<V2ToolId | null>("image");
   const [aiOpen, setAiOpen] = useState(false);
   const [aiPreview, setAiPreview] = useState<string | null>(null);

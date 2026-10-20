@@ -1,4 +1,5 @@
 import type { ImageCrop, Scene } from "@/lib/scene";
+import type { WatermarkPlacement } from "./watermark-placement";
 
 export type RenderOptions = {
   scale: number;
@@ -31,6 +32,8 @@ export type PreviewAssets = {
   videoAspect?: number | null;
   sunlightOverlay?: TexImageSource | null;
   watermark?: TexImageSource | null;
+  /** Corner / size / opacity of the watermark; default bottom-right, 1×, opaque. */
+  watermarkPlacement?: WatermarkPlacement | null;
   textLayers?: TextLayerAsset[] | null;
 };
 

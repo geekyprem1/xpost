@@ -186,6 +186,7 @@ async function runImage(request: ImageRequest) {
       videoAspect: assets.videoAspect ?? null,
       sunlightOverlay: canvasFrom(assets.sunlightOverlay),
       watermark: canvasFrom(assets.watermark),
+      watermarkPlacement: assets.watermarkPlacement ?? null,
       textLayers: textLayersFrom(assets),
     });
     check();
@@ -261,6 +262,7 @@ async function runVideo(request: VideoRequest) {
       screenshotSize,
       sunlightOverlay: canvasFrom(assets.sunlightOverlay),
       watermark: canvasFrom(assets.watermark),
+      watermarkPlacement: assets.watermarkPlacement ?? null,
       textLayers: textLayersFrom(assets),
     });
 
@@ -393,6 +395,7 @@ async function runGif(request: GifRequest) {
       screenshotSize,
       sunlightOverlay: canvasFrom(assets.sunlightOverlay),
       watermark: canvasFrom(assets.watermark),
+      watermarkPlacement: assets.watermarkPlacement ?? null,
       textLayers: textLayersFrom(assets),
     });
 

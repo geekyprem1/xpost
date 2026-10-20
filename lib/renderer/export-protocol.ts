@@ -1,5 +1,6 @@
 import type { Scene } from "@/lib/scene";
 import type { ExportFormat, ExportScale } from "./export-format";
+import type { WatermarkPlacement } from "./watermark-placement";
 
 export type BakedTextLayer = {
   id: string;
@@ -23,6 +24,7 @@ export type BakedAssets = {
   videoAspect?: number | null;
   sunlightOverlay?: ImageBitmap | null;
   watermark?: ImageBitmap | null;
+  watermarkPlacement?: WatermarkPlacement | null;
   textLayers?: BakedTextLayer[] | null;
 };
 

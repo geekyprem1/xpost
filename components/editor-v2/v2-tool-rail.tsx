@@ -12,6 +12,7 @@ import {
   Palette,
   PenLine,
   ShieldOff,
+  Stamp,
   Sun,
   Type,
   WandSparkles,
@@ -33,6 +34,7 @@ const ICONS: Record<V2ToolId, LucideIcon> = {
   position: Move,
   sunlight: Sun,
   auto: WandSparkles,
+  brand: Stamp,
 };
 
 function RailButton({

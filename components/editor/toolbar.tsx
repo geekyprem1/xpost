@@ -12,6 +12,7 @@ import {
   Palette,
   PenLine,
   ShieldOff,
+  Stamp,
   Sun,
   Trash2,
   Type,
@@ -22,6 +23,7 @@ import { ScreenCapture } from "@/components/editor/screen-capture";
 import { AnnotatePanel } from "@/components/editor/panels/annotate-panel";
 import { AutoPanel } from "@/components/editor/panels/auto-panel";
 import { BackgroundPanel } from "@/components/editor/panels/background-panel";
+import { BrandPanel } from "@/components/editor/panels/brand-panel";
 import { CropPanel } from "@/components/editor/panels/crop-panel";
 import { FramePanel } from "@/components/editor/panels/frame-panel";
 import { LayoutPanel } from "@/components/editor/panels/layout-panel";
@@ -54,7 +56,8 @@ export type PanelId =
   | "position"
   | "layout"
   | "sunlight"
-  | "auto";
+  | "auto"
+  | "brand";
 
 const PANEL_TOOLS: { id: PanelId; label: string; icon: LucideIcon }[] = [
   { id: "text", label: "Text", icon: Type },
@@ -69,6 +72,7 @@ const PANEL_TOOLS: { id: PanelId; label: string; icon: LucideIcon }[] = [
   { id: "layout", label: "Layout", icon: LayoutGrid },
   { id: "sunlight", label: "Sunlight", icon: Sun },
   { id: "auto", label: "Auto", icon: WandSparkles },
+  { id: "brand", label: "Brand", icon: Stamp },
 ];
 
 export function Toolbar({
@@ -157,7 +161,8 @@ export function Toolbar({
                 tool.id === "style" ||
                 tool.id === "layers" ||
                 tool.id === "sunlight" ||
-                tool.id === "frame"
+                tool.id === "frame" ||
+                tool.id === "brand"
                   ? "max-h-[65dvh] w-88 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl p-4"
                   : undefined
               }
@@ -186,6 +191,8 @@ export function Toolbar({
                 <SunlightPanel />
               ) : tool.id === "auto" ? (
                 <AutoPanel />
+              ) : tool.id === "brand" ? (
+                <BrandPanel />
               ) : (
                 <>
                   <PopoverTitle>{tool.label}</PopoverTitle>

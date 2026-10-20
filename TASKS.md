@@ -21,7 +21,7 @@
 | M4 — AI Studio | 7–8 | Mostly done (T4.4 live review, T4.5 pending; T4.8 → T9.10) |
 | M5 — X Share (no API) | 9 | ✅ Complete |
 | M7 — Quick wins | ~1 week | Not started — M8 ke baad |
-| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.6 done (17 Oct); T8.7 next |
+| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.7 done (T8.7 manual check pending); T8.8 next |
 | M9 — Differentiators | ~2–3 weeks | Not started |
 | M6 — Launch | M9 ke baad | Not started (T6.1 done; T6.4 PostHog → T7.9) |
 | M10 — Growth + Pro | Launch ke baad | Not started |
@@ -562,12 +562,13 @@ T8.0 → T8.1 → T8.2 baaki sab ke blocker hain. T8.10 (projects) T8.1 ke baad 
 **Refs:** PRD CR-1, CR-2
 
 ### T8.7 Brand kit
-- [ ] Save / apply / rename / delete style (BK-1) — guest localStorage, user `user_styles` (T8.9)
-- [ ] Custom watermark: logo / text, corner, opacity, size (BK-2) — renderer watermark layer extend
-- [ ] Brand colors (BK-3) pickers mein
-- [ ] **[USER]** watermark policy (U18)
+- [x] Save / apply / rename / delete style (BK-1) — `lib/brand/brand-kit.ts` (snapshot = aspect + background + frame + style + transform + layout + sunlight; screenshot / crop / layers / watermark toggle untouched), apply = **ek undo entry**, max 10; naya "Brand" panel (V1 toolbar + V2 rail). Storage abhi localStorage `shotlark-brand:{userId}` (tolerant zod parse — ek kharab style poora kit nahi todta); **`user_styles` cloud sync T8.9 / T8.10 ke saath**
+- [x] Custom watermark: logo / text, corner, opacity, size (BK-2) — PNG/SVG ≤ 500 KB → 256 px PNG; text (`@handle`, Inter), pill on/off, dark/light tone; renderer `watermarkPlacement` (4 corners, 50–200 %, 10–100 % opacity — `uOpacity` shader); **ek hi resolver** (`resolveWatermark`) preview, main-thread export aur worker (PNG/MP4/GIF) teeno mein; text/logo khaali → Shotlark badge
+- [x] Brand colors (BK-3) pickers mein — max 6 (dedupe, hex normalize); background (solid swatches + "Brand gradient"), text (color / pill / shadow), annotation palette mein sabse upar
+- [ ] **[USER]** watermark policy (U18) — abhi custom watermark sabke liye free (beta)
 
-**Done when:** Saved style kisi bhi naye screenshot pe ek click mein same look de; custom watermark export mein.
+**Done when:** Saved style kisi bhi naye screenshot pe ek click mein same look de; custom watermark export mein. — ✓ code + **22 naye tests** (style capture/apply/limits, colors, kit parse, store persist / per-user / quota, placement regression: default rect purane 36 px / 30 px margin jaisa hi); **300 tests green**, lint 0 errors, typecheck + build pass.
+**Pending (manual):** logged-in editor mein Brand panel visual check — logo upload, corners, export PNG/MP4/GIF mein custom watermark (yahan browser session nahi tha).
 **Refs:** PRD BK-1…BK-3
 
 ### T8.8 Platform sizes

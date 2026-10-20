@@ -11,7 +11,8 @@ export type V2ToolId =
   | "layout"
   | "position"
   | "sunlight"
-  | "auto";
+  | "auto"
+  | "brand";
 
 export const V2_TOOL_LABELS: Record<V2ToolId, string> = {
   image: "Image",
@@ -27,6 +28,7 @@ export const V2_TOOL_LABELS: Record<V2ToolId, string> = {
   position: "Position",
   sunlight: "Light",
   auto: "Auto",
+  brand: "Brand",
 };
 
 export const V2_TOOL_GROUPS: {
@@ -45,6 +47,7 @@ export const V2_TOOL_GROUPS: {
       "position",
       "sunlight",
       "auto",
+      "brand",
     ],
   },
 ];

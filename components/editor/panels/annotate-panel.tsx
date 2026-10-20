@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { BrandSwatches } from "@/components/editor/panels/brand-swatches";
 import {
   ANNOTATION_COLORS,
   ANNOTATION_EMOJI,
@@ -68,6 +69,11 @@ export function AnnotatePanel() {
 
       <section className="space-y-2 border-t pt-3">
         <span className="text-xs font-medium">Color</span>
+        <BrandSwatches
+          value={style.color}
+          label="Annotation brand colors"
+          onPick={(color) => setStyle({ color })}
+        />
         <div className="flex flex-wrap gap-1.5">
           {ANNOTATION_COLORS.map((color) => (
             <button

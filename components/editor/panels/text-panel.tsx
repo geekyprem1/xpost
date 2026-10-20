@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { AlignCenter, AlignLeft, AlignRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { BrandSwatches } from "@/components/editor/panels/brand-swatches";
 import { FONT_OPTIONS } from "@/lib/fonts";
 import {
   TEXT_LAYOUT_PRESETS,
@@ -41,16 +42,24 @@ function ColorField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-2 text-xs">
+    <div className="flex items-center justify-between gap-2 text-xs">
       <span className="text-muted-foreground">{label}</span>
-      <input
-        type="color"
-        value={value}
-        aria-label={label}
-        className="h-6 w-10 cursor-pointer rounded border bg-transparent"
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </label>
+      <div className="flex items-center gap-1.5">
+        <BrandSwatches
+          size="sm"
+          value={value}
+          label={`${label} brand colors`}
+          onPick={onChange}
+        />
+        <input
+          type="color"
+          value={value}
+          aria-label={label}
+          className="h-6 w-10 cursor-pointer rounded border bg-transparent"
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </div>
+    </div>
   );
 }
 

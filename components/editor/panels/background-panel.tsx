@@ -21,6 +21,9 @@ import {
 } from "@/lib/backgrounds/presets";
 import { gradientBackgroundFromImage } from "@/lib/editor/auto-style";
 import { useEditorStore } from "@/lib/store";
+import { brandGradient } from "@/lib/brand/brand-kit";
+import { useBrandStore } from "@/lib/brand/brand-store";
+import { BrandSwatches } from "@/components/editor/panels/brand-swatches";
 
 const TABS = [
   { id: "motion", label: "Motion" },
@@ -60,6 +63,7 @@ export function BackgroundPanel() {
   const commitScene = useEditorStore((state) => state.commitScene);
   const [activeTab, setActiveTab] = useState<TabId>("premium");
   const [filters, setFilters] = useState<BackgroundTag[]>([]);
+  const brandColors = useBrandStore((state) => state.kit.colors);
 
   const premium = useMemo(
     () => filterByTags(PREMIUM_PRESETS, filters),
@@ -263,6 +267,30 @@ export function BackgroundPanel() {
             Gradient
           </Button>
         </div>
+
+        {brandColors.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <BrandSwatches
+              value={solid?.color}
+              label="Brand background colors"
+              onPick={applySolid}
+            />
+            {brandColors.length >= 2 ? (
+              <Button
+                type="button"
+                size="xs"
+                variant="outline"
+                onClick={() => {
+                  const next = brandGradient(brandColors);
+                  if (next)
+                    setScene((scene) => ({ ...scene, background: next }));
+                }}
+              >
+                Brand gradient
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
 
         {solid ? (
           <div className="flex items-center gap-2">

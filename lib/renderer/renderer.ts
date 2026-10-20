@@ -27,6 +27,11 @@ import {
   uploadGlTexture,
 } from "./gl";
 import type { GlFbo, GlProgram } from "./gl";
+import {
+  DEFAULT_WATERMARK_PLACEMENT,
+  clampWatermarkOpacity,
+  watermarkRect,
+} from "./watermark-placement";
 import type {
   PreviewAssets,
   RenderBlobResult,
@@ -292,11 +297,13 @@ out vec4 outColor;
 uniform sampler2D uTex;
 uniform vec2 uRes;
 uniform vec4 uRect;
+uniform float uOpacity;
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
   vec2 uv = (p - uRect.xy) / uRect.zw;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
-  outColor = texture(uTex, vec2(uv.x, 1.0 - uv.y));
+  vec4 color = texture(uTex, vec2(uv.x, 1.0 - uv.y));
+  outColor = vec4(color.rgb, color.a * uOpacity);
 }`;
 
 export class WebGL2Renderer implements Renderer {
@@ -1148,9 +1155,17 @@ export class WebGL2Renderer implements Renderer {
     const size = this.watermarkSize;
     if (!texture || !size) return;
 
-    const height = 36 * scale;
-    const width = height * (size.width / size.height);
-    const margin = 30 * scale;
+    const placement =
+      this.assets.watermarkPlacement ?? DEFAULT_WATERMARK_PLACEMENT;
+    const opacity = clampWatermarkOpacity(placement.opacity);
+    if (opacity <= 0) return;
+    const rect = watermarkRect(
+      canvas.width,
+      canvas.height,
+      scale,
+      size.width / size.height,
+      placement,
+    );
 
     gl.useProgram(program.program);
     const u = program.uniforms;
@@ -1158,13 +1173,8 @@ export class WebGL2Renderer implements Renderer {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.uniform1i(u.uTex, 0);
     gl.uniform2f(u.uRes, canvas.width, canvas.height);
-    gl.uniform4f(
-      u.uRect,
-      canvas.width - margin - width,
-      canvas.height - margin - height,
-      width,
-      height,
-    );
+    gl.uniform4f(u.uRect, rect.x, rect.y, rect.width, rect.height);
+    gl.uniform1f(u.uOpacity, opacity);
     gl.bindVertexArray(this.triVao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }

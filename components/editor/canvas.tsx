@@ -16,13 +16,14 @@ import { createSunlightOverlayCanvas } from "@/lib/editor/sunlight-overlays";
 import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 import {
   computeOutputSize,
-  createWatermarkCanvas,
   fitSize,
   WebGL2Renderer,
   type TextLayerAsset,
 } from "@/lib/renderer";
 import { croppedImageSize, FULL_CROP } from "@/lib/scene";
 import { useEditorStore, useUiStore } from "@/lib/store";
+import { useBrandStore } from "@/lib/brand/brand-store";
+import { resolveWatermark } from "@/lib/brand/watermark-asset";
 
 const WELCOME_TILES = [13, 23, 16, 12, 14, 30, 21, 24, 11, 28, 25, 20];
 
@@ -75,11 +76,6 @@ export function EditorCanvas() {
         lastUploadedRef.current = null;
         setError(null);
         setReady((value) => value + 1);
-        void document.fonts.ready.then(() => {
-          if (disposed) return;
-          renderer.setAssets({ watermark: createWatermarkCanvas() });
-          setReady((value) => value + 1);
-        });
       })
       .catch((reason: unknown) => {
         if (disposed) return;
@@ -166,6 +162,29 @@ export function EditorCanvas() {
       compositeKeyRef.current = null;
     }
   }, [hasImage, imageElement, ready, scene.layers]);
+
+  // Custom watermark (BK-2) — same resolver as every export path.
+  const brandWatermark = useBrandStore((state) => state.kit.watermark);
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer || !ready) return;
+    let cancelled = false;
+    void resolveWatermark(brandWatermark)
+      .then((watermark) => {
+        if (cancelled || rendererRef.current !== renderer) return;
+        renderer.setAssets({
+          watermark: watermark.source,
+          watermarkPlacement: watermark.placement,
+        });
+        renderSceneRef.current();
+      })
+      .catch(() => {
+        // Broken logo data: keep the previous watermark rather than none.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [brandWatermark, ready]);
 
   const overlayId = scene.sunlight.overlay;
   useEffect(() => {

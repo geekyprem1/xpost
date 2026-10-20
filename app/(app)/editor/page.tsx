@@ -13,12 +13,14 @@ import { useCreditsStore } from "@/lib/store/credits-store";
 import { useEditorShortcuts } from "@/lib/store/use-editor-shortcuts";
 import { useLocalDraft } from "@/lib/store/use-local-draft";
 import { useEditorHandoff } from "@/lib/editor/use-editor-handoff";
+import { useBrandKitLoader } from "@/lib/brand/use-brand-kit";
 import { Aperture, ArrowUpRight } from "lucide-react";
 
 export default function EditorPage() {
   useEditorShortcuts();
   const draft = useLocalDraft();
   useEditorHandoff(draft.ready);
+  useBrandKitLoader();
   const [openPanel, setOpenPanel] = useState<PanelId | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiPreview, setAiPreview] = useState<string | null>(null);

@@ -5,7 +5,7 @@ import { croppedImageSize, type Scene } from "@/lib/scene";
 import type { PreviewAssets } from "./types";
 import { computeOutputSize } from "./geometry";
 import { WebGL2Renderer } from "./renderer";
-import { createWatermarkCanvas } from "./watermark";
+import { resolveActiveWatermark } from "@/lib/brand/watermark-asset";
 import {
   exportMime,
   type ExportFormat,
@@ -108,8 +108,10 @@ async function collectAssets(
   scene: Scene,
   assets: ExportImageAssets,
 ): Promise<Partial<PreviewAssets>> {
+  const watermark = await resolveActiveWatermark();
   const collected: Partial<PreviewAssets> = {
-    watermark: createWatermarkCanvas(),
+    watermark: watermark.source,
+    watermarkPlacement: watermark.placement,
     sunlightOverlay:
       scene.sunlight.overlay === "none"
         ? null

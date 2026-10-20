@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { AnnotatePanel } from "@/components/editor/panels/annotate-panel";
 import { AutoPanel } from "@/components/editor/panels/auto-panel";
 import { BackgroundPanel } from "@/components/editor/panels/background-panel";
+import { BrandPanel } from "@/components/editor/panels/brand-panel";
 import { CropPanel } from "@/components/editor/panels/crop-panel";
 import { FramePanel } from "@/components/editor/panels/frame-panel";
 import { LayersPanel } from "@/components/editor/panels/layers-panel";
@@ -45,6 +46,8 @@ function Panel({ tool }: { tool: V2ToolId }) {
       return <SunlightPanel />;
     case "auto":
       return <AutoPanel />;
+    case "brand":
+      return <BrandPanel />;
   }
 }
 

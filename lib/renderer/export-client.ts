@@ -21,7 +21,7 @@ import type {
 } from "./export-protocol";
 import { computeOutputSize } from "./geometry";
 import { capVideoSize } from "./export-video";
-import { createWatermarkCanvas } from "./watermark";
+import { resolveActiveWatermark } from "@/lib/brand/watermark-asset";
 
 export class ExportCancelledError extends Error {
   constructor() {
@@ -116,8 +116,10 @@ async function bakeAssets(
   textScale = 1,
 ): Promise<BakedAssets> {
   await document.fonts.ready;
+  const watermark = await resolveActiveWatermark();
   const baked: BakedAssets = {
-    watermark: await createImageBitmap(createWatermarkCanvas()),
+    watermark: await createImageBitmap(watermark.source),
+    watermarkPlacement: watermark.placement,
   };
   const textLayers = await bakeTextLayers(scene, textScale);
   if (textLayers.length > 0) baked.textLayers = textLayers;
