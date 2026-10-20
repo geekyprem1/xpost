@@ -160,13 +160,41 @@ export function computeOutputSize(
   imageSize?: Size | null,
 ): Size {
   const width = Math.max(1, Math.round(scene.canvas.baseWidth * scale));
-  const ratio =
-    scene.canvas.aspect === "auto"
+  const size = scene.canvas.size;
+  const ratio = size
+    ? size.width / size.height
+    : scene.canvas.aspect === "auto"
       ? imageSize && imageSize.height > 0
         ? imageSize.width / imageSize.height
         : 4 / 3
       : (ASPECT_RATIOS[scene.canvas.aspect] ?? 4 / 3);
   return { width, height: Math.max(1, Math.round(width / ratio)) };
+}
+
+/**
+ * Downloaded file ke pixels for a download scale (1× / 2× / 3×).
+ * `computeOutputSize` design-space render scale leta hai (width = baseWidth ×
+ * scale); exact platform size (PS-2) pe 1× = bilkul `canvas.size`.
+ * Render karte waqt scale = `output.width / baseWidth` — renderer ka layout
+ * phir wahi pixels deta hai.
+ */
+export function computeExportSize(
+  scene: Scene,
+  scale: number,
+  imageSize?: Size | null,
+): Size {
+  const size = scene.canvas.size;
+  if (!size) return computeOutputSize(scene, scale, imageSize);
+  return {
+    width: Math.max(1, Math.round(size.width * scale)),
+    height: Math.max(1, Math.round(size.height * scale)),
+  };
+}
+
+/** Design-space render scale for a download scale (text raster ke liye bhi). */
+export function exportRenderScale(scene: Scene, scale: number): number {
+  const size = scene.canvas.size;
+  return size ? (size.width * scale) / scene.canvas.baseWidth : scale;
 }
 
 export function cornerRadiusPx(scene: Scene, scale: number): number {

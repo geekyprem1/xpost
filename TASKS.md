@@ -21,7 +21,7 @@
 | M4 — AI Studio | 7–8 | Mostly done (T4.4 live review, T4.5 pending; T4.8 → T9.10) |
 | M5 — X Share (no API) | 9 | ✅ Complete |
 | M7 — Quick wins | ~1 week | Not started — M8 ke baad |
-| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.7 done (T8.7 manual check pending); T8.8 next |
+| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.8 done (T8.7 / T8.8 manual check pending); T8.9 next |
 | M9 — Differentiators | ~2–3 weeks | Not started |
 | M6 — Launch | M9 ke baad | Not started (T6.1 done; T6.4 PostHog → T7.9) |
 | M10 — Growth + Pro | Launch ke baad | Not started |
@@ -571,11 +571,12 @@ T8.0 → T8.1 → T8.2 baaki sab ke blocker hain. T8.10 (projects) T8.1 ke baad 
 **Pending (manual):** logged-in editor mein Brand panel visual check — logo upload, corners, export PNG/MP4/GIF mein custom watermark (yahan browser session nahi tha).
 **Refs:** PRD BK-1…BK-3
 
-### T8.8 Platform sizes
-- [ ] Layout panel "Platform" group (PS-1), exact-pixel output (PS-2), custom size input (PS-3)
-- [ ] `computeOutputSize` tests: har preset exact pixels
+### T8.8 Platform sizes ✅
+- [x] Layout panel "Platform" group (PS-1), exact-pixel output (PS-2), custom size input (PS-3) — `lib/editor/platform-sizes.ts` (10 presets: X 1600×900 / 1080×1080 / 1080×1350, LinkedIn, IG ×3, Product Hunt, OG, YouTube); scene `canvas.size?` (optional, int 200–4096 — schema v2 hi, migration nahi chahiye); design space 1500 wide hi rehta hai (padding / text same feel), `computeExportSize` = exact pixels, render scale `output.width / baseWidth`; aspect ya look chunne pe size clear; saved styles (T8.7) size yaad rakhte hain; canvas size badge + V2 status exact pixels dikhate hain
+- [x] Tests: har preset 1× / 2× / 3× exact pixels **aur** renderer `computeCardLayout` output wahi pixels (stretch nahi); custom size validation, schema limits, aspect/look/style interplay; no-size regression
 
-**Done when:** Product Hunt preset 1× export = 1270×760 exact.
+**Done when:** Product Hunt preset 1× export = 1270×760 exact. — ✓ unit test se (export size + renderer layout dono **1270 × 760**); **309 tests green**, lint 0 errors, typecheck + build pass.
+**Pending (manual):** logged-in editor mein Platform preset → PNG 1× download ka file size check (yahan browser session nahi tha). Note: custom 4096 px pe 3× (12288 px) kuch GPUs ki max texture se bada ho sakta hai — 9:16 3× jaisa pehle se existing risk.
 **Refs:** PRD PS-1…PS-3
 
 ### T8.9 DB migrations (v1.7 part 1)

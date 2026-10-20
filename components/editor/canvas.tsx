@@ -15,6 +15,7 @@ import { useImageActions } from "@/lib/image/use-image-actions";
 import { createSunlightOverlayCanvas } from "@/lib/editor/sunlight-overlays";
 import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 import {
+  computeExportSize,
   computeOutputSize,
   fitSize,
   WebGL2Renderer,
@@ -390,6 +391,12 @@ export function EditorCanvas() {
     1,
     cropTool ? fullImageSize : croppedImageSize(scene, fullImageSize),
   );
+  // 1× download pixels (exact platform size jab set ho).
+  const exportSize = computeExportSize(
+    scene,
+    1,
+    cropTool ? fullImageSize : croppedImageSize(scene, fullImageSize),
+  );
   const display = size
     ? fitSize(
         { width: Math.max(1, size.width), height: Math.max(1, size.height) },
@@ -649,7 +656,7 @@ export function EditorCanvas() {
       />
       {hasImage ? (
         <span className="bg-background/85 text-muted-foreground absolute top-0 left-0 rounded-full border px-3 py-1.5 font-mono text-[11px] shadow-sm backdrop-blur">
-          {output.width} × {output.height}
+          {exportSize.width} × {exportSize.height}
         </span>
       ) : null}
       {imageError ? (

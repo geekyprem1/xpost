@@ -5,6 +5,7 @@ import {
   WALLPAPER_PRESETS,
 } from "@/lib/backgrounds/presets";
 import motionPresets from "@/lib/backgrounds/motion-presets.json";
+import { withAspect } from "@/lib/editor/platform-sizes";
 
 /**
  * A "look" is a finished composition recipe (frame + canvas + background +
@@ -298,7 +299,7 @@ export function looksIn(category: LookCategory): Look[] {
 export function applyLook(scene: Scene, look: Look): Scene {
   return {
     ...scene,
-    canvas: { ...scene.canvas, aspect: look.aspect },
+    canvas: withAspect(scene.canvas, look.aspect),
     frame: { ...scene.frame, kind: look.frame },
     background: structuredClone(look.background),
     style: { ...scene.style, ...look.style },

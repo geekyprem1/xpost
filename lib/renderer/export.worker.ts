@@ -11,7 +11,7 @@ import {
   type VideoSample,
 } from "mediabunny";
 import { croppedImageSize } from "@/lib/scene";
-import { computeOutputSize } from "./geometry";
+import { computeExportSize } from "./geometry";
 import { exportMime } from "./export-format";
 import {
   GIF_LOOP_FADE_SECONDS,
@@ -170,7 +170,7 @@ async function runImage(request: ImageRequest) {
     const screenshotSize = screenshot
       ? { width: screenshot.width, height: screenshot.height }
       : null;
-    const output = computeOutputSize(
+    const output = computeExportSize(
       scene,
       options.scale,
       croppedImageSize(scene, screenshotSize),
@@ -240,7 +240,7 @@ async function runVideo(request: VideoRequest) {
     const screenshotSize = screenshot
       ? { width: screenshot.width, height: screenshot.height }
       : null;
-    const full = computeOutputSize(
+    const full = computeExportSize(
       scene,
       1,
       croppedImageSize(scene, screenshotSize),
@@ -373,7 +373,7 @@ async function runGif(request: GifRequest) {
     const screenshotSize = screenshot
       ? { width: screenshot.width, height: screenshot.height }
       : null;
-    const full = computeOutputSize(
+    const full = computeExportSize(
       scene,
       1,
       croppedImageSize(scene, screenshotSize),

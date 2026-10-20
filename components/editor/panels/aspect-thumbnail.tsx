@@ -5,11 +5,14 @@ import { useEffect, useRef } from "react";
 export function AspectThumbnail({
   ratio,
   label,
+  detail,
   active,
   onSelect,
 }: {
   ratio: number | null;
   label: string;
+  /** Optional second line, e.g. "1270 × 760". */
+  detail?: string;
   active: boolean;
   onSelect: () => void;
 }) {
@@ -42,7 +45,9 @@ export function AspectThumbnail({
     const x = (width - rectW) / 2;
     const y = (height - rectH) / 2;
 
-    const brandAccent = getComputedStyle(canvas).getPropertyValue("--brand-wing").trim();
+    const brandAccent = getComputedStyle(canvas)
+      .getPropertyValue("--brand-wing")
+      .trim();
     ctx.beginPath();
     ctx.roundRect(x, y, rectW, rectH, 3);
     if (ratio === null) {
@@ -61,17 +66,27 @@ export function AspectThumbnail({
     <button
       type="button"
       onClick={onSelect}
-      aria-label={`${label} aspect ratio`}
+      aria-label={detail ? `${label}, ${detail}` : `${label} aspect ratio`}
       aria-pressed={active}
-      title={label}
+      title={detail ? `${label} · ${detail}` : label}
       className={`flex flex-col gap-1 rounded-md border p-1 transition-all ${
-        active ? "ring-2 ring-ring" : "hover:opacity-85"
+        active ? "ring-ring ring-2" : "hover:opacity-85"
       }`}
     >
-      <canvas ref={canvasRef} width={96} height={54} className="block w-full rounded-sm" />
-      <span className="text-[10px] leading-none text-muted-foreground">
+      <canvas
+        ref={canvasRef}
+        width={96}
+        height={54}
+        className="block w-full rounded-sm"
+      />
+      <span className="text-muted-foreground truncate text-[10px] leading-none">
         {label}
       </span>
+      {detail ? (
+        <span className="text-muted-foreground/70 font-mono text-[9px] leading-none">
+          {detail}
+        </span>
+      ) : null}
     </button>
   );
 }

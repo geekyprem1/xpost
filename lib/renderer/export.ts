@@ -3,7 +3,7 @@ import { compositeImageLayers } from "@/lib/layers/image-composite";
 import { rasterizeTextLayers } from "@/lib/layers/text-raster";
 import { croppedImageSize, type Scene } from "@/lib/scene";
 import type { PreviewAssets } from "./types";
-import { computeOutputSize } from "./geometry";
+import { computeExportSize } from "./geometry";
 import { WebGL2Renderer } from "./renderer";
 import { resolveActiveWatermark } from "@/lib/brand/watermark-asset";
 import {
@@ -188,7 +188,7 @@ export async function exportImage(
         height: assets.screenshot.naturalHeight,
       }
     : null;
-  const output = computeOutputSize(
+  const output = computeExportSize(
     scene,
     options.scale,
     croppedImageSize(scene, imageSize),

@@ -16,6 +16,9 @@ import {
 export const SCENE_VERSION = 2;
 export const MAX_LAYERS = 50;
 export const MAX_TEXT_LENGTH = 500;
+/** Custom canvas size limits, px at 1× (PRD PS-3). */
+export const MIN_CANVAS_SIZE = 200;
+export const MAX_CANVAS_SIZE = 4096;
 
 const OVERLAY_OPTIONS = ["none", ...OVERLAY_IDS] as const;
 
@@ -178,6 +181,18 @@ export const sceneSchema = z.object({
   canvas: z.object({
     aspect: z.enum(ASPECT_IDS),
     baseWidth: z.number().min(1),
+    /**
+     * Exact 1× output pixels (PS-1…PS-3). Set ho to aspect ignore hota hai;
+     * design space ab bhi baseWidth wide rehta hai (padding / text same feel).
+     */
+    size: z
+      .object({
+        width: z.number().int().min(MIN_CANVAS_SIZE).max(MAX_CANVAS_SIZE),
+        height: z.number().int().min(MIN_CANVAS_SIZE).max(MAX_CANVAS_SIZE),
+        /** Platform preset id; custom size pe undefined. */
+        preset: z.string().max(40).optional(),
+      })
+      .optional(),
   }),
   image: z
     .object({

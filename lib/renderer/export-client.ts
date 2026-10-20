@@ -19,7 +19,7 @@ import type {
   GifExportOptions,
   VideoExportOptions,
 } from "./export-protocol";
-import { computeOutputSize } from "./geometry";
+import { computeExportSize, exportRenderScale } from "./geometry";
 import { capVideoSize } from "./export-video";
 import { resolveActiveWatermark } from "@/lib/brand/watermark-asset";
 
@@ -184,7 +184,7 @@ function textScaleForCap(
         height: assets.screenshot.naturalHeight,
       }
     : null;
-  const full = computeOutputSize(
+  const full = computeExportSize(
     scene,
     1,
     croppedImageSize(scene, screenshotSize),
@@ -276,7 +276,7 @@ export function startImageExport(
     const baked = await (deps.bakeAssets ?? bakeAssets)(
       scene,
       assets,
-      options.scale,
+      exportRenderScale(scene, options.scale),
     );
     if (state.cancelled) throw new ExportCancelledError();
     const worker = (deps.createWorker ?? defaultCreateWorker)();

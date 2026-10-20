@@ -11,7 +11,7 @@ import { V2TopBar } from "@/components/editor-v2/v2-top-bar";
 import { V2_TOOL_LABELS, type V2ToolId } from "@/components/editor-v2/tools";
 import { fetchCredits } from "@/lib/api/credits";
 import { capturePostImageForAi } from "@/lib/editor/ai-image";
-import { computeOutputSize } from "@/lib/renderer";
+import { computeExportSize } from "@/lib/renderer";
 import { croppedImageSize } from "@/lib/scene";
 import { useEditorStore, useUiStore } from "@/lib/store";
 import { useCreditsStore } from "@/lib/store/credits-store";
@@ -137,7 +137,7 @@ export default function EditorV2Page() {
     );
   }
 
-  const output = computeOutputSize(
+  const output = computeExportSize(
     scene,
     1,
     croppedImageSize(

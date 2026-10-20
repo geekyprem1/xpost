@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { sceneSchema, type Scene } from "@/lib/scene";
+import { withAspect } from "@/lib/editor/platform-sizes";
 import {
   WATERMARK_CORNERS,
   type WatermarkPlacement,
@@ -25,6 +26,8 @@ const shape = sceneSchema.shape;
 /** The "look" of a scene — everything except the screenshot, crop and layers. */
 export const styleSnapshotSchema = z.object({
   aspect: shape.canvas.shape.aspect,
+  /** Exact platform size (T8.8); purane saved styles mein nahi hota. */
+  size: shape.canvas.shape.size,
   background: shape.background,
   frame: shape.frame,
   style: shape.style,
@@ -143,6 +146,7 @@ export function parseBrandKit(input: unknown): BrandKit {
 export function captureStyle(scene: Scene): StyleSnapshot {
   return structuredClone({
     aspect: scene.canvas.aspect,
+    ...(scene.canvas.size ? { size: scene.canvas.size } : {}),
     background: scene.background,
     frame: scene.frame,
     style: scene.style,
@@ -158,9 +162,10 @@ export function applyStyleSnapshot(
   snapshot: StyleSnapshot,
 ): Scene {
   const copy = structuredClone(snapshot);
+  const canvas = withAspect(scene.canvas, copy.aspect);
   return {
     ...scene,
-    canvas: { ...scene.canvas, aspect: copy.aspect },
+    canvas: copy.size ? { ...canvas, size: copy.size } : canvas,
     background: copy.background,
     frame: copy.frame,
     style: copy.style,
