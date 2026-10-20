@@ -432,9 +432,10 @@ Schema `supabase/migrations/` mein; reference SQL PRD §10 mein. Rules:
 
 | Table | Purpose | Client access |
 |---|---|---|
-| `profiles` | User + `ai_credits` + `credits_reset_at` | Read own; update sirf name/avatar |
+| `profiles` | User + `ai_credits` + `credits_reset_at` + `preview_identity` | Read own; update sirf name / avatar / `preview_identity` |
 | `x_accounts` | X profile + encrypted tokens + refresh lease | Read own, sirf public columns |
-| `projects` | Scene + post text | Own CRUD |
+| `projects` | Scene + post text + `post_versions` (≤ 20) + `thumbnail_path`; max `limits.projects_max` (trigger) | Own CRUD |
+| `user_styles` | Saved brand styles (BK-1); max `limits.brand_styles_max` (trigger) | Own CRUD (update sirf `name`, `style`) |
 | `ai_generations` | AI call log + cost | Read own |
 | `posts` | X posts: weight, status, cost | Read own |
 | `credit_transactions` | Credits ledger | Read own |
@@ -453,6 +454,7 @@ Schema `supabase/migrations/` mein; reference SQL PRD §10 mein. Rules:
 | `reserve_x_post(user, text, media_type, has_url, project)` → post_id | `/api/x/post` | Profile row lock → period mein (pending + posted) weights + naya weight ≤ limit → `pending` row insert; warna `X_POST_LIMIT_REACHED` |
 | `claim_x_token_refresh(user)` → bool | Token service | `refresh_lock_until` null / expired ho to `now() + 30s` set karke true; warna false (caller thoda ruk ke fresh token padhe) |
 | `reset_monthly_credits()` | pg_cron daily | Period khatam → `ai_credits` reset, `credits_reset_at = now()`, ledger entry |
+| `enforce_user_row_limit()` | BEFORE INSERT trigger (`projects`, `user_styles`) | Per-user advisory lock → count ≥ `app_config` limit → `PROJECTS_LIMIT_REACHED` / `BRAND_STYLES_LIMIT_REACHED` |
 | `cleanup_housekeeping()` | pg_cron hourly | 15 min purane `pending` posts → `failed`; purane `rate_limits` + expired `pexels_cache` delete |
 
 - **Usage period:** `credits_reset_at` se 1 mahina. AI credits aur X posts dono isi period pe chalte hain → UI pe ek hi "reset date".

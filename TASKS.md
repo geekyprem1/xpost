@@ -21,7 +21,7 @@
 | M4 — AI Studio | 7–8 | Mostly done (T4.4 live review, T4.5 pending; T4.8 → T9.10) |
 | M5 — X Share (no API) | 9 | ✅ Complete |
 | M7 — Quick wins | ~1 week | Not started — M8 ke baad |
-| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.8 done (T8.7 / T8.8 manual check pending); T8.9 next |
+| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.9 done (T8.9 apply [USER] pending; T8.7 / T8.8 manual check pending); T8.10 next |
 | M9 — Differentiators | ~2–3 weeks | Not started |
 | M6 — Launch | M9 ke baad | Not started (T6.1 done; T6.4 PostHog → T7.9) |
 | M10 — Growth + Pro | Launch ke baad | Not started |
@@ -580,11 +580,11 @@ T8.0 → T8.1 → T8.2 baaki sab ke blocker hain. T8.10 (projects) T8.1 ke baad 
 **Refs:** PRD PS-1…PS-3
 
 ### T8.9 DB migrations (v1.7 part 1)
-- [ ] Migration: `projects` + `post_versions`, `thumbnail_path`; `profiles` + `preview_identity`; `user_styles` table; column grants; `app_config` keys (`limits.projects_max`, `limits.brand_styles_max`)
-- [ ] pgTAP: RLS isolation (`user_styles`), client `bonus_credits` update nahi kar sakta (column abhi na ho to T10.3 mein), limit checks
-- [ ] **[USER]** SQL Editor mein apply (order batana hai)
+- [x] Migration `20261020090000_v17_part1.sql` (additive only): `projects` + `post_versions` (array ≤ 20), `thumbnail_path` (sirf `{uid}/{projectId}/thumb.webp`), editor_state ≤ 1 MB; `profiles` + `preview_identity` (object ≤ 2 KB) + column grant; `user_styles` table (RLS own-all, `user_id` default `auth.uid()`, update grant sirf `name` / `style`, name 1–40, style object ≤ 64 KB); `enforce_user_row_limit()` trigger (advisory lock, race-safe) → projects 50 / styles 10 `app_config` se; `app_config` keys
+- [x] pgTAP `05_v17_part1_test.sql` (21 checks): RLS isolation + cross-user insert/update/delete, `user_id` move blocked, anon blocked, shape checks, preview_identity allowed / `ai_credits` still blocked, style limit 10, project limit (app_config driven). `bonus_credits` test T10.3 mein (column abhi nahi)
+- [ ] **[USER]** Real project pe apply — order: sirf ye ek file (`supabase/migrations/20261020090000_v17_part1.sql`), purani 6 migrations ke baad
 
-**Done when:** pgTAP green; Dashboard mein columns / table + policies.
+**Done when:** pgTAP green; Dashboard mein columns / table + policies. — ✓ local temporary Supabase pe **5/5 test files, 51 assertions PASS** (purane tests bhi), `supabase db lint` clean. Dashboard verify apply ke baad.
 **Refs:** PRD §10.3
 
 ### T8.10 Projects & cloud save
