@@ -246,6 +246,38 @@ describe("project api", () => {
     expect(files.has(created.imagePath!)).toBe(false);
     expect(files.has(saved.imagePath!)).toBe(true);
     expect(files.has(`${UID}/${created.id}/thumb.webp`)).toBe(true);
+    expect(saved.thumbnailUploaded).toBe(true);
+    expect(await files.get(`${UID}/${created.id}/thumb.webp`)!.text()).toBe(
+      "thumb",
+    );
+  });
+
+  it("create ke saath thumbnail: file + thumbnail_path set", async () => {
+    const { client, files, rows } = fakeClient();
+    const created = await createProject(client, {
+      userId: UID,
+      title: "x",
+      scene: createDefaultScene(),
+      postText: "",
+      image: png(),
+      thumbnail: new Blob(["t0"], { type: "image/webp" }),
+    });
+    expect(created.thumbnailUploaded).toBe(true);
+    expect(rows.get(created.id)!.thumbnail_path).toBe(
+      `${UID}/${created.id}/thumb.webp`,
+    );
+    expect(await files.get(`${UID}/${created.id}/thumb.webp`)!.text()).toBe(
+      "t0",
+    );
+    const without = await createProject(client, {
+      userId: UID,
+      title: "y",
+      scene: createDefaultScene(),
+      postText: "",
+      image: null,
+    });
+    expect(without.thumbnailUploaded).toBe(false);
+    expect(rows.get(without.id)!.thumbnail_path).toBeNull();
   });
 
   it("delete: folder files + row", async () => {

@@ -127,6 +127,8 @@ export function useProjectSession(projectId: string | null) {
     let force = false;
     let thumbDirty = true;
     let lastThumbAt = 0;
+    /** Cloud row pe thumbnail hai? Nahi → agle save mein zaroor banao (purane projects backfill). */
+    let hasThumbnail = true;
     let latest: Snapshot | null = null;
     let cacheTimer: ReturnType<typeof setTimeout> | undefined;
     let unsubscribe: (() => void) | undefined;
@@ -156,15 +158,20 @@ export function useProjectSession(projectId: string | null) {
         let thumbnail: Blob | null = null;
         const now = Date.now();
         if (
+          !hasThumbnail ||
           image !== undefined ||
           (thumbDirty && now - lastThumbAt > THUMB_MIN_INTERVAL_MS)
         ) {
           lastThumbAt = now;
-          thumbDirty = false;
           thumbnail = await renderProjectThumbnail(
             snapshot.scene,
             snapshot.imageElement,
-          ).catch(() => null);
+          ).catch((reason: unknown) => {
+            console.warn("[projects] thumbnail render failed", reason);
+            return null;
+          });
+          // Fail hua to agle save pe phir try (dirty bana rehta hai).
+          if (thumbnail) thumbDirty = false;
         }
         const saved = await saveProject(client, {
           userId,
@@ -180,6 +187,8 @@ export function useProjectSession(projectId: string | null) {
         force = false;
         base = saved.updatedAt;
         imagePath = saved.imagePath;
+        if (saved.thumbnailUploaded) hasThumbnail = true;
+        else if (thumbnail) thumbDirty = true;
         syncedBlob = snapshot.imageBlob;
         savedRevision = snapshot.revision;
         await writeCache(latest ?? snapshot);
@@ -358,6 +367,7 @@ export function useProjectSession(projectId: string | null) {
 
         base = record.updatedAt;
         imagePath = record.sourceImagePath;
+        hasThumbnail = record.thumbnailPath !== null;
         if (decision === "cache" && cache) {
           syncedBlob =
             cache.imagePath === record.sourceImagePath ? cache.image : null;
@@ -366,7 +376,9 @@ export function useProjectSession(projectId: string | null) {
           useProjectSessionStore
             .getState()
             .set({ status: cache.dirty ? "dirty" : "saved" });
-          startTracking(cache.dirty || syncedBlob !== cache.image);
+          startTracking(
+            cache.dirty || syncedBlob !== cache.image || !hasThumbnail,
+          );
         } else {
           const image = record.sourceImagePath
             ? await downloadProjectImage(client, record.sourceImagePath)
@@ -376,7 +388,8 @@ export function useProjectSession(projectId: string | null) {
           await applyToEditor(record.scene, image, record.postText);
           if (cancelled) return;
           useProjectSessionStore.getState().set({ status: "saved" });
-          startTracking(false);
+          // Thumbnail missing (purana / failed) → ek save jo use bana de.
+          startTracking(!hasThumbnail);
           if (latest) await writeCache(latest);
         }
         window.addEventListener("pagehide", flushNow);
@@ -469,13 +482,24 @@ export function useProjectPromotion(
         const blob = start.imageBlob;
         // Same screenshot → same create call (Strict Mode / double effect se duplicate nahi).
         if (inflightPromotion?.blob !== blob) {
-          const promise = createProject(client, {
-            userId,
-            title,
-            scene: start.scene,
-            postText: start.postText,
-            image: blob,
-          });
+          const promise = renderProjectThumbnail(
+            start.scene,
+            start.imageElement,
+          )
+            .catch((reason: unknown) => {
+              console.warn("[projects] thumbnail render failed", reason);
+              return null;
+            })
+            .then((thumbnail) =>
+              createProject(client, {
+                userId,
+                title,
+                scene: start.scene,
+                postText: start.postText,
+                image: blob,
+                thumbnail,
+              }),
+            );
           inflightPromotion = { blob, promise };
           promise.catch(() => {
             if (inflightPromotion?.blob === blob) inflightPromotion = null;

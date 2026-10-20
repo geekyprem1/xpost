@@ -235,6 +235,28 @@ async function uploadSource(
   return path;
 }
 
+/** Thumbnail optional hai: fail → null (save chalta rahe), reason console mein. */
+async function uploadThumbnail(
+  client: SupabaseClient,
+  userId: string,
+  projectId: string,
+  thumbnail: Blob,
+): Promise<string | null> {
+  const path = thumbnailPath(userId, projectId);
+  const { error } = await client.storage
+    .from(PROJECTS_BUCKET)
+    .upload(path, thumbnail, {
+      contentType: "image/webp",
+      upsert: true,
+      cacheControl: "60",
+    });
+  if (error) {
+    console.warn("[projects] thumbnail upload failed", error.message);
+    return null;
+  }
+  return path;
+}
+
 async function removeFiles(client: SupabaseClient, paths: string[]) {
   if (paths.length === 0) return;
   // Best effort: ek stray file storage mein reh jaaye to bhi user flow na toote.
@@ -250,12 +272,15 @@ export type CreateProjectInput = {
   scene: Scene;
   postText: string;
   image: Blob | null;
+  thumbnail?: Blob | null;
 };
 
 export type SavedProject = {
   id: string;
   updatedAt: string;
   imagePath: string | null;
+  /** Is save mein thumbnail upload + `thumbnail_path` set hua. */
+  thumbnailUploaded: boolean;
 };
 
 /** Row pehle (limit trigger), phir upload — limit pe koi orphan file nahi. */
@@ -279,11 +304,15 @@ export async function createProject(
     try {
       if (input.image)
         imagePath = await uploadSource(client, input.userId, id, input.image);
+      const thumb = input.thumbnail
+        ? await uploadThumbnail(client, input.userId, id, input.thumbnail)
+        : null;
       const { data, error: updateError } = await client
         .from("projects")
         .update({
           source_image_path: imagePath,
           editor_state: sceneForStorage(input.scene, imagePath),
+          ...(thumb ? { thumbnail_path: thumb } : {}),
         })
         .eq("id", id)
         .select("updated_at")
@@ -294,10 +323,17 @@ export async function createProject(
         id,
         updatedAt: (data as { updated_at: string }).updated_at,
         imagePath,
+        thumbnailUploaded: thumb !== null,
       };
     } catch (reason) {
       await client.from("projects").delete().eq("id", id);
-      if (imagePath) await removeFiles(client, [imagePath]);
+      await removeFiles(
+        client,
+        [
+          imagePath,
+          input.thumbnail ? thumbnailPath(input.userId, id) : null,
+        ].filter((path): path is string => path !== null),
+      );
       throw reason;
     }
   }, "The project could not be created.");
@@ -337,18 +373,14 @@ export async function saveProject(
       imagePath = null;
     }
 
-    let thumb: string | undefined;
-    if (input.thumbnail) {
-      thumb = thumbnailPath(input.userId, input.projectId);
-      const { error } = await client.storage
-        .from(PROJECTS_BUCKET)
-        .upload(thumb, input.thumbnail, {
-          contentType: "image/webp",
-          upsert: true,
-          cacheControl: "60",
-        });
-      if (error) thumb = undefined; // Thumbnail optional; save continue.
-    }
+    const thumb = input.thumbnail
+      ? await uploadThumbnail(
+          client,
+          input.userId,
+          input.projectId,
+          input.thumbnail,
+        )
+      : null;
 
     const patch: Record<string, unknown> = {
       editor_state: sceneForStorage(input.scene, imagePath),
@@ -377,6 +409,7 @@ export async function saveProject(
       id: input.projectId,
       updatedAt: (data as { updated_at: string }).updated_at,
       imagePath,
+      thumbnailUploaded: thumb !== null,
     };
   }, "Your changes could not be saved.");
 }
