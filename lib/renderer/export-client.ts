@@ -13,6 +13,7 @@ import { exportImage } from "./export";
 import type {
   BakedAssets,
   BakedTextLayer,
+  ExportTimings,
   ExportWorkerMessage,
   ExportWorkerRequest,
   GifExportOptions,
@@ -45,6 +46,7 @@ export type ExportResult = ExportImageResult & {
   via: "worker" | "main";
   frames?: number;
   durationSeconds?: number;
+  timings?: ExportTimings;
 };
 
 export type ExportHandle = {
@@ -396,6 +398,7 @@ export function startGifExport(
       via: "worker",
       frames: message.frames,
       durationSeconds: message.durationSeconds,
+      timings: message.timings,
     };
   };
   return buildHandle(state, work);

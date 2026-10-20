@@ -45,7 +45,12 @@ export type GifExportOptions = {
   maxWidth: number;
   maxHeight: number;
   maxFrames: number;
+  /** Ordered dithering: smoother gradients, somewhat larger file. */
+  dither?: boolean;
 };
+
+/** Milliseconds spent per export step, for diagnosing slow exports. */
+export type ExportTimings = Record<string, number>;
 
 export type ExportWorkerRequest =
   | {
@@ -89,6 +94,7 @@ export type ExportWorkerMessage =
       ms: number;
       frames?: number;
       durationSeconds?: number;
+      timings?: ExportTimings;
     }
   | { id: number; type: "error"; message: string }
   | { id: number; type: "cancelled" };

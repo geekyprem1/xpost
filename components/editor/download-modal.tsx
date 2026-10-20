@@ -30,7 +30,13 @@ import {
   type ExportHandle,
   type ExportProgress,
 } from "@/lib/renderer/export-client";
-import { GIF_MAX_FRAMES, GIF_MAX_HEIGHT } from "@/lib/renderer/export-gif";
+import {
+  GIF_DEFAULT_WIDTH,
+  GIF_FPS,
+  GIF_MAX_FRAMES,
+  GIF_MAX_HEIGHT,
+  GIF_WIDTHS,
+} from "@/lib/renderer/export-gif";
 import {
   VIDEO_BITRATE,
   VIDEO_FPS,
@@ -85,8 +91,9 @@ export function DownloadModal({
   const [type, setType] = useState<ExportType>("image");
   const [format, setFormat] = useState<ExportFormat>("png");
   const [scale, setScale] = useState<ExportScale>(2);
-  const [gifWidth, setGifWidth] = useState(480);
+  const [gifWidth, setGifWidth] = useState<number>(GIF_DEFAULT_WIDTH);
   const [gifLength, setGifLength] = useState(5);
+  const [gifDither, setGifDither] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +129,9 @@ export function DownloadModal({
         ).toFixed(2)}s · ${preset}`,
       );
       setVia(result.via);
+      // Per-step breakdown for diagnosing slow exports (DevTools console).
+      if (result.timings)
+        console.info(`[export] ${kind} timings (ms)`, result.timings);
       return result;
     } catch (reason) {
       if (reason instanceof ExportCancelledError) {
@@ -170,11 +180,12 @@ export function DownloadModal({
         scene,
         { screenshot: imageElement },
         {
-          fps: 12,
+          fps: GIF_FPS,
           maxWidth: gifWidth,
           durationSeconds: gifLength,
           maxHeight: GIF_MAX_HEIGHT,
           maxFrames: GIF_MAX_FRAMES,
+          dither: gifDither,
         },
         { onProgress: setProgress },
       ),
@@ -222,7 +233,7 @@ export function DownloadModal({
           <DialogTitle>Download</DialogTitle>
           <DialogDescription>
             {type === "gif"
-              ? `${gifWidth}px wide · ${gifLength}s`
+              ? `${gifWidth}px wide · ${gifLength}s · ${GIF_FPS} fps`
               : "Choose a file type, format and scale."}
           </DialogDescription>
         </DialogHeader>
@@ -263,8 +274,8 @@ export function DownloadModal({
                 <legend className="text-muted-foreground mb-2 text-xs font-medium uppercase">
                   Width
                 </legend>
-                <div className="grid grid-cols-2 gap-2">
-                  {[480, 640].map((width) => (
+                <div className="grid grid-cols-3 gap-2">
+                  {GIF_WIDTHS.map((width) => (
                     <Button
                       key={width}
                       type="button"
@@ -297,9 +308,30 @@ export function DownloadModal({
                   ))}
                 </div>
               </fieldset>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="text-xs font-medium" id="gif-dither-label">
+                    Smooth gradients
+                  </span>
+                  <p className="text-muted-foreground text-[11px] leading-snug">
+                    Less color banding. Files get 15–40% larger.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={busy}
+                  variant={gifDither ? "secondary" : "outline"}
+                  aria-pressed={gifDither}
+                  aria-labelledby="gif-dither-label"
+                  onClick={() => setGifDither((value) => !value)}
+                >
+                  {gifDither ? "On" : "Off"}
+                </Button>
+              </div>
               <p className="text-muted-foreground text-xs leading-relaxed">
-                Creates your GIF at 12 fps in your browser. Smaller widths and
-                shorter lengths export faster.
+                Creates your GIF at {GIF_FPS} fps in your browser, with a
+                seamless loop. Smaller widths and shorter lengths export faster.
               </p>
             </>
           ) : null}

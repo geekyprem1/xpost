@@ -1,5 +1,4 @@
 /// <reference lib="webworker" />
-import { applyPalette, GIFEncoder, quantize } from "gifenc";
 import {
   ALL_FORMATS,
   BufferTarget,
@@ -14,11 +13,22 @@ import {
 import { croppedImageSize } from "@/lib/scene";
 import { computeOutputSize } from "./geometry";
 import { exportMime } from "./export-format";
-import { gifFrameDelayMs } from "./export-gif";
+import {
+  GIF_LOOP_FADE_SECONDS,
+  GIF_PALETTE_WARMUP_FRAMES,
+  gifFrameDelayMs,
+} from "./export-gif";
 import { buildLoopTimestamps, computeVideoDuration } from "./export-video";
+import {
+  GifStreamEncoder,
+  blendInto,
+  crossfadeWeight,
+  planGifFrames,
+} from "./gif-encoder";
 import { WebGL2Renderer } from "./renderer";
 import type {
   BakedAssets,
+  ExportTimings,
   ExportWorkerCancel,
   ExportWorkerMessage,
   ExportWorkerRequest,
@@ -92,20 +102,36 @@ scope.onmessage = (
   cancelled.add(message.id);
 };
 
+/**
+ * Draws a decoded video frame into `frameCanvas` and returns the source size.
+ * With `cover` (the output size the background fills), the frame is first
+ * downscaled to just cover it, so far fewer pixels are uploaded and sampled
+ * per frame (a 1080p clip under an 800px GIF). Default (bilinear) smoothing:
+ * "high" measured slower than not downscaling at all.
+ */
 function drawSampleFrame(
   sample: VideoSample,
   frameCanvas: OffscreenCanvas,
   frameContext: OffscreenCanvasRenderingContext2D,
+  cover?: { width: number; height: number },
 ): { width: number; height: number } {
-  const width = sample.displayWidth || 16;
-  const height = sample.displayHeight || 16;
+  const sourceWidth = sample.displayWidth || 16;
+  const sourceHeight = sample.displayHeight || 16;
+  const scale = cover
+    ? Math.min(
+        1,
+        Math.max(cover.width / sourceWidth, cover.height / sourceHeight),
+      )
+    : 1;
+  const width = Math.max(1, Math.ceil(sourceWidth * scale));
+  const height = Math.max(1, Math.ceil(sourceHeight * scale));
   if (frameCanvas.width !== width || frameCanvas.height !== height) {
     frameCanvas.width = width;
     frameCanvas.height = height;
   }
   frameContext.clearRect(0, 0, width, height);
   sample.draw(frameContext, 0, 0, width, height);
-  return { width, height };
+  return { width: sourceWidth, height: sourceHeight };
 }
 
 function done(
@@ -114,7 +140,11 @@ function done(
   width: number,
   height: number,
   started: number,
-  extras: { frames?: number; durationSeconds?: number } = {},
+  extras: {
+    frames?: number;
+    durationSeconds?: number;
+    timings?: ExportTimings;
+  } = {},
 ) {
   post({
     id,
@@ -305,6 +335,10 @@ async function runVideo(request: VideoRequest) {
 async function runGif(request: GifRequest) {
   const { id, scene, assets, options } = request;
   const started = performance.now();
+  const timings: ExportTimings = {};
+  const spend = (step: string, since: number) => {
+    timings[step] = (timings[step] ?? 0) + performance.now() - since;
+  };
   const check = () => {
     if (cancelled.has(id)) throw new CancelledError();
   };
@@ -315,6 +349,7 @@ async function runGif(request: GifRequest) {
       throw new Error("GIF export requires a motion background");
     }
     post({ id, type: "progress", phase: "decode" });
+    let mark = performance.now();
 
     input = new Input({
       formats: ALL_FORMATS,
@@ -323,13 +358,14 @@ async function runGif(request: GifRequest) {
     const track = await input.getPrimaryVideoTrack();
     if (!track) throw new Error("No video track found");
     const sourceDuration = await input.computeDuration();
-    const duration =
-      options.durationSeconds ?? computeVideoDuration(sourceDuration);
-    const timestamps = buildLoopTimestamps(
-      duration,
-      options.fps,
+    const plan = planGifFrames({
+      durationSeconds:
+        options.durationSeconds ?? computeVideoDuration(sourceDuration),
+      fps: options.fps,
       sourceDuration,
-    ).slice(0, options.maxFrames);
+      fadeSeconds: GIF_LOOP_FADE_SECONDS,
+      maxFrames: options.maxFrames,
+    });
 
     const screenshot = canvasFrom(assets.screenshot);
     const screenshotSize = screenshot
@@ -367,55 +403,112 @@ async function runGif(request: GifRequest) {
     if (!readContext)
       throw new Error("Unable to create a 2D rendering context");
 
-    const gif = GIFEncoder();
-    const delay = gifFrameDelayMs(options.fps);
+    const encoder = new GifStreamEncoder({
+      width,
+      height,
+      delayMs: gifFrameDelayMs(options.fps),
+      dither: options.dither ?? false,
+    });
+    const { outputFrames, fadeFrames } = plan;
+    // The first decoded frames build the shared palette; the first
+    // `fadeFrames` of them are also kept to crossfade the loop's end.
+    const warmupCount = Math.min(
+      plan.timestamps.length,
+      Math.max(fadeFrames, GIF_PALETTE_WARMUP_FRAMES),
+    );
+    const warmup: Uint8ClampedArray[] = [];
+    let paletteReady = false;
+
+    // Decoded frame k is output frame k − fadeFrames (see planGifFrames).
+    const writeOutput = (rgba: Uint8ClampedArray, decodedIndex: number) => {
+      // Last `fadeFrames` outputs (decoded index ≥ outputFrames) are blended.
+      const fadeIndex = decodedIndex - outputFrames;
+      if (fadeIndex >= 0) {
+        const step = performance.now();
+        blendInto(
+          rgba,
+          warmup[fadeIndex],
+          crossfadeWeight(fadeIndex, fadeFrames),
+        );
+        spend("crossfade", step);
+      }
+      encoder.writeFrame(rgba);
+    };
+    const startEncoding = () => {
+      encoder.buildPaletteFrom(warmup);
+      paletteReady = true;
+      for (let k = fadeFrames; k < warmup.length; k++)
+        writeOutput(warmup[k], k);
+      warmup.length = fadeFrames;
+    };
+
     const sink = new VideoSampleSink(track);
     const frameCanvas = new OffscreenCanvas(16, 16);
     const frameContext = frameCanvas.getContext("2d");
     if (!frameContext)
       throw new Error("Unable to create a 2D rendering context");
-    const total = timestamps.length;
+    const cover = { width, height };
+    const total = plan.timestamps.length;
     let index = 0;
+    spend("setup", mark);
 
-    for await (const sample of sink.samplesAtTimestamps(timestamps)) {
+    mark = performance.now();
+    for await (const sample of sink.samplesAtTimestamps(plan.timestamps)) {
+      spend("decode", mark);
       check();
+      let step = performance.now();
       if (sample) {
-        const dims = drawSampleFrame(sample, frameCanvas, frameContext);
+        const dims = drawSampleFrame(sample, frameCanvas, frameContext, cover);
         renderer.setAssets({
           videoFrame: frameCanvas,
           videoAspect: dims.width / Math.max(1, dims.height),
         });
         sample.close();
       }
+      spend("upload", step);
+      step = performance.now();
       renderer.render(scene, { scale: width / scene.canvas.baseWidth });
+      spend("render", step);
+      // GPU work queued by render() finishes here, so this includes it.
+      step = performance.now();
       readContext.clearRect(0, 0, width, height);
       readContext.drawImage(canvas, 0, 0);
       const rgba = readContext.getImageData(0, 0, width, height).data;
-      const palette = quantize(rgba, 256, { format: "rgb565" });
-      const indexed = applyPalette(rgba, palette, "rgb565");
-      gif.writeFrame(
-        indexed,
-        width,
-        height,
-        index === 0 ? { palette, delay, repeat: 0 } : { palette, delay },
-      );
+      spend("readback", step);
+
+      if (index < warmupCount) warmup.push(rgba);
+      if (paletteReady) writeOutput(rgba, index);
+      else if (index === warmupCount - 1) startEncoding();
       index++;
       if (index % 5 === 0 || index === total) {
         post({ id, type: "progress", phase: "encode", frame: index, total });
       }
+      mark = performance.now();
     }
+    if (!paletteReady && warmup.length > 0) startEncoding();
 
-    gif.finish();
+    const bytes = encoder.finish();
     check();
-    const bytes = gif.bytes();
     if (bytes.length === 0) throw new Error("The GIF output is empty");
+    timings.palette = encoder.timings.palette;
+    timings.map = encoder.timings.map;
+    timings.lzw = encoder.timings.lzw;
+    timings.total = performance.now() - started;
+    for (const key of Object.keys(timings))
+      timings[key] = Math.round(timings[key]);
+    // A count, not milliseconds: > 0 means the colors drifted mid-loop.
+    timings.paletteRebuilds = encoder.paletteRebuilds;
     done(
       id,
       new Blob([new Uint8Array(bytes)], { type: "image/gif" }),
       width,
       height,
       started,
-      { frames: index, durationSeconds: duration },
+      {
+        frames: encoder.frameCount,
+        durationSeconds: encoder.frameCount / options.fps,
+        timings,
+      },
     );
   } catch (error) {
     reportError(id, error);
