@@ -1,22 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createDefaultScene } from "@/lib/scene";
 import { loadImageFromFile } from "@/lib/image/load";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useEditorStore } from "./editor-store";
 import {
+  deleteLocalDraft,
   readLocalDraft,
   writeLocalDraft,
   type LocalDraft,
 } from "./local-draft";
 
-export function useLocalDraft() {
-  const [ready, setReady] = useState(false);
+/**
+ * Browser-only draft for /editor (no cloud project yet). `enabled: false`
+ * (project pages) → kuch nahi karta. `discard()` jab draft cloud project ban
+ * jaaye: pending write cancel + IndexedDB entry delete, taaki wahi screenshot
+ * dobara naya project na bane.
+ */
+export function useLocalDraft(enabled = true) {
+  const [ready, setReady] = useState(!enabled);
   const [error, setError] = useState<string | null>(null);
+  const discardRef = useRef<() => Promise<void>>(async () => undefined);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
+    let discarded = false;
     let unsubscribe: (() => void) | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let pending: LocalDraft | null = null;
@@ -25,7 +35,7 @@ export function useLocalDraft() {
 
     const flush = () => {
       clearTimeout(timer);
-      if (!pending || !userId) return;
+      if (discarded || !pending || !userId) return;
       const draft = pending;
       const savingRevision = revision;
       pending = null;
@@ -44,6 +54,15 @@ export function useLocalDraft() {
     };
     const onVisibility = () => {
       if (document.hidden) flush();
+    };
+
+    discardRef.current = async () => {
+      discarded = true;
+      unsubscribe?.();
+      unsubscribe = undefined;
+      clearTimeout(timer);
+      pending = null;
+      if (userId) await deleteLocalDraft(userId).catch(() => undefined);
     };
 
     void (async () => {
@@ -78,10 +97,12 @@ export function useLocalDraft() {
             loaded.url,
             draft.scene.image?.path.replace(/^local\//, "") ?? "screenshot",
             draft.image,
+            draft.scene.image ? { restore: draft.scene.image } : undefined,
           );
         }
         store.setPostText(draft?.postText ?? "");
         useEditorStore.temporal.getState().clear();
+        if (discarded) return;
 
         unsubscribe = useEditorStore.subscribe((state, previous) => {
           if (
@@ -120,8 +141,10 @@ export function useLocalDraft() {
       flush();
       window.removeEventListener("pagehide", flush);
       document.removeEventListener("visibilitychange", onVisibility);
+      discardRef.current = async () => undefined;
     };
-  }, []);
+  }, [enabled]);
 
-  return { ready, error };
+  const discard = useCallback(() => discardRef.current(), []);
+  return { ready, error, discard };
 }

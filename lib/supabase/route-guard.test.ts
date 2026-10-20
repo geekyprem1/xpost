@@ -14,7 +14,7 @@ describe("protected routes", () => {
     auth.claims = null;
   });
 
-  it.each(["/editor", "/account", "/editor/project"])(
+  it.each(["/editor", "/account", "/editor/project", "/projects"])(
     "redirects logged-out %s even with the old bypass flag",
     async (path) => {
       vi.stubEnv("AUTH_ENABLED", "false");

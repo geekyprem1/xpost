@@ -21,7 +21,7 @@
 | M4 — AI Studio | 7–8 | Mostly done (T4.4 live review, T4.5 pending; T4.8 → T9.10) |
 | M5 — X Share (no API) | 9 | ✅ Complete |
 | M7 — Quick wins | ~1 week | Not started — M8 ke baad |
-| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.9 done (T8.9 apply [USER] pending; T8.7 / T8.8 manual check pending); T8.10 next |
+| M8 — Layers + Projects | ~3 weeks | **In progress** — T8.0–T8.10 done (T8.7 / T8.8 / T8.10 manual check pending); T8.11 QA next |
 | M9 — Differentiators | ~2–3 weeks | Not started |
 | M6 — Launch | M9 ke baad | Not started (T6.1 done; T6.4 PostHog → T7.9) |
 | M10 — Growth + Pro | Launch ke baad | Not started |
@@ -147,8 +147,8 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 ### T1.6 Upload flow
 - [x] Empty state: drag & drop, paste (Ctrl+V), file picker — client-side ✓ (local object-URL, browser-tested)
 - [x] Validation: PNG/JPG/WebP, max 10 MB — 7 unit tests ✓
-- [ ] Upload `uploads/{uid}/{projectId}/source.{ext}`; `projects` row create; image dimensions save — **auth OFF hai abhi** (AUTH_ENABLED=false); storage upload + persistence auth wapas aane pe
-- [ ] Project load by `/editor/[projectId]` — same dependency
+- [x] Upload `uploads/{uid}/{projectId}/source-{token}.{ext}`; `projects` row create; image dimensions save — T8.10 mein
+- [x] Project load by `/editor/[projectId]` — T8.10 mein
 
 **Done when:** Upload ke baad image canvas pe dikhe; page reload pe project wapas load ho. — image canvas pe ✓ (pixel + visual + undo/redo verify); reload-persistence auth pe pending
 **v1.7:** Bacha hua upload / project-load kaam ab **T8.10** (Projects & cloud save) mein.
@@ -582,21 +582,24 @@ T8.0 → T8.1 → T8.2 baaki sab ke blocker hain. T8.10 (projects) T8.1 ke baad 
 ### T8.9 DB migrations (v1.7 part 1)
 - [x] Migration `20261020090000_v17_part1.sql` (additive only): `projects` + `post_versions` (array ≤ 20), `thumbnail_path` (sirf `{uid}/{projectId}/thumb.webp`), editor_state ≤ 1 MB; `profiles` + `preview_identity` (object ≤ 2 KB) + column grant; `user_styles` table (RLS own-all, `user_id` default `auth.uid()`, update grant sirf `name` / `style`, name 1–40, style object ≤ 64 KB); `enforce_user_row_limit()` trigger (advisory lock, race-safe) → projects 50 / styles 10 `app_config` se; `app_config` keys
 - [x] pgTAP `05_v17_part1_test.sql` (21 checks): RLS isolation + cross-user insert/update/delete, `user_id` move blocked, anon blocked, shape checks, preview_identity allowed / `ai_credits` still blocked, style limit 10, project limit (app_config driven). `bonus_credits` test T10.3 mein (column abhi nahi)
-- [ ] **[USER]** Real project pe apply — order: sirf ye ek file (`supabase/migrations/20261020090000_v17_part1.sql`), purani 6 migrations ke baad
+- [x] **[USER]** Real project pe apply — SQL Editor se applied (20 Oct); verify query se columns / table / policies / triggers / config confirm
 
 **Done when:** pgTAP green; Dashboard mein columns / table + policies. — ✓ local temporary Supabase pe **5/5 test files, 51 assertions PASS** (purane tests bhi), `supabase db lint` clean. Dashboard verify apply ke baad.
 **Refs:** PRD §10.3
 
 ### T8.10 Projects & cloud save
-- [ ] `/projects` dashboard: grid + thumbnail, New / Open / Rename / Duplicate / Delete (PJ-1)
-- [ ] Save: `projects` row + `uploads/{uid}/{projectId}/source.{ext}` + `thumb.webp`; autosave controller ka Supabase save fn (PJ-2)
-- [ ] `/editor/[projectId]` load + 404 (PJ-3); `/editor` pehle upload pe row create
-- [ ] IndexedDB cache + `updated_at` conflict prompt (PJ-4)
-- [ ] Guest import → project (PJ-5); limit 50 (PJ-6); post text + versions (PJ-7)
-- [ ] Preview identity cloud sync (T7.4)
-- [ ] Delete account flow nayi files bhi hataye (verify)
+- [x] `/projects` dashboard: grid + thumbnail (signed URLs), New / Open / Rename / Duplicate / Delete (two-step), `n / 50` + limit state (PJ-1) — `app/(app)/projects/page.tsx`; proxy + route-guard test mein `/projects` protected
+- [x] Save: `projects` row + `uploads/{uid}/{projectId}/source-{token}.{ext}` (token → conflict pe overwrite nahi; purani file save ke baad delete) + `thumb.webp` (≤ 640 px, export path se, max ek baar / 15s); generic `createAutosave<T>` snapshot-based (1.5s debounce, `shouldRetry` — conflict / auth pe auto-retry nahi) (PJ-2) — `lib/projects/*`
+- [x] `/editor/[projectId]` load + "Project not found" (RLS se doosre user ka bhi) (PJ-3); `/editor` pe pehli screenshot → project create → `/editor/{id}` redirect, local draft discard (Strict Mode duplicate guard)
+- [x] IndexedDB cache (`shotlark-projects`) har change pe + `updated_at` optimistic concurrency → conflict dialog ("Keep this browser's version" / "Use cloud version"), open-time bhi; offline open cache se (PJ-4)
+- [x] Purana local draft (screenshot ke saath) `/editor` kholte hi project ban jaata hai (PJ-5 ka logged-in hissa — guest import T7.5 ke saath); limit 50 → `PROJECTS_LIMIT_REACHED` → draft local hi rehta hai + message (PJ-6); post text save (PJ-7 — versions T7.3 ke saath `post_versions` mein)
+- [ ] Preview identity cloud sync — T7.4 abhi bana nahi, uske saath
+- [x] Delete account: `uploads/{uid}/**` recursive delete pehle se project folders cover karta hai; `uploads-cleanup` cron sirf `{uid}/` ke direct files dekhta hai — project files kabhi auto-delete nahi (comment add kiya)
+- [x] Top bar: project title + save status (Saved / Saving… / Unsaved / Saved in this browser / Not saved → retry) + Projects / New project menu
+- Bonus fix: draft / project restore pe `setImage` crop reset kar deta tha — ab `restore` option se saved crop bachta hai
 
-**Done when:** Do projects banao → doosre browser mein login → dono khulein same look ke saath; reload persistence ✓ (T1.6 closed).
+**Done when:** Do projects banao → doosre browser mein login → dono khulein same look ke saath; reload persistence ✓ (T1.6 closed). — ✓ **local Supabase pe live check** (asli RLS + Storage policies + triggers): create → save + thumbnail → stale save CONFLICT → new screenshot (purani file gayi) → list + signed thumb → user B na padh sake na A ke folder mein likh sake → rename → duplicate (files copy) → delete (koi file nahi bachi) → limit trigger; **331 unit tests green** (projects model / cache / api fake-client / autosave rules), lint 0 errors, typecheck + build pass.
+**Pending:** (1) ~~T8.9 migration apply~~ ✓ (20 Oct); (2) manual: do browsers mein same account se dono projects kholna; (3) Studio V2 (`/editor-v2`) abhi local draft pe hi — projects support V2 Phase 2 mein.
 **Refs:** PRD PJ-1…PJ-7, ED-6, AUTH-5
 
 ### T8.11 M8 QA

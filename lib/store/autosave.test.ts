@@ -50,7 +50,11 @@ describe("autosave", () => {
     const save = vi.fn<(scene: Scene) => Promise<void>>();
     save.mockRejectedValueOnce(new Error("network down"));
     save.mockResolvedValue(undefined);
-    const autosave = createAutosave({ save, debounceMs: 2000, retryDelayMs: 5000 });
+    const autosave = createAutosave({
+      save,
+      debounceMs: 2000,
+      retryDelayMs: 5000,
+    });
 
     autosave.schedule(createDefaultScene());
     await vi.advanceTimersByTimeAsync(2000);
@@ -69,7 +73,9 @@ describe("autosave", () => {
     const first = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const save = vi.fn<(scene: Scene) => Promise<void>>().mockReturnValueOnce(first);
+    const save = vi
+      .fn<(scene: Scene) => Promise<void>>()
+      .mockReturnValueOnce(first);
     save.mockResolvedValue(undefined);
     const autosave = createAutosave({ save, debounceMs: 2000 });
 
@@ -113,5 +119,55 @@ describe("autosave", () => {
     await vi.advanceTimersByTimeAsync(5000);
 
     expect(save).not.toHaveBeenCalled();
+  });
+});
+
+describe("autosave retry rules", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("shouldRetry false → error pe ruk jaata hai, onError milta hai", async () => {
+    const failure = new Error("conflict");
+    const save = vi.fn<(value: number) => Promise<void>>(async () => {
+      throw failure;
+    });
+    const onError = vi.fn();
+    const autosave = createAutosave<number>({
+      save,
+      debounceMs: 10,
+      retryDelayMs: 50,
+      shouldRetry: () => false,
+      onError,
+    });
+    autosave.schedule(1);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(autosave.getStatus()).toBe("error");
+    expect(onError).toHaveBeenCalledWith(failure);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(save).toHaveBeenCalledTimes(1);
+
+    // Manual retry (user choice) phir se try karta hai.
+    save.mockResolvedValueOnce(undefined);
+    autosave.retry();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(autosave.getStatus()).toBe("saved");
+    autosave.dispose();
+  });
+
+  it("generic value (snapshot) save fn tak pahunchta hai", async () => {
+    const save = vi.fn<(value: { revision: number }) => Promise<void>>(
+      async () => undefined,
+    );
+    const autosave = createAutosave({ save, debounceMs: 5 });
+    autosave.schedule({ revision: 3 });
+    await vi.advanceTimersByTimeAsync(5);
+    expect(save).toHaveBeenCalledWith({ revision: 3 });
+    autosave.dispose();
   });
 });

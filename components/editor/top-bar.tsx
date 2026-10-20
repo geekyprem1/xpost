@@ -23,6 +23,10 @@ import {
 import { DownloadModal } from "@/components/editor/download-modal";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useCreditsStore } from "@/lib/store/credits-store";
+import {
+  projectStatusLabel,
+  useProjectSessionStore,
+} from "@/lib/projects/project-store";
 
 export function TopBar() {
   const router = useRouter();
@@ -38,6 +42,9 @@ export function TopBar() {
   const [email, setEmail] = useState<string | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const credits = useCreditsStore((state) => state.credits);
+  const projectTitle = useProjectSessionStore((state) => state.title);
+  const saveStatus = useProjectSessionStore((state) => state.status);
+  const retrySave = useProjectSessionStore((state) => state.retry);
 
   useEffect(() => {
     void fetchCredits()
@@ -83,7 +90,30 @@ export function TopBar() {
         </Link>
         <span className="studio-header-divider" />
         <span className="studio-project">
-          Screenshot studio <span>Personal workspace</span>
+          <strong
+            className="block max-w-48 truncate font-semibold"
+            title={projectTitle ?? undefined}
+          >
+            {projectTitle ?? "Screenshot studio"}
+          </strong>
+          <span
+            role="status"
+            aria-live="polite"
+            className="flex items-center gap-1.5"
+          >
+            {saveStatus === "error" || saveStatus === "conflict" ? (
+              <button
+                type="button"
+                className="underline underline-offset-2"
+                onClick={() => retrySave?.()}
+                disabled={!retrySave || saveStatus === "conflict"}
+              >
+                {projectStatusLabel(saveStatus)}
+              </button>
+            ) : (
+              projectStatusLabel(saveStatus)
+            )}
+          </span>
         </span>
       </div>
       <div className="flex items-center gap-1.5">
@@ -168,6 +198,12 @@ export function TopBar() {
               {email ?? "Guest"}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/projects">Projects</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/editor">New project</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/account">Account</Link>
             </DropdownMenuItem>

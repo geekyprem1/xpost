@@ -90,3 +90,14 @@ export async function writeLocalDraft(
     tx.onerror = () => reject(tx.error);
   });
 }
+
+export async function deleteLocalDraft(userId: string): Promise<void> {
+  const db = await openDatabase();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction("drafts", "readwrite");
+    tx.objectStore("drafts").delete(userId);
+    tx.oncomplete = () => resolve();
+    tx.onabort = () => reject(tx.error);
+    tx.onerror = () => reject(tx.error);
+  });
+}

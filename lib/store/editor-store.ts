@@ -46,7 +46,11 @@ export type EditorStore = {
     url: string,
     name: string,
     blob?: Blob,
-    options?: { clearLayers?: boolean },
+    options?: {
+      clearLayers?: boolean;
+      /** Restore (draft / project load): saved image meta incl. crop rakho. */
+      restore?: NonNullable<Scene["image"]>;
+    },
   ) => void;
   clearImage: () => void;
   setImageError: (message: string | null) => void;
@@ -230,12 +234,18 @@ export const useEditorStore = create<EditorStore>()(
           scene: {
             ...state.scene,
             layers: options?.clearLayers ? [] : state.scene.layers,
-            image: {
-              path: `local/${name}`,
-              width: element.naturalWidth,
-              height: element.naturalHeight,
-              crop: { x: 0, y: 0, w: 1, h: 1 },
-            },
+            image: options?.restore
+              ? {
+                  ...options.restore,
+                  width: element.naturalWidth,
+                  height: element.naturalHeight,
+                }
+              : {
+                  path: `local/${name}`,
+                  width: element.naturalWidth,
+                  height: element.naturalHeight,
+                  crop: { x: 0, y: 0, w: 1, h: 1 },
+                },
           },
         }));
         if (options?.clearLayers) {

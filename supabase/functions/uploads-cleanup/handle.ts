@@ -70,6 +70,10 @@ export function createHandle(overrides: Partial<CleanupDeps> = {}) {
         const folders = (roots ?? []).filter(
           (entry) => entry.name && !entry.id,
         );
+        // Sirf `{uid}/` ke direct files scan hote hain. Projects ki files
+        // `{uid}/{projectId}/…` (T8.10) aur `{uid}/brand|profile/…` sub-folders
+        // mein hain — wo folder entries (id null, koi timestamp nahi) hain, isliye
+        // yahan kabhi delete nahi hoti. Project delete / account delete unhe hataate hain.
         for (const folder of folders) {
           summary.foldersScanned++;
           const { data: files } = await admin.storage

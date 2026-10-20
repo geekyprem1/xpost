@@ -2,10 +2,10 @@ import type { Scene } from "@/lib/scene";
 
 export type AutosaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
 
-export type AutosaveSaveFn = (scene: Scene) => Promise<void>;
+export type AutosaveSaveFn<T = Scene> = (value: T) => Promise<void>;
 
-export type AutosaveController = {
-  schedule: (scene: Scene) => void;
+export type AutosaveController<T = Scene> = {
+  schedule: (value: T) => void;
   flush: () => Promise<void>;
   retry: () => void;
   getStatus: () => AutosaveStatus;
@@ -13,16 +13,19 @@ export type AutosaveController = {
   dispose: () => void;
 };
 
-export function createAutosave(options: {
-  save: AutosaveSaveFn;
+export function createAutosave<T = Scene>(options: {
+  save: AutosaveSaveFn<T>;
   debounceMs?: number;
   retryDelayMs?: number;
-}): AutosaveController {
+  /** false → status "error" rehta hai, auto-retry nahi (e.g. save conflict). */
+  shouldRetry?: (error: unknown) => boolean;
+  onError?: (error: unknown) => void;
+}): AutosaveController<T> {
   const debounceMs = options.debounceMs ?? 2000;
   const retryDelayMs = options.retryDelayMs ?? 5000;
 
   let status: AutosaveStatus = "idle";
-  let pending: Scene | null = null;
+  let pending: T | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let inflight = false;
@@ -42,9 +45,9 @@ export function createAutosave(options: {
     }
   }
 
-  function schedule(scene: Scene) {
+  function schedule(value: T) {
     if (disposed) return;
-    pending = scene;
+    pending = value;
     setStatus("dirty");
     clearTimer();
     timer = setTimeout(() => {
@@ -66,25 +69,28 @@ export function createAutosave(options: {
     if (disposed) return;
     clearTimer();
     if (inflight) return;
-    if (!pending) {
+    if (pending === null) {
       if (status === "dirty") setStatus("saved");
       return;
     }
 
     inflight = true;
-    const scene = pending;
+    const value = pending;
     setStatus("saving");
 
     try {
-      await options.save(scene);
-      if (pending === scene) pending = null;
-      setStatus(pending ? "dirty" : "saved");
+      await options.save(value);
+      if (pending === value) pending = null;
+      setStatus(pending !== null ? "dirty" : "saved");
       inflight = false;
-      if (pending) await flush();
-    } catch {
+      if (pending !== null) await flush();
+    } catch (error) {
       inflight = false;
+      if (disposed) return;
       setStatus("error");
+      options.onError?.(error);
       if (retryTimer) clearTimeout(retryTimer);
+      if (options.shouldRetry && !options.shouldRetry(error)) return;
       retryTimer = setTimeout(() => {
         retryTimer = null;
         void flush();
