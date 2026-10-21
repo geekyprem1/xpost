@@ -30,12 +30,6 @@ export function SiteNav() {
           Shotlark
         </Link>
         <Link
-          href="#looks"
-          className="text-muted-foreground hover:text-foreground hidden min-h-11 items-center px-3 text-sm transition-colors sm:inline-flex"
-        >
-          Looks
-        </Link>
-        <Link
           href="#features"
           className="text-muted-foreground hover:text-foreground hidden min-h-11 items-center px-3 text-sm transition-colors sm:inline-flex"
         >

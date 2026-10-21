@@ -4,8 +4,6 @@ import { Palette, Send, WandSparkles, type LucideIcon } from "lucide-react";
 import { AnimatedTiles } from "@/components/marketing/animated-tiles";
 import { HeroDropzone } from "@/components/marketing/hero-dropzone";
 import { HeroHeadline } from "@/components/marketing/hero-headline";
-import { LookGallery } from "@/components/marketing/look-gallery";
-import { LooksShowcase } from "@/components/marketing/looks-showcase";
 import { LEGAL_CONTACT_EMAIL } from "@/components/marketing/legal-page";
 import { SiteNav } from "@/components/marketing/site-nav";
 
@@ -43,10 +41,6 @@ const FAQ = [
     a: "Rendering happens in your browser. Images are only sent to the AI when you ask it to write a post.",
   },
   {
-    q: "Can I change a look after picking it?",
-    a: "Yes. A look is just a starting point. Swap the frame, background, layout or style any time in the editor.",
-  },
-  {
     q: "Can I remove the watermark?",
     a: "Yes. The Shotlark badge is on by default and you can switch it off before downloading.",
   },
@@ -81,33 +75,16 @@ export default function Home() {
           </p>
         </section>
 
-        {/* Before / after */}
-        <section className="px-4 pb-24 sm:px-6 sm:pb-32">
-          <SectionHeading
-            title="One screenshot."
-            muted="Endless looks."
-            body="Drag across the image to compare."
-          />
-          <div className="mt-12">
-            <LooksShowcase />
-          </div>
-        </section>
-
-        {/* Gallery */}
-        <section id="looks" className="scroll-mt-24 px-6 pb-24 sm:pb-32">
-          <div className="mx-auto max-w-6xl">
-            <div className="max-w-xl">
-              <h2 className="text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
-                Pick a look.
-              </h2>
-              <p className="text-muted-foreground mt-3 text-lg text-pretty">
-                Choose a starting point and drop your screenshot right in.
-              </p>
-            </div>
-            <div className="mt-12">
-              <LookGallery />
-            </div>
-          </div>
+        {/* Statement: the quiet line sets up, the loud one answers. */}
+        <section className="px-6 pt-4 pb-28 text-center sm:pt-8 sm:pb-40">
+          <h2 className="mx-auto max-w-5xl font-bold text-balance">
+            <span className="text-muted-solid block text-2xl leading-snug font-semibold tracking-[-0.03em] sm:text-4xl">
+              Most screenshots get scrolled past.
+            </span>
+            <span className="mt-2 block text-5xl leading-[0.95] tracking-[-0.055em] sm:mt-3 sm:text-8xl lg:text-9xl">
+              Yours won’t.
+            </span>
+          </h2>
         </section>
 
         {/* Features */}
