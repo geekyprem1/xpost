@@ -3,7 +3,7 @@ export const GIF_MAX_WIDTH = 1280;
 export const GIF_MAX_HEIGHT = 1080;
 export const GIF_MAX_FRAMES = 350;
 /** Width options in the download modal (5s at 960px measured ~4 MB). */
-export const GIF_WIDTHS = [640, 800, 960] as const;
+export const GIF_WIDTHS = [640, 800, 960, 1280] as const;
 export const GIF_DEFAULT_WIDTH = 800;
 /** Crossfade that hides the jump where the GIF loops back to its start. */
 export const GIF_LOOP_FADE_SECONDS = 0.5;

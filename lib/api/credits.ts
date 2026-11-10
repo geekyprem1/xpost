@@ -13,7 +13,7 @@ export async function fetchCredits(): Promise<CreditsInfo | null> {
       .single();
     if (error || !data) return null;
     const row = data as { ai_credits: number; credits_reset_at: string };
-    return { credits: row.ai_credits, resetAt: row.credits_reset_at ?? null };
+    return { credits: row.ai_credits, resetAt: null };
   } catch {
     return null;
   }

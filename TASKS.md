@@ -39,6 +39,8 @@ V1 `/editor` untouched. Same store/renderer/export engine; sirf naya shell + UX.
 
 ## Definition of Done (har task ke liye)
 
+**Billing decision (22 Oct):** one-time model replaces the planned recurring Pro plan: 24h full trial + 5 AI credits; Lifetime Editor $9.99 + 100 credits; 100/$2.99 and 500/$8.99 top-ups, no expiry. Checkout/webhook/ledger/refunds, pricing, account status and editor gates implemented. Hosted migration, Dodo products/credentials and live smoke test pending. Setup and verification: `DODO_PAYMENTS.md`. Existing credit balances retained; monthly reset disabled by migration.
+
 - Lint, typecheck, build pass.
 - Logic wale code (credits, limits, crypto, scene, presets) ke tests.
 - Code mein koi secret nahi; server-only modules mein `import 'server-only'`.
@@ -407,10 +409,12 @@ M1 ke saath parallel. Har item kis task se pehle chahiye, wo "Needed by" mein ha
 Sab chhote, independent changes. Order: T7.1 → T7.7 (T7.7 T7.1 ke cache pe tika hai), baaki kisi bhi order mein.
 
 ### T7.1 Share image quality
-- [ ] `lib/editor/share-image.ts`: scene → X-preset JPEG (2× → step-down ≤ 5 MB, `encodeWithinLimit`) + clipboard PNG (2× → 1.5× → 1×, ≤ 5 MB); worker export path
-- [ ] Cache: scene / image change pe invalidate; AI panel open + 600ms idle pe pre-render
-- [ ] `right-panel.tsx`: Copy image / Download image is render se; `capturePostImageForAi` (1024px) sirf AI calls ke liye
-- [ ] Unit tests: step-down sequence, cache invalidation
+- [x] `lib/editor/share-image.ts`: scene → X-preset JPEG (2× → step-down ≤ 5 MB, `encodeWithinLimit`) + clipboard PNG (2× → 1.5× → 1×, ≤ 5 MB); worker export path
+- [x] Cache: scene / image / custom watermark change pe invalidate; AI panel open + 600ms idle pe pre-render
+- [x] `right-panel.tsx`: Copy image / Download image is render se; `capturePostImageForAi` (1024px) sirf AI calls ke liye (preview mein bhi wahi small image)
+- [x] Unit tests: step-down sequence, cache invalidation, retries, oversized exports
+
+**22 Oct:** T7.1 + T7.7 implemented. Clipboard failure downloads the full-quality JPEG. Browser clipboard/popup behavior and actual exported dimensions still need a signed-in manual check; automated tests, lint, typecheck and production build verified.
 
 **Done when:** Share image 1500 base pe ≥ 3000px wide (ya step-down ke baad sabse bada jo ≤ 5 MB ho), `X-ready ✓`; AI request mein ab bhi 1024px image jaaye.
 **Refs:** PRD QW-1, EX-8, AI-11
@@ -459,9 +463,9 @@ Sab chhote, independent changes. Order: T7.1 → T7.7 (T7.7 T7.1 ke cache pe tik
 **Refs:** PRD QW-6, AI-6
 
 ### T7.7 Copy image & open X
-- [ ] Primary button: cached share PNG (T7.1) → `ClipboardItem` + `window.open(intent)` same gesture mein
-- [ ] Clipboard fail → auto download + hint; Ctrl+V / ⌘V hint
-- [ ] Image ready na ho to button "Preparing…" disabled
+- [x] Primary button: cached share PNG (T7.1) → `ClipboardItem` + `window.open(intent)` same gesture mein
+- [x] Clipboard fail → auto download + hint; Ctrl+V / ⌘V hint
+- [x] Image ready na ho to button "Preparing…" disabled; failure / oversized PNG pe text-only Open in X available
 
 **Done when:** Chrome + Safari pe ek click mein X tab khule aur compose mein paste se image aaye; popup block na ho.
 **Refs:** PRD QW-7, XF-1, XF-3

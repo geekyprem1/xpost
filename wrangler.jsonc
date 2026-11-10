@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "shotlark",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-09",
+  "compatibility_flags": ["nodejs_compat"],
+  // Keep the workers.dev staging URL alive alongside the custom domains.
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "shotlark.pro",
+      "custom_domain": true,
+      "zone_id": "ed1d6078edb74d5701b28132d60cab1b"
+    },
+    {
+      "pattern": "www.shotlark.pro",
+      "custom_domain": true,
+      "zone_id": "ed1d6078edb74d5701b28132d60cab1b"
+    }
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // next/image optimization via Cloudflare Image Transformations.
+  // Paid feature; remove this block and set images.unoptimized in
+  // next.config.ts if you don't want it.
+  "images": {
+    "binding": "IMAGES"
+  },
+  "vars": {
+    // Non-secret env vars go here; secrets via `wrangler secret put`.
+    // Example:
+    // "NEXT_PUBLIC_SUPABASE_URL": "https://xxx.supabase.co"
+  }
+}

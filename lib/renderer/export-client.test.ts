@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useBillingStore } from "@/lib/billing/access-store";
 import { createDefaultScene } from "@/lib/scene";
 import {
   ExportCancelledError,
@@ -7,6 +8,13 @@ import {
   startVideoExport,
 } from "./export-client";
 import type { BakedAssets } from "./export-protocol";
+
+beforeEach(() =>
+  useBillingStore
+    .getState()
+    .setProfile({ lifetime_editor: true, created_at: "2020-01-01T00:00:00Z" }),
+);
+afterEach(() => useBillingStore.getState().setProfile(null));
 
 class FakeWorker {
   posted: Array<{ message: unknown; transfer?: Transferable[] }> = [];
@@ -80,7 +88,7 @@ describe("startImageExport (worker client)", () => {
       {},
       { format: "png", scale: 2 },
       { onProgress: (progress) => phases.push(progress.phase) },
-      deps(worker)
+      deps(worker),
     );
     await flush();
     expect(worker.posted).toHaveLength(1);
@@ -113,13 +121,15 @@ describe("startImageExport (worker client)", () => {
       {},
       { format: "png", scale: 2 },
       {},
-      deps(worker)
+      deps(worker),
     );
     await flush();
     handle.cancel();
     await expect(handle.promise).rejects.toBeInstanceOf(ExportCancelledError);
     expect(
-      worker.posted.some((entry) => (entry.message as { type?: string }).type === "cancel")
+      worker.posted.some(
+        (entry) => (entry.message as { type?: string }).type === "cancel",
+      ),
     ).toBe(true);
     expect(worker.terminated).toBe(true);
   });
@@ -137,7 +147,7 @@ describe("startImageExport (worker client)", () => {
           new Promise<BakedAssets>((resolve) => {
             releaseBake = () => resolve(makeBaked());
           }),
-      })
+      }),
     );
     handle.cancel();
     releaseBake();
@@ -152,7 +162,7 @@ describe("startImageExport (worker client)", () => {
       {},
       { format: "png", scale: 2 },
       {},
-      deps(worker)
+      deps(worker),
     );
     await flush();
     worker.emit({ id: 1, type: "error", message: "encode fail" });
@@ -167,7 +177,7 @@ describe("startImageExport (worker client)", () => {
       {},
       { format: "png", scale: 2 },
       {},
-      deps(worker)
+      deps(worker),
     );
     await flush();
     worker.emitError("worker crash");
@@ -190,7 +200,7 @@ describe("startImageExport (worker client)", () => {
       {
         supported: () => false,
         runMain: runMain as unknown as typeof import("./export").exportImage,
-      }
+      },
     );
     const result = await handle.promise;
     expect(result.via).toBe("main");
@@ -203,20 +213,27 @@ describe("startImageExport (worker client)", () => {
 describe("startVideoExport", () => {
   it("supported: video request post hota hai, frame progress + done", async () => {
     const worker = new FakeWorker();
-    const progress: Array<{ phase: string; frame?: number; total?: number }> = [];
+    const progress: Array<{ phase: string; frame?: number; total?: number }> =
+      [];
     const handle = startVideoExport(
       scene,
       {},
       VIDEO_OPTIONS,
       { onProgress: (event) => progress.push(event) },
-      deps(worker)
+      deps(worker),
     );
     await flush();
     expect(worker.posted).toHaveLength(1);
     expect((worker.posted[0].message as { kind?: string }).kind).toBe("video");
 
     worker.emit({ id: 1, type: "progress", phase: "decode" });
-    worker.emit({ id: 1, type: "progress", phase: "encode", frame: 30, total: 180 });
+    worker.emit({
+      id: 1,
+      type: "progress",
+      phase: "encode",
+      frame: 30,
+      total: 180,
+    });
     worker.emit({
       id: 1,
       type: "done",
@@ -244,20 +261,14 @@ describe("startVideoExport", () => {
       {},
       VIDEO_OPTIONS,
       {},
-      deps(new FakeWorker(), { supportedVideo: async () => false })
+      deps(new FakeWorker(), { supportedVideo: async () => false }),
     );
     await expect(handle.promise).rejects.toThrow(/unsupported/);
   });
 
   it("video export cancel hota hai", async () => {
     const worker = new FakeWorker();
-    const handle = startVideoExport(
-      scene,
-      {},
-      VIDEO_OPTIONS,
-      {},
-      deps(worker)
-    );
+    const handle = startVideoExport(scene, {}, VIDEO_OPTIONS, {}, deps(worker));
     await flush();
     handle.cancel();
     await expect(handle.promise).rejects.toBeInstanceOf(ExportCancelledError);
@@ -280,12 +291,21 @@ describe("startGifExport", () => {
       scene,
       {},
       GIF_OPTIONS,
-      { onProgress: (event) => progress.push({ phase: event.phase, frame: event.frame }) },
-      deps(worker)
+      {
+        onProgress: (event) =>
+          progress.push({ phase: event.phase, frame: event.frame }),
+      },
+      deps(worker),
     );
     await flush();
     expect((worker.posted[0].message as { kind?: string }).kind).toBe("gif");
-    worker.emit({ id: 1, type: "progress", phase: "encode", frame: 15, total: 90 });
+    worker.emit({
+      id: 1,
+      type: "progress",
+      phase: "encode",
+      frame: 15,
+      total: 90,
+    });
     worker.emit({
       id: 1,
       type: "done",
@@ -310,7 +330,7 @@ describe("startGifExport", () => {
       {},
       GIF_OPTIONS,
       {},
-      deps(new FakeWorker(), { supported: () => false })
+      deps(new FakeWorker(), { supported: () => false }),
     );
     await expect(handle.promise).rejects.toThrow(/unsupported/);
   });

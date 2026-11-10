@@ -4,7 +4,7 @@ export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 export type ExportFileKind = ExportFormat | "mp4" | "gif";
 
 export const EXPORT_SCALES = [1, 2, 3] as const;
-export type ExportScale = (typeof EXPORT_SCALES)[number];
+export type ExportScale = (typeof EXPORT_SCALES)[number] | 1.5;
 
 const MIME: Record<ExportFormat, string> = {
   png: "image/png",
@@ -18,7 +18,7 @@ export function exportMime(format: ExportFormat): string {
 
 export function exportFilename(
   format: ExportFileKind,
-  date = new Date()
+  date = new Date(),
 ): string {
   const pad = (value: number) => String(value).padStart(2, "0");
   const stamp = [

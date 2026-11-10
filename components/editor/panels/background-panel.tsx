@@ -24,6 +24,8 @@ import { useEditorStore } from "@/lib/store";
 import { brandGradient } from "@/lib/brand/brand-kit";
 import { useBrandStore } from "@/lib/brand/brand-store";
 import { BrandSwatches } from "@/components/editor/panels/brand-swatches";
+import { useBillingStore } from "@/lib/billing/access-store";
+import { UpgradeNotice } from "@/components/billing/upgrade-notice";
 
 const TABS = [
   { id: "motion", label: "Motion" },
@@ -57,6 +59,7 @@ const MOTION_CHIPS = [
 ];
 
 export function BackgroundPanel() {
+  const pro = useBillingStore((state) => state.pro);
   const background = useEditorStore((state) => state.scene.background);
   const imageElement = useEditorStore((state) => state.imageElement);
   const setScene = useEditorStore((state) => state.setScene);
@@ -221,27 +224,41 @@ export function BackgroundPanel() {
           ))}
         </TabsContent>
         <TabsContent value="motion">
-          <MotionGallery />
-          <details className="mt-4 border-t pt-3">
-            <summary className="cursor-pointer text-xs font-medium">
-              Search more videos
-            </summary>
-            <PexelsPane
-              defaultKind="video"
-              defaultQuery="abstract loop"
-              chips={MOTION_CHIPS}
-            />
-          </details>
+          {pro ? (
+            <>
+              <MotionGallery />
+              <details className="mt-4 border-t pt-3">
+                <summary className="cursor-pointer text-xs font-medium">
+                  Search more videos
+                </summary>
+                <PexelsPane
+                  defaultKind="video"
+                  defaultQuery="abstract loop"
+                  chips={MOTION_CHIPS}
+                />
+              </details>
+            </>
+          ) : (
+            <UpgradeNotice feature="Motion backgrounds" />
+          )}
         </TabsContent>
         <TabsContent value="search">
-          <PexelsPane defaultKind="photo" showKindToggle />
+          {pro ? (
+            <PexelsPane defaultKind="photo" showKindToggle />
+          ) : (
+            <UpgradeNotice feature="Photo and motion backgrounds" />
+          )}
         </TabsContent>
         <TabsContent value="photo">
-          <PexelsPane
-            defaultKind="photo"
-            defaultQuery="workspace"
-            chips={PHOTO_CHIPS}
-          />
+          {pro ? (
+            <PexelsPane
+              defaultKind="photo"
+              defaultQuery="workspace"
+              chips={PHOTO_CHIPS}
+            />
+          ) : (
+            <UpgradeNotice feature="Photo backgrounds" />
+          )}
         </TabsContent>
       </Tabs>
 

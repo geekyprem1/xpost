@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useCreditsStore } from "@/lib/store/credits-store";
+import { AccountBilling } from "@/components/billing/account-billing";
 
 type Transaction = {
   id: string;
@@ -58,6 +59,7 @@ export default function AccountPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const liveCredits = useCreditsStore((state) => state.credits);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,9 +101,7 @@ export default function AccountPage() {
           setState({ kind: "error", message: "Unable to load your profile." });
           return;
         }
-        useCreditsStore
-          .getState()
-          .setCredits(profile.ai_credits, profile.credits_reset_at ?? null);
+        useCreditsStore.getState().setCredits(profile.ai_credits);
         setState({
           kind: "ready",
           email: user.email ?? null,
@@ -194,13 +194,15 @@ export default function AccountPage() {
             <p className="text-sm font-medium">{state.email ?? "User"}</p>
             <div className="mt-2 flex flex-wrap gap-4 text-sm">
               <span>
-                AI credits: <strong>{state.credits}</strong>
+                AI credits: <strong>{liveCredits ?? state.credits}</strong>
               </span>
               <span className="text-muted-foreground">
-                Reset: {formatDate(state.resetAt)}
+                Credits never expire
               </span>
             </div>
           </div>
+
+          <AccountBilling />
 
           <div className="rounded-xl border p-4">
             <p className="text-sm font-medium">Credits history</p>

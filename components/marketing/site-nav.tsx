@@ -30,16 +30,16 @@ export function SiteNav() {
           Shotlark
         </Link>
         <Link
-          href="#features"
+          href="/#features"
           className="text-muted-foreground hover:text-foreground hidden min-h-11 items-center px-3 text-sm transition-colors sm:inline-flex"
         >
           Features
         </Link>
         <Link
-          href="#faq"
+          href="/pricing"
           className="text-muted-foreground hover:text-foreground hidden min-h-11 items-center px-3 text-sm transition-colors md:inline-flex"
         >
-          FAQ
+          Pricing
         </Link>
         <Link
           href="/editor"

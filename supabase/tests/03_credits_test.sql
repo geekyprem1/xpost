@@ -4,8 +4,8 @@ select plan(7);
 
 select is(
   (select ai_credits from public.profiles where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
-  30,
-  'user A ke paas 30 credits hain'
+  5,
+  'user A starts with 5 credits'
 );
 
 set local role authenticated;
@@ -21,9 +21,9 @@ select throws_ok(
 reset role;
 
 select is(
-  public.consume_credits('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 5, 'generate'),
-  25,
-  '5 credits consume hone ke baad 25 bache'
+  public.consume_credits('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 2, 'generate'),
+  3,
+  '3 credits remain after consuming 2'
 );
 
 select throws_ok(
@@ -33,7 +33,7 @@ select throws_ok(
   'negative amount reject hota hai'
 );
 
-select public.consume_credits('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 25, 'generate');
+select public.consume_credits('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 3, 'generate');
 
 select throws_ok(
   $$select public.consume_credits('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 1, 'generate')$$,

@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { SiteFooter } from "./site-footer";
+import { LEGAL_EFFECTIVE_DATE } from "@/lib/site-details";
 
 /** Single place to change the legal contact address and effective date. */
-export const LEGAL_CONTACT_EMAIL = "support@shotlark.pro";
-export const LEGAL_EFFECTIVE_DATE = "October 19, 2026";
+export { LEGAL_CONTACT_EMAIL, LEGAL_EFFECTIVE_DATE } from "@/lib/site-details";
 
 export function LegalPage({
   title,
@@ -54,28 +55,7 @@ export function LegalPage({
         </article>
       </main>
 
-      <footer className="border-border/50 border-t px-6 py-10">
-        <div className="text-muted-foreground mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 text-sm sm:flex-row">
-          <p>© Shotlark</p>
-          <nav aria-label="Legal" className="flex gap-6">
-            <Link
-              href="/privacy"
-              className="hover:text-foreground transition-colors"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="/terms"
-              className="hover:text-foreground transition-colors"
-            >
-              Terms
-            </Link>
-            <Link href="/" className="hover:text-foreground transition-colors">
-              Home
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

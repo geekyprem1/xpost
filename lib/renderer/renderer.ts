@@ -194,6 +194,7 @@ void main() {
   float d = sdRoundRect(p - uSize * 0.5, uSize * 0.5, uRadius);
   float mask = 1.0 - smoothstep(-0.75, 0.75, d);
   vec2 uv = vUv;
+  bool outside = false;
   if (uDeviceScreen > 0.5) {
     float sourceAspect = uSourceAspect;
     float targetAspect = uSize.x / uSize.y;
@@ -201,16 +202,19 @@ void main() {
     if (uContain > 0.5) {
       vec2 fit = vec2(min(1.0, sourceAspect / targetAspect), min(1.0, targetAspect / sourceAspect));
       uv = (uv - 0.5) / fit + 0.5;
-      if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) {
-        outColor = vec4(vec3(0.035), mask);
-        return;
-      }
+      outside = any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)));
     } else {
       uv = (uv - 0.5) * crop + 0.5;
     }
   }
   uv = uCrop.xy + uv * uCrop.zw;
+  // Sampled before any branch on per-pixel values, so mip level selection
+  // (screen-space derivatives) stays valid for every pixel in the quad.
   vec4 c = texture(uTex, uv);
+  if (outside) {
+    outColor = vec4(vec3(0.035), mask);
+    return;
+  }
   outColor = vec4(c.rgb, c.a * mask);
 }`;
 
@@ -429,7 +433,9 @@ export class WebGL2Renderer implements Renderer {
     const gl = this.gl;
     if (!gl) return;
     if (partial.screenshot) {
-      this.upload("screenshot", partial.screenshot);
+      // Static and usually far larger than its on-canvas size (GIF/video
+      // exports draw it at a fraction of its resolution): mipmap it.
+      this.upload("screenshot", partial.screenshot, true);
     } else if ("screenshot" in partial) {
       this.deleteTexture("screenshot");
     }
@@ -442,7 +448,7 @@ export class WebGL2Renderer implements Renderer {
       this.deleteTexture("overlay");
     }
     if (partial.watermark) {
-      this.upload("watermark", partial.watermark);
+      this.upload("watermark", partial.watermark, true);
       const size = partial.watermark as { width?: number; height?: number };
       this.watermarkSize =
         typeof size.width === "number" && typeof size.height === "number"
@@ -590,7 +596,7 @@ export class WebGL2Renderer implements Renderer {
     this.canvas = null;
   }
 
-  private upload(key: string, source: TexImageSource) {
+  private upload(key: string, source: TexImageSource, mipmap = false) {
     const gl = this.gl;
     if (!gl) return;
     let texture = this.textures.get(key);
@@ -598,7 +604,7 @@ export class WebGL2Renderer implements Renderer {
       texture = createGlTexture(gl);
       this.textures.set(key, texture);
     }
-    uploadGlTexture(gl, texture, source);
+    uploadGlTexture(gl, texture, source, mipmap);
   }
 
   private deleteTexture(key: string) {

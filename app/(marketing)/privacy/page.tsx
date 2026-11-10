@@ -46,21 +46,21 @@ export default function PrivacyPage() {
 
       <h3>AI writing</h3>
       <p>
-        When you ask the AI to write or refine a post, we send the current
-        visual and your instructions to our AI provider to generate the text. We
-        keep a record of each request (your instructions, the generated text,
-        the model used, and usage counts) so we can show your history, enforce
-        credit limits, and track costs. We do not store the image as part of
-        that record.
+        When you generate a post, we send the current visual and your
+        instructions to our AI provider. Refinement requests send the post text,
+        instructions and relevant chat context. We keep a record of each request
+        (your instructions, the generated text, the model used, and usage
+        counts) so we can show your history, enforce credit limits, and track
+        costs. We do not store the image as part of that record.
       </p>
 
-      <h3>X (Twitter) account</h3>
+      <h3>Sharing to X (Twitter)</h3>
       <p>
-        If you connect an X account, we store your X user ID, username, display
-        name, profile picture, and the access tokens needed to post on your
-        behalf. Tokens are stored encrypted. When you publish through Shotlark,
-        we keep the post text, media type, status, and X post ID. We only post
-        when you ask us to.
+        When you choose Open in X, we open X compose with your post text in the
+        link. The current sharing flow does not connect your X account to
+        Shotlark or require X access tokens. You attach copied or downloaded
+        media and choose whether to publish within X, where X&apos;s privacy
+        policy applies.
       </p>
 
       <h3>Stock media searches</h3>
@@ -71,6 +71,13 @@ export default function PrivacyPage() {
       </p>
 
       <h3>Usage and technical data</h3>
+      <p>
+        For purchases, we send your email address and account/order identifiers
+        to Dodo Payments. We store product, payment and checkout identifiers,
+        amounts, payment status and credit adjustments to fulfil purchases and
+        process refunds. Payment card details are handled by Dodo Payments and
+        its payment providers; Shotlark does not store your card details.
+      </p>
       <p>
         We keep credit balances, request counts used for rate limiting, and
         standard server logs (such as IP address, browser type, and error
@@ -87,7 +94,7 @@ export default function PrivacyPage() {
       <h2>How we use information</h2>
       <ul>
         <li>To provide the editor, save your projects, and sign you in.</li>
-        <li>To generate AI text and publish to X when you request it.</li>
+        <li>To generate AI text and open X compose when you request it.</li>
         <li>To enforce usage limits and prevent abuse.</li>
         <li>To fix bugs, keep the service secure, and improve it.</li>
         <li>To contact you about your account or important changes.</li>
@@ -119,12 +126,13 @@ export default function PrivacyPage() {
         <li>Supabase: authentication, database, and file storage.</li>
         <li>Vercel: website hosting.</li>
         <li>Google: sign-in.</li>
+        <li>Dodo Payments: checkout, payment confirmation and refunds.</li>
         <li>
           OpenRouter and the AI model providers it routes to: generating post
           text.
         </li>
         <li>Pexels and Pixabay: stock media search.</li>
-        <li>X: publishing posts you choose to share.</li>
+        <li>X: its compose page when you choose to open a post there.</li>
       </ul>
       <p>
         We may also disclose information if required by law or to protect the
@@ -141,20 +149,21 @@ export default function PrivacyPage() {
           Uploaded files that are no longer attached to a project are deleted
           after 30 days.
         </li>
-        <li>
-          Files prepared for posting to X are deleted right after posting, or
-          within 24 hours if posting does not finish.
-        </li>
         <li>Cached stock media search results are kept for up to 24 hours.</li>
+        <li>
+          Limited payment records are retained after account deletion, with the
+          link to your profile removed.
+        </li>
       </ul>
 
       <h2>Deleting your account</h2>
       <p>
         You can delete your account at any time from the{" "}
         <Link href="/account">Account</Link> page. This permanently removes your
-        profile, projects, uploaded files, AI history, and connected X account
-        details from our systems. Copies in backups are removed as backups
-        expire. You can also revoke Shotlark&apos;s access from your{" "}
+        profile, projects, uploaded files and AI history from our systems.
+        Limited payment records are retained as described above. Copies in
+        backups are removed as backups expire. You can also revoke
+        Shotlark&apos;s access from your{" "}
         <a
           href="https://myaccount.google.com/connections"
           target="_blank"
@@ -168,8 +177,8 @@ export default function PrivacyPage() {
       <h2>Security</h2>
       <p>
         We use encrypted connections, access controls that limit each user to
-        their own data, and encryption for X access tokens. No system is
-        perfectly secure, but we work to protect your information.
+        their own data. No system is perfectly secure, but we work to protect
+        your information.
       </p>
 
       <h2>Your rights</h2>

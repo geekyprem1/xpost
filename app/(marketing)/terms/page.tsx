@@ -23,8 +23,8 @@ export default function TermsPage() {
       <p>
         Shotlark lets you style screenshots, write posts with AI, export images
         and videos, and share to X. Shotlark is currently in beta. Features,
-        limits, and availability may change, and we may add paid plans in the
-        future. We will tell you before charging for anything.
+        limits, and availability may change. Paid purchases require an explicit
+        checkout; the free trial does not automatically charge you.
       </p>
 
       <h2>Your account</h2>
@@ -45,8 +45,9 @@ export default function TermsPage() {
         You keep ownership of the screenshots, text, and other content you
         create or upload. You give us a limited permission to store, process,
         and display that content only as needed to run the service for you,
-        including sending it to our AI provider when you use AI features and to
-        X when you choose to post.
+        including sending it to our AI provider when you use AI features. When
+        you open X compose, the post text is sent to X in a compose link; you
+        choose whether to attach an image and publish there.
       </p>
       <p>
         You confirm that you have the rights to the content you upload and post,
@@ -78,18 +79,39 @@ export default function TermsPage() {
 
       <h2>X integration</h2>
       <p>
-        If you connect an X account, Shotlark posts only when you ask it to.
-        Your use of X is also subject to X&apos;s own terms. You can disconnect
-        your X account at any time. X may limit or reject posts, and we are not
-        responsible for X&apos;s decisions or outages.
+        Shotlark opens X compose with your post text and helps you copy or
+        download the image. You attach media and publish within X yourself. The
+        current sharing flow does not require connecting an X account to
+        Shotlark. Your use of X is subject to its own terms, and X may limit or
+        reject posts.
       </p>
 
       <h2>Credits and limits</h2>
       <p>
-        AI features use monthly credits, and posting to X has monthly limits.
-        Credits reset each usage period, have no cash value, and cannot be
-        transferred. We may adjust limits to keep the service fair and
-        sustainable.
+        New accounts include 5 AI credits and a 24-hour full editor trial.
+        Afterward, the basic editor remains available with watermarked exports.
+        Lifetime Editor is a one-time purchase with 100 AI credits. Additional
+        credit packs are sold separately and do not unlock editor features. AI
+        credits do not expire, have no cash value, and cannot be transferred.
+        Each generation or refinement uses one credit; failed requests are
+        refunded.
+      </p>
+
+      <h2 id="payments-and-refunds">Payments and refunds</h2>
+      <p>
+        Dodo Payments processes checkout. The price and currency are displayed
+        before payment. Purchases are applied after payment is confirmed.
+        Contact us with purchase or refund questions using the address below.
+        Refunds adjust the associated credit balance proportionally; full
+        refunds of Lifetime Editor revoke its access. Previously used refunded
+        credits are settled by future credits added to your account.
+      </p>
+      <p>
+        All current paid products are one-time purchases. There is no recurring
+        subscription to cancel, and the free trial does not automatically
+        convert to a paid purchase. Closing a checkout before payment does not
+        activate a paid product. Deleting an account does not automatically
+        request a refund; contact support for a purchase-related request.
       </p>
 
       <h2>Third-party media and assets</h2>

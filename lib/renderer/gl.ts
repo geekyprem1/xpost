@@ -75,15 +75,32 @@ export function createGlTexture(gl: WebGL2RenderingContext): WebGLTexture {
   return texture;
 }
 
+/**
+ * Uploads `source` into `texture`. With `mipmap`, a mip chain is built and
+ * trilinear filtering is enabled, so drawing a large image much smaller
+ * (e.g. a 2500px screenshot inside an 800px GIF) averages all source pixels
+ * instead of sampling a few and aliasing text and thin lines.
+ */
 export function uploadGlTexture(
   gl: WebGL2RenderingContext,
   texture: WebGLTexture,
   source: TexImageSource,
+  mipmap = false,
 ) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  if (mipmap) {
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MIN_FILTER,
+      gl.LINEAR_MIPMAP_LINEAR,
+    );
+  } else {
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  }
 }
 
 export type GlFbo = {

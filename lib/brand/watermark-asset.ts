@@ -13,6 +13,8 @@ import {
   type BrandWatermark,
 } from "./brand-kit";
 import { useBrandStore } from "./brand-store";
+import { useBillingStore } from "@/lib/billing/access-store";
+import { editorAccess } from "@/lib/billing/catalog";
 
 /** Badge canvas resolution: 36 design px × 4 → sharp up to 3× export at 200%. */
 const RENDER_SCALE = 4;
@@ -189,5 +191,10 @@ export async function resolveWatermark(
 }
 
 export function resolveActiveWatermark(): Promise<ActiveWatermark> {
-  return resolveWatermark(useBrandStore.getState().kit.watermark);
+  const watermark = useBrandStore.getState().kit.watermark;
+  return resolveWatermark(
+    editorAccess(useBillingStore.getState().profile).pro
+      ? watermark
+      : { ...watermark, enabled: false },
+  );
 }

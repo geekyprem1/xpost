@@ -38,6 +38,13 @@ tsc-out*.txt
 # vercel
 .vercel
 
+# cloudflare
+.open-next/
+.wrangler/
+.worker-tmp/
+.open-next-tmp/
+.wrangler-tmp/
+
 # local agent settings
 .commandcode/
 

@@ -21,8 +21,8 @@ select is(
 
 select is(
   (select ai_credits from public.profiles where id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
-  30,
-  'app_config ke limit se 30 credits milte hain'
+  5,
+  'new accounts receive 5 starting credits'
 );
 
 select is(
@@ -33,7 +33,7 @@ select is(
 
 select is(
   (select value #>> '{}' from public.app_config where key = 'limits.ai_credits_monthly'),
-  '30',
+  '5',
   'app_config default set hai'
 );
 

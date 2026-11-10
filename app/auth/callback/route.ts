@@ -22,7 +22,9 @@ export async function GET(request: NextRequest) {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}/editor`);
+      return NextResponse.redirect(
+        `${origin}${searchParams.get("next") === "/pricing" ? "/pricing" : "/editor"}`,
+      );
     }
     console.error("[auth/callback] code exchange failed:", error.message);
   } else {

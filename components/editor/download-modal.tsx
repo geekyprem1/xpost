@@ -48,6 +48,8 @@ import {
   type ExportPresetKind,
 } from "@/lib/renderer/x-presets";
 import { useEditorStore } from "@/lib/store";
+import { useBillingStore } from "@/lib/billing/access-store";
+import { UpgradeNotice } from "@/components/billing/upgrade-notice";
 
 const TYPES = [
   { id: "image", label: "Image", icon: ImageIcon },
@@ -86,6 +88,7 @@ export function DownloadModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const scene = useEditorStore((state) => state.scene);
+  const pro = useBillingStore((state) => state.pro);
   const imageElement = useEditorStore((state) => state.imageElement);
   const setScene = useEditorStore((state) => state.setScene);
   const [type, setType] = useState<ExportType>("image");
@@ -101,7 +104,7 @@ export function DownloadModal({
   const [via, setVia] = useState<"worker" | "main" | null>(null);
   const handleRef = useRef<ExportHandle | null>(null);
 
-  const motionAvailable = scene.background.kind === "video";
+  const motionAvailable = pro && scene.background.kind === "video";
 
   async function runHandle(
     kind: ExportPresetKind,
@@ -152,7 +155,7 @@ export function DownloadModal({
       startImageExport(
         scene,
         { screenshot: imageElement },
-        { format: exportFormat, scale },
+        { format: exportFormat, scale: pro ? scale : 1 },
         { onProgress: setProgress },
       ),
     );
@@ -274,7 +277,7 @@ export function DownloadModal({
                 <legend className="text-muted-foreground mb-2 text-xs font-medium uppercase">
                   Width
                 </legend>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   {GIF_WIDTHS.map((width) => (
                     <Button
                       key={width}
@@ -364,7 +367,8 @@ export function DownloadModal({
                       type="button"
                       size="sm"
                       variant={scale === option ? "secondary" : "outline"}
-                      aria-pressed={scale === option}
+                      aria-pressed={(pro ? scale : 1) === option}
+                      disabled={!pro && option !== 1}
                       onClick={() => setScale(option)}
                     >
                       {option}×
@@ -380,8 +384,9 @@ export function DownloadModal({
             <Button
               type="button"
               size="sm"
-              variant={scene.watermark ? "secondary" : "outline"}
-              aria-pressed={scene.watermark}
+              variant={!pro || scene.watermark ? "secondary" : "outline"}
+              aria-pressed={!pro || scene.watermark}
+              disabled={!pro}
               onClick={() =>
                 setScene((current) => ({
                   ...current,
@@ -389,9 +394,13 @@ export function DownloadModal({
                 }))
               }
             >
-              {scene.watermark ? "On" : "Off"}
+              {!pro || scene.watermark ? "On" : "Off"}
             </Button>
           </div>
+
+          {!pro ? (
+            <UpgradeNotice feature="Clean high-resolution, GIF and video exports" />
+          ) : null}
 
           {busy ? (
             <p className="text-muted-foreground flex items-center gap-2 text-xs">

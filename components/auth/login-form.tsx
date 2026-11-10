@@ -29,7 +29,13 @@ function GoogleIcon() {
   );
 }
 
-export function LoginForm({ initialError }: { initialError: string | null }) {
+export function LoginForm({
+  initialError,
+  nextPath = "/editor",
+}: {
+  initialError: string | null;
+  nextPath?: "/pricing" | "/editor";
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
 
@@ -42,7 +48,7 @@ export function LoginForm({ initialError }: { initialError: string | null }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
       if (error) throw error;

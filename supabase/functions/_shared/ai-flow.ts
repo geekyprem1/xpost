@@ -79,7 +79,7 @@ export async function runAiStream(options: AiStreamOptions): Promise<Response> {
     if (message.includes("INSUFFICIENT_CREDITS")) {
       return errorResponse(
         "INSUFFICIENT_CREDITS",
-        "Your AI credits are exhausted. Please wait until your reset date.",
+        "Your AI credits are exhausted. Top up credits from the pricing page to keep writing.",
       );
     }
     console.error("consume_credits failed:", message);

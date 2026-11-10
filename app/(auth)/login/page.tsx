@@ -6,9 +6,9 @@ export const instant = false;
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
 
   return (
     <main className="flex min-h-dvh items-center justify-center p-6">
@@ -27,6 +27,7 @@ export default async function LoginPage({
           </p>
         </div>
         <LoginForm
+          nextPath={next === "/pricing" ? "/pricing" : "/editor"}
           initialError={
             error ? "Sign-in didn't complete. Please try again." : null
           }

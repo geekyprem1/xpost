@@ -10,8 +10,9 @@ import {
   VideoSampleSink,
   type VideoSample,
 } from "mediabunny";
-import { croppedImageSize } from "@/lib/scene";
-import { computeExportSize } from "./geometry";
+import { croppedImageSize, getImageCrop } from "@/lib/scene";
+import type { Scene } from "@/lib/scene";
+import { computeCardLayout, computeExportSize } from "./geometry";
 import { exportMime } from "./export-format";
 import {
   GIF_LOOP_FADE_SECONDS,
@@ -55,6 +56,69 @@ function canvasFrom(
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Unable to create a 2D rendering context");
   context.drawImage(source, 0, 0);
+  return canvas;
+}
+
+/**
+ * Downscales the screenshot to (about) the pixel size it is drawn at in the
+ * output. GIF/video exports draw a 2000–3000px screenshot into a few hundred
+ * pixels; sampling that on the GPU (even with mipmaps) leaves text soft or
+ * jagged. Halving steps + a final high-quality resize approximate a proper
+ * area filter, so the GPU then samples at ~1:1 and text stays crisp.
+ * The texture's size does not affect layout: `screenshotSize` stays the
+ * original size and UVs are normalized.
+ */
+function fitScreenshotToOutput(
+  scene: Scene,
+  screenshot: OffscreenCanvas | null,
+  renderScale: number,
+): OffscreenCanvas | null {
+  if (!screenshot) return screenshot;
+  const size = { width: screenshot.width, height: screenshot.height };
+  const crop = getImageCrop(scene);
+  const layout = computeCardLayout(
+    scene,
+    renderScale,
+    croppedImageSize(scene, size),
+  );
+  // Output pixels per source pixel; the larger axis wins so a device
+  // screen's "cover" crop is never undersampled.
+  const ratio = Math.max(
+    layout.imageRect.width / Math.max(1, size.width * crop.w),
+    layout.imageRect.height / Math.max(1, size.height * crop.h),
+  );
+  // Close to 1:1 already: GPU filtering is fine.
+  if (!Number.isFinite(ratio) || ratio >= 0.8) return screenshot;
+  const targetWidth = Math.max(1, Math.round(size.width * ratio));
+  const targetHeight = Math.max(1, Math.round(size.height * ratio));
+
+  let current = screenshot;
+  while (
+    current.width / 2 >= targetWidth &&
+    current.height / 2 >= targetHeight
+  ) {
+    current = resizeCanvas(
+      current,
+      Math.round(current.width / 2),
+      Math.round(current.height / 2),
+    );
+  }
+  if (current.width !== targetWidth || current.height !== targetHeight)
+    current = resizeCanvas(current, targetWidth, targetHeight);
+  return current;
+}
+
+function resizeCanvas(
+  source: OffscreenCanvas,
+  width: number,
+  height: number,
+): OffscreenCanvas {
+  const canvas = new OffscreenCanvas(width, height);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Unable to create a 2D rendering context");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(source, 0, 0, width, height);
   return canvas;
 }
 
@@ -258,7 +322,11 @@ async function runVideo(request: VideoRequest) {
     await renderer.init(canvas);
     check();
     renderer.setAssets({
-      screenshot,
+      screenshot: fitScreenshotToOutput(
+        scene,
+        screenshot,
+        width / scene.canvas.baseWidth,
+      ),
       screenshotSize,
       sunlightOverlay: canvasFrom(assets.sunlightOverlay),
       watermark: canvasFrom(assets.watermark),
@@ -391,7 +459,11 @@ async function runGif(request: GifRequest) {
     await renderer.init(canvas);
     check();
     renderer.setAssets({
-      screenshot,
+      screenshot: fitScreenshotToOutput(
+        scene,
+        screenshot,
+        width / scene.canvas.baseWidth,
+      ),
       screenshotSize,
       sunlightOverlay: canvasFrom(assets.sunlightOverlay),
       watermark: canvasFrom(assets.watermark),

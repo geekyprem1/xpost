@@ -48,11 +48,9 @@ import {
   X_LONG_POST_LIMIT,
   X_WEIGHTED_LIMIT,
 } from "@/lib/editor/post-text";
-import {
-  blobToPng,
-  buildXIntentUrl,
-  dataUrlToBlob,
-} from "@/lib/editor/x-share";
+import { buildXIntentUrl } from "@/lib/editor/x-share";
+import { useShareImages } from "@/lib/editor/use-share-images";
+import { downloadShareImage } from "@/lib/editor/share-image";
 import { useCreditsStore } from "@/lib/store/credits-store";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -83,16 +81,6 @@ function PreviewIdentity({ email }: { email: string | null }) {
       </span>
     </>
   );
-}
-
-function formatResetDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 export function RightPanel({
@@ -131,8 +119,8 @@ export function RightPanel({
   const runRef = useRef(0);
   const actionRef = useRef(false);
   const streamRef = useRef(false);
-  const resetAt = useCreditsStore((state) => state.resetAt);
   const [email, setEmail] = useState<string | null>(null);
+  const share = useShareImages(open);
 
   useEffect(() => {
     if (!open) return;
@@ -295,27 +283,46 @@ export function RightPanel({
   }
 
   async function onCopyImage() {
-    if (!previewImage) return;
+    const images = share.images;
+    if (!images?.png) return;
     try {
-      const png = await blobToPng(dataUrlToBlob(previewImage));
       await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": png }),
+        new ClipboardItem({ "image/png": images.png }),
       ]);
       flash("Image copied. Paste it into your X post.");
     } catch {
-      setError(
-        "Image copy failed. Download the image and attach it to your post.",
-      );
+      downloadShareImage(images.jpeg);
+      flash("Image downloaded. Attach it to your X post.");
     }
   }
 
   function onDownloadImage() {
-    if (!previewImage) return;
-    const anchor = document.createElement("a");
-    anchor.href = previewImage;
-    anchor.download = "shotlark-post.jpg";
-    anchor.click();
+    if (!share.images) return;
+    downloadShareImage(share.images.jpeg);
     flash("Image downloaded. Attach it to your X post.");
+  }
+
+  function onCopyImageAndOpenX() {
+    const images = share.images;
+    if (!images?.png || !postText.trim()) return;
+    // Begin both operations in the click gesture: awaiting clipboard first can
+    // lose popup permission, particularly on Safari.
+    let copy: Promise<void>;
+    try {
+      copy = navigator.clipboard.write([
+        new ClipboardItem({ "image/png": images.png }),
+      ]);
+    } catch {
+      copy = Promise.reject(new Error("Clipboard unavailable"));
+    }
+    window.open(buildXIntentUrl(postText), "_blank", "noopener,noreferrer");
+    void copy.then(
+      () => flash("Image copied. Press Ctrl+V / ⌘V in X to attach it."),
+      () => {
+        downloadShareImage(images.jpeg);
+        flash("Image downloaded. Attach it to your X post.");
+      },
+    );
   }
 
   return (
@@ -514,11 +521,23 @@ export function RightPanel({
               <Button
                 type="button"
                 size="sm"
-                disabled={busy || postText.trim().length === 0}
-                onClick={onOpenX}
+                disabled={
+                  busy ||
+                  postText.trim().length === 0 ||
+                  (hasScreenshot && !share.images && !share.error)
+                }
+                onClick={
+                  hasScreenshot && share.images?.png
+                    ? onCopyImageAndOpenX
+                    : onOpenX
+                }
               >
                 <ExternalLink aria-hidden />
-                Open in X
+                {hasScreenshot && share.images?.png
+                  ? "Copy image & open X"
+                  : hasScreenshot && !share.images && !share.error
+                    ? "Preparing…"
+                    : "Open in X"}
               </Button>
               <Button
                 type="button"
@@ -534,7 +553,7 @@ export function RightPanel({
                 type="button"
                 size="sm"
                 variant="outline"
-                disabled={!hasScreenshot || !previewImage || previewBusy}
+                disabled={!hasScreenshot || !share.images?.png}
                 onClick={() => void onCopyImage()}
               >
                 <Copy aria-hidden />
@@ -544,13 +563,30 @@ export function RightPanel({
                 type="button"
                 size="sm"
                 variant="outline"
-                disabled={!hasScreenshot || !previewImage}
+                disabled={!hasScreenshot || !share.images}
                 onClick={onDownloadImage}
               >
                 <Download aria-hidden />
                 Download image
               </Button>
             </div>
+            {share.error ? (
+              <p role="status" className="text-destructive mt-2 text-xs">
+                {share.error}{" "}
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={share.retry}
+                >
+                  Retry
+                </button>
+              </p>
+            ) : share.images && !share.images.png ? (
+              <p role="status" className="text-muted-foreground mt-2 text-xs">
+                Clipboard image exceeds 5 MB. Download the JPEG and attach it in
+                X.
+              </p>
+            ) : null}
             {stats.overLimit ? (
               <p className="mt-1.5 text-[11px] text-amber-500">
                 Your post exceeds the character limit. Shorten it or enable Long
@@ -612,13 +648,15 @@ export function RightPanel({
               </Button>
             </div>
             <p className="text-muted-foreground text-[10px]">
-              Each AI action uses 1 credit. Credits renew on your reset date.
+              Each AI action uses 1 credit. Credits never expire.
             </p>
             {limitReached ? (
               <p className="border-destructive/40 text-destructive rounded-lg border p-2 text-[11px]">
-                You have used all your AI credits
-                {resetAt ? ` — reset ${formatResetDate(resetAt)}` : ""}. Your
-                credits will renew then.
+                You have used all your AI credits.{" "}
+                <a href="/pricing" className="underline">
+                  Top up credits
+                </a>{" "}
+                to keep writing.
               </p>
             ) : null}
           </div>

@@ -5,6 +5,8 @@ import { getFrameConfig } from "@/lib/renderer/frames";
 import { Button } from "@/components/ui/button";
 import type { FrameId } from "@/lib/scene";
 import { useEditorStore } from "@/lib/store";
+import { useBillingStore } from "@/lib/billing/access-store";
+import { UpgradeNotice } from "@/components/billing/upgrade-notice";
 
 const FRAME_LABELS: Record<FrameId, string> = {
   screenshot: "Screenshot",
@@ -26,9 +28,11 @@ const FRAME_LABELS: Record<FrameId, string> = {
 };
 
 export function FramePanel() {
+  const pro = useBillingStore((state) => state.pro);
   const scene = useEditorStore((state) => state.scene);
   const setScene = useEditorStore((state) => state.setScene);
   const frameKind = scene.frame.kind;
+  if (!pro) return <UpgradeNotice feature="Device and window frames" />;
 
   const groups: Array<{ label: string; ids: FrameId[] }> = [
     { label: "Essentials", ids: ["screenshot", "browser"] },

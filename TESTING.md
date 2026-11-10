@@ -1,5 +1,26 @@
 # Shotlark — Manual Test Guide (sab check karne ke liye)
 
+## Share-image quality (22 Oct)
+
+- [ ] AI Studio open karne ke baad `Preparing…` finishes; Download image gives a full-render JPEG, normally 2× output (1500 base → 3000px), ≤ 5 MB. Large images step down when needed.
+- [ ] Copy image pastes a PNG (2×, or 1.5×/1× if needed), ≤ 5 MB. AI capture stays at a maximum 1024px.
+- [ ] Change crop, redact/text layers, image, background or custom watermark; old share image is disabled immediately, then regenerated after 600ms idle.
+- [ ] `Copy image & open X` opens X with post text; Ctrl+V / ⌘V attaches the image. Deny clipboard permission: JPEG auto-downloads and the panel shows an attachment hint.
+- [ ] Oversized clipboard PNG leaves JPEG download and text-only Open in X available. Failed export shows Retry.
+- [ ] Verify the same behavior in classic editor and `/editor-v2`, including a motion background's static share frame.
+
+Dodo Payments setup: see `DODO_PAYMENTS.md`. Checkout remains disabled until the migration, credentials and product IDs are configured.
+
+## Dodo billing
+
+- [ ] New account starts with 5 credits and a 24-hour full editor trial. After trial: frames/photo/motion and animated/high-resolution exports locked, basic static export has Shotlark watermark.
+- [ ] Logged-out purchase returns to pricing after Google sign-in; no automatic charge. Checkout prices match $9.99 / $2.99 / $8.99 in USD.
+- [ ] Complete each product's test checkout. Return page waits for a verified webhook; balance changes once, lifetime unlocks only for the lifetime product.
+- [ ] Cancel checkout: credits/access unchanged. Replay successful webhook: no duplicate credits.
+- [ ] Partial/full refund and lost-dispute test delivery: balance/access reconcile; already-used refunded credits appear as an adjustment settled by future top-ups.
+- [ ] Expired/modified webhook signatures rejected; database failure asks Dodo to retry.
+- [ ] Existing paid balance survives the old monthly-reset cron. Trial expiration and licence changes invalidate cached share images.
+
 ## 1. Start karo
 
 ```bash

@@ -15,7 +15,7 @@ export async function proxy(request: NextRequest) {
   // Auth callbacks manage their own session. Running getClaims() here first
   // can tear down a stale session, which also deletes the PKCE code verifier
   // cookie before /auth/callback gets to read it.
-  if (pathname.startsWith("/auth/")) {
+  if (pathname.startsWith("/auth/") || pathname === "/api/billing/webhook") {
     return NextResponse.next({ request });
   }
 
@@ -75,7 +75,10 @@ export async function proxy(request: NextRequest) {
 
   if (isLoggedIn && pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/editor";
+    url.pathname =
+      request.nextUrl.searchParams.get("next") === "/pricing"
+        ? "/pricing"
+        : "/editor";
     url.search = "";
     return redirectTo(url);
   }

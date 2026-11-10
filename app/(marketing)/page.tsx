@@ -4,13 +4,14 @@ import { Palette, Send, WandSparkles, type LucideIcon } from "lucide-react";
 import { AnimatedTiles } from "@/components/marketing/animated-tiles";
 import { HeroDropzone } from "@/components/marketing/hero-dropzone";
 import { HeroHeadline } from "@/components/marketing/hero-headline";
-import { LEGAL_CONTACT_EMAIL } from "@/components/marketing/legal-page";
+import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteNav } from "@/components/marketing/site-nav";
+import { Pricing } from "@/components/marketing/pricing";
 
 export const metadata: Metadata = {
   title: "Shotlark — Screenshot mockups and AI posts for X",
   description:
-    "Drop a screenshot, pick a look, and let AI write the post. Device mockups, motion backgrounds, and one-click sharing to X. Free during beta.",
+    "Drop a screenshot, pick a look, and let AI write the post. Try free, then own the complete editor for $9.99. No subscription.",
 };
 
 const PILLARS: Array<{ icon: LucideIcon; title: string; body: string }> = [
@@ -34,7 +35,7 @@ const PILLARS: Array<{ icon: LucideIcon; title: string; body: string }> = [
 const FAQ = [
   {
     q: "Is Shotlark free?",
-    a: "Yes. During the beta every editor feature is unlocked, and AI writing includes 30 credits a month.",
+    a: "Start with 24 hours of the full editor and 5 AI credits, no card needed. After the trial, the basic editor stays free with watermarked exports. Lifetime Editor costs $9.99 once and includes 100 AI credits.",
   },
   {
     q: "Where are my screenshots processed?",
@@ -42,7 +43,7 @@ const FAQ = [
   },
   {
     q: "Can I remove the watermark?",
-    a: "Yes. The Shotlark badge is on by default and you can switch it off before downloading.",
+    a: "You can remove the watermark during your trial or with Lifetime Editor. Free basic exports include the Shotlark badge.",
   },
 ];
 
@@ -71,7 +72,8 @@ export default function Home() {
           <p
             className={`${reveal} text-muted-foreground mt-6 text-sm motion-safe:delay-[950ms]`}
           >
-            Free during beta · Sign in with Google · Rendered in your browser
+            24-hour full editor trial · No card needed · Rendered in your
+            browser
           </p>
         </section>
 
@@ -118,6 +120,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <Pricing />
 
         {/* FAQ */}
         <section id="faq" className="scroll-mt-24 px-6 py-24 sm:py-32">
@@ -181,43 +185,5 @@ function SectionHeading({
         </p>
       ) : null}
     </div>
-  );
-}
-
-function SiteFooter() {
-  return (
-    <footer className="border-border/50 border-t px-6 py-10">
-      <div className="text-muted-foreground mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm sm:flex-row">
-        <nav
-          aria-label="Footer"
-          className="flex flex-wrap justify-center gap-x-6 gap-y-2"
-        >
-          <Link
-            href="/privacy"
-            className="hover:text-foreground transition-colors"
-          >
-            Privacy
-          </Link>
-          <Link
-            href="/terms"
-            className="hover:text-foreground transition-colors"
-          >
-            Terms
-          </Link>
-          <Link
-            href="/login"
-            className="hover:text-foreground transition-colors"
-          >
-            Sign in
-          </Link>
-        </nav>
-        <a
-          href={`mailto:${LEGAL_CONTACT_EMAIL}`}
-          className="hover:text-foreground transition-colors"
-        >
-          {LEGAL_CONTACT_EMAIL}
-        </a>
-      </div>
-    </footer>
   );
 }

@@ -22,6 +22,8 @@ import type {
 import { computeExportSize, exportRenderScale } from "./geometry";
 import { capVideoSize } from "./export-video";
 import { resolveActiveWatermark } from "@/lib/brand/watermark-asset";
+import { billingScene, useBillingStore } from "@/lib/billing/access-store";
+import { editorAccess } from "@/lib/billing/catalog";
 
 export class ExportCancelledError extends Error {
   constructor() {
@@ -256,6 +258,9 @@ export function startImageExport(
   hooks: ExportProgressHooks = {},
   deps: ExportClientDeps = {},
 ): ExportHandle {
+  const pro = editorAccess(useBillingStore.getState().profile).pro;
+  scene = billingScene(scene, pro);
+  if (!pro) options = { ...options, scale: 1 };
   const state: RunnerState = {
     cancelled: false,
     rejectCancel: null,
@@ -311,6 +316,10 @@ export function startVideoExport(
     worker: null,
   };
   const work = async (): Promise<ExportResult> => {
+    if (!editorAccess(useBillingStore.getState().profile).pro)
+      throw new Error(
+        "Video export requires Lifetime Editor or an active trial.",
+      );
     const check = deps.supportedVideo ?? videoExportSupported;
     const supported = await check();
     if (!supported) {
@@ -365,6 +374,10 @@ export function startGifExport(
     worker: null,
   };
   const work = async (): Promise<ExportResult> => {
+    if (!editorAccess(useBillingStore.getState().profile).pro)
+      throw new Error(
+        "GIF export requires Lifetime Editor or an active trial.",
+      );
     const supported = (deps.supported ?? workerExportSupported)();
     if (!supported) {
       throw new Error(

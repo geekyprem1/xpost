@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LayerOverlay } from "@/components/editor/layer-overlay";
 import { useCanvasBuildAnimation } from "@/lib/hooks/use-canvas-build-animation";
 import { ensureFonts } from "@/lib/fonts";
@@ -25,6 +25,7 @@ import { croppedImageSize, FULL_CROP } from "@/lib/scene";
 import { useEditorStore, useUiStore } from "@/lib/store";
 import { useBrandStore } from "@/lib/brand/brand-store";
 import { resolveWatermark } from "@/lib/brand/watermark-asset";
+import { billingScene, useBillingStore } from "@/lib/billing/access-store";
 
 const WELCOME_TILES = [13, 23, 16, 12, 14, 30, 21, 24, 11, 28, 25, 20];
 
@@ -46,7 +47,12 @@ export function EditorCanvas() {
     new Map<string, { key: string; asset: TextLayerAsset }>(),
   );
   const compositeKeyRef = useRef<string | null>(null);
-  const scene = useEditorStore((state) => state.scene);
+  const storedScene = useEditorStore((state) => state.scene);
+  const pro = useBillingStore((state) => state.pro);
+  const scene = useMemo(
+    () => billingScene(storedScene, pro),
+    [storedScene, pro],
+  );
   const imageElement = useEditorStore((state) => state.imageElement);
   const imageError = useEditorStore((state) => state.imageError);
   const cropTool = useUiStore((state) => state.cropTool);
@@ -170,7 +176,9 @@ export function EditorCanvas() {
     const renderer = rendererRef.current;
     if (!renderer || !ready) return;
     let cancelled = false;
-    void resolveWatermark(brandWatermark)
+    void resolveWatermark(
+      pro ? brandWatermark : { ...brandWatermark, enabled: false },
+    )
       .then((watermark) => {
         if (cancelled || rendererRef.current !== renderer) return;
         renderer.setAssets({
@@ -185,7 +193,7 @@ export function EditorCanvas() {
     return () => {
       cancelled = true;
     };
-  }, [brandWatermark, ready]);
+  }, [brandWatermark, ready, pro]);
 
   const overlayId = scene.sunlight.overlay;
   useEffect(() => {
