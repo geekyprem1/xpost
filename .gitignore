@@ -34,6 +34,9 @@ tsc-out*.txt
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+# Production build values (NEXT_PUBLIC_* only - public by design, needed at
+# build time by Cloudflare Workers Builds / any CI). Never put secrets here.
+!.env.production
 
 # vercel
 .vercel

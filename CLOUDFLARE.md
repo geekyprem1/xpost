@@ -39,6 +39,35 @@ npx wrangler login     # opens browser, log in with your Cloudflare account
 npm run deploy:worker
 ```
 
+## Deploying from GitHub (Cloudflare Workers Builds)
+
+Push to `main` → Cloudflare builds and deploys automatically. Setup is in the
+dashboard (the GitHub connection needs an OAuth handshake the CLI cannot do):
+
+1. Dashboard → **Workers & Pages** → `shotlark` → **Settings** → **Builds**
+2. **Connect** → GitHub → authorize the Cloudflare GitHub App if prompted
+3. Pick repo **`geekyprem1/xpost`**, branch **`main`**
+4. Build command: `node scripts/worker.mjs build`
+5. Deploy command: `npx wrangler deploy`
+
+Nothing else is required for the build to be correct:
+
+- `next.config.ts` detects Cloudflare CI through the `WORKERS_CI` variable
+  (set automatically by Workers Builds) and the wrapper also sets
+  `CLOUDFLARE_BUILD=1`, so Cache Components stays off on this target.
+- `NEXT_PUBLIC_*` values come from the committed **`.env.production`** (public
+  values only — they ship in the client bundle anyway).
+- Server secrets are already stored on the Worker (`wrangler secret list`), and
+  Workers Builds reuses them — they are not needed at build time.
+
+> `.env.production` must never contain a secret. If you add a new
+> `NEXT_PUBLIC_*` value, add it there; anything server-only goes through
+> `wrangler secret put`.
+
+Local CLI deploys (`npm run deploy:worker`) keep working exactly as before and
+are useful for hotfixes; a Git-triggered build will simply overwrite the same
+Worker.
+
 Then in the Cloudflare dashboard: Workers & Pages → `shotlark` →
 Settings → Domains & Routes — `shotlark.pro` and `www.shotlark.pro` are
 attached as custom domains (also declared in `wrangler.jsonc`, so deploys
