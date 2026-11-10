@@ -120,6 +120,7 @@ export function useProjectSession(projectId: string | null) {
     let title = "";
     let base = "";
     let imagePath: string | null = null;
+    let thumbnailPath: string | null = null;
     /** Blob jo `imagePath` pe cloud mein hai (reference compare → upload needed?). */
     let syncedBlob: Blob | null = null;
     let revision = 0;
@@ -182,11 +183,13 @@ export function useProjectSession(projectId: string | null) {
           postText: snapshot.postText,
           image,
           currentImagePath: imagePath,
+          currentThumbnailPath: thumbnailPath,
           thumbnail,
         });
         force = false;
         base = saved.updatedAt;
         imagePath = saved.imagePath;
+        thumbnailPath = saved.thumbnailPath;
         if (saved.thumbnailUploaded) hasThumbnail = true;
         else if (thumbnail) thumbDirty = true;
         syncedBlob = snapshot.imageBlob;
@@ -367,6 +370,7 @@ export function useProjectSession(projectId: string | null) {
 
         base = record.updatedAt;
         imagePath = record.sourceImagePath;
+        thumbnailPath = record.thumbnailPath;
         hasThumbnail = record.thumbnailPath !== null;
         if (decision === "cache" && cache) {
           syncedBlob =

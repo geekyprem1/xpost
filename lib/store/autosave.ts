@@ -28,7 +28,7 @@ export function createAutosave<T = Scene>(options: {
   let pending: T | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
-  let inflight = false;
+  let inflight: Promise<void> | null = null;
   let disposed = false;
   const listeners = new Set<(status: AutosaveStatus) => void>();
 
@@ -65,37 +65,49 @@ export function createAutosave<T = Scene>(options: {
     void flush();
   }
 
-  async function flush(): Promise<void> {
-    if (disposed) return;
+  function flush(): Promise<void> {
+    if (disposed) return Promise.resolve();
     clearTimer();
-    if (inflight) return;
+    // Cleanup callers must wait for the active save AND any newer snapshots
+    // before disposing the controller.
+    if (inflight) return inflight;
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
     if (pending === null) {
       if (status === "dirty") setStatus("saved");
-      return;
+      return Promise.resolve();
     }
 
-    inflight = true;
-    const value = pending;
-    setStatus("saving");
-
-    try {
-      await options.save(value);
-      if (pending === value) pending = null;
-      setStatus(pending !== null ? "dirty" : "saved");
-      inflight = false;
-      if (pending !== null) await flush();
-    } catch (error) {
-      inflight = false;
-      if (disposed) return;
-      setStatus("error");
-      options.onError?.(error);
-      if (retryTimer) clearTimeout(retryTimer);
-      if (options.shouldRetry && !options.shouldRetry(error)) return;
-      retryTimer = setTimeout(() => {
-        retryTimer = null;
-        void flush();
-      }, retryDelayMs);
-    }
+    inflight = Promise.resolve()
+      .then(async () => {
+        while (!disposed && pending !== null) {
+          const value = pending;
+          setStatus("saving");
+          try {
+            await options.save(value);
+            if (disposed) return;
+            if (pending === value) pending = null;
+            setStatus(pending !== null ? "dirty" : "saved");
+          } catch (error) {
+            if (disposed) return;
+            setStatus("error");
+            options.onError?.(error);
+            if (retryTimer) clearTimeout(retryTimer);
+            if (options.shouldRetry && !options.shouldRetry(error)) return;
+            retryTimer = setTimeout(() => {
+              retryTimer = null;
+              void flush();
+            }, retryDelayMs);
+            return;
+          }
+        }
+      })
+      .finally(() => {
+        inflight = null;
+      });
+    return inflight;
   }
 
   function getStatus() {

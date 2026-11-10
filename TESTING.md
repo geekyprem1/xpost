@@ -1,5 +1,14 @@
 # Shotlark — Manual Test Guide (sab check karne ke liye)
 
+## Project save and AI regressions (10 Nov 2026)
+
+- [ ] Start AI generation in project A, navigate to Projects, then open project B while A is still generating. B's text must stay unchanged. Repeat while the AI image capture is still pending and in Studio V2.
+- [ ] Throttle the network, edit a project until a cloud save starts, make another edit, and navigate to Projects. Wait for the requests to finish, then reopen from another browser: the latest edit must be present.
+- [ ] Open a project in two tabs. Save different changes in each. The losing tab must show the conflict dialog without replacing the winning tab's dashboard thumbnail.
+- [ ] Interrupt an AI stream before its `done` event. The panel must show an interruption error and restore the original post text.
+
+Apply `20261110090000_versioned_project_thumbnails.sql` before the thumbnail checks.
+
 ## Share-image quality (22 Oct)
 
 - [ ] AI Studio open karne ke baad `Preparing…` finishes; Download image gives a full-render JPEG, normally 2× output (1500 base → 3000px), ≤ 5 MB. Large images step down when needed.

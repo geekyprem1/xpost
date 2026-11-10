@@ -223,7 +223,7 @@ describe("project api", () => {
     expect(forced.updatedAt).not.toBe(first.updatedAt);
   });
 
-  it("naya screenshot: nayi file, purani hat jaati hai; thumbnail fixed path", async () => {
+  it("naya screenshot: nayi file, purani hat jaati hai; thumbnail versioned path", async () => {
     const { client, files } = fakeClient();
     const created = await createProject(client, {
       userId: UID,
@@ -245,11 +245,12 @@ describe("project api", () => {
     expect(saved.imagePath).toMatch(/\.jpg$/);
     expect(files.has(created.imagePath!)).toBe(false);
     expect(files.has(saved.imagePath!)).toBe(true);
-    expect(files.has(`${UID}/${created.id}/thumb.webp`)).toBe(true);
-    expect(saved.thumbnailUploaded).toBe(true);
-    expect(await files.get(`${UID}/${created.id}/thumb.webp`)!.text()).toBe(
-      "thumb",
+    expect(saved.thumbnailPath).toMatch(
+      new RegExp(`^${UID}/${created.id}/thumb-[a-z0-9]+\\.webp$`),
     );
+    expect(files.has(saved.thumbnailPath!)).toBe(true);
+    expect(saved.thumbnailUploaded).toBe(true);
+    expect(await files.get(saved.thumbnailPath!)!.text()).toBe("thumb");
   });
 
   it("create ke saath thumbnail: file + thumbnail_path set", async () => {
@@ -263,12 +264,8 @@ describe("project api", () => {
       thumbnail: new Blob(["t0"], { type: "image/webp" }),
     });
     expect(created.thumbnailUploaded).toBe(true);
-    expect(rows.get(created.id)!.thumbnail_path).toBe(
-      `${UID}/${created.id}/thumb.webp`,
-    );
-    expect(await files.get(`${UID}/${created.id}/thumb.webp`)!.text()).toBe(
-      "t0",
-    );
+    expect(rows.get(created.id)!.thumbnail_path).toBe(created.thumbnailPath);
+    expect(await files.get(created.thumbnailPath!)!.text()).toBe("t0");
     const without = await createProject(client, {
       userId: UID,
       title: "y",
@@ -278,6 +275,104 @@ describe("project api", () => {
     });
     expect(without.thumbnailUploaded).toBe(false);
     expect(rows.get(without.id)!.thumbnail_path).toBeNull();
+  });
+
+  it("a rejected stale save leaves the winning thumbnail intact and removes its candidate", async () => {
+    const { client, files } = fakeClient();
+    const created = await createProject(client, {
+      userId: UID,
+      title: "x",
+      scene: createDefaultScene(),
+      postText: "",
+      image: null,
+      thumbnail: new Blob(["original"], { type: "image/webp" }),
+    });
+    const winning = await saveProject(client, {
+      userId: UID,
+      projectId: created.id,
+      baseUpdatedAt: created.updatedAt,
+      scene: createDefaultScene(),
+      postText: "winner",
+      currentImagePath: null,
+      currentThumbnailPath: created.thumbnailPath,
+      thumbnail: new Blob(["winning thumbnail"], { type: "image/webp" }),
+    });
+    expect(winning.thumbnailPath).not.toBe(created.thumbnailPath);
+    expect(files.has(created.thumbnailPath!)).toBe(false);
+    const before = new Map(files);
+    await expect(
+      saveProject(client, {
+        userId: UID,
+        projectId: created.id,
+        baseUpdatedAt: created.updatedAt,
+        scene: createDefaultScene(),
+        postText: "loser",
+        currentImagePath: null,
+        currentThumbnailPath: created.thumbnailPath,
+        thumbnail: new Blob(["stale thumbnail"], { type: "image/webp" }),
+      }),
+    ).rejects.toSatisfy((error) => isProjectError(error, "CONFLICT"));
+    expect(files).toEqual(before);
+    expect(await files.get(winning.thumbnailPath!)!.text()).toBe(
+      "winning thumbnail",
+    );
+    expect((await getProject(client, created.id)).thumbnailPath).toBe(
+      winning.thumbnailPath,
+    );
+  });
+
+  it("a delayed thumbnail upload cannot replace a newer tab's thumbnail", async () => {
+    const { client, files } = fakeClient();
+    const created = await createProject(client, {
+      userId: UID,
+      title: "x",
+      scene: createDefaultScene(),
+      postText: "",
+      image: null,
+    });
+    let releaseUpload!: () => void;
+    const blocked = new Promise<void>((resolve) => {
+      releaseUpload = resolve;
+    });
+    const originalFrom = client.storage.from.bind(client.storage);
+    vi.spyOn(client.storage, "from").mockImplementation((bucket) => {
+      const target = originalFrom(bucket);
+      return {
+        ...target,
+        upload: async (...args: Parameters<typeof target.upload>) => {
+          if (
+            args[1] instanceof Blob &&
+            (await args[1].text()) === "slow thumbnail"
+          )
+            await blocked;
+          return target.upload(...args);
+        },
+      } as typeof target;
+    });
+    const input = {
+      userId: UID,
+      projectId: created.id,
+      baseUpdatedAt: created.updatedAt,
+      scene: createDefaultScene(),
+      postText: "",
+      currentImagePath: null,
+    };
+    const slow = saveProject(client, {
+      ...input,
+      thumbnail: new Blob(["slow thumbnail"], { type: "image/webp" }),
+    });
+    const winner = await saveProject(client, {
+      ...input,
+      thumbnail: new Blob(["fast thumbnail"], { type: "image/webp" }),
+    });
+    releaseUpload();
+    await expect(slow).rejects.toSatisfy((error) =>
+      isProjectError(error, "CONFLICT"),
+    );
+    expect(await files.get(winner.thumbnailPath!)!.text()).toBe(
+      "fast thumbnail",
+    );
+    expect(files.size).toBe(1);
   });
 
   it("delete: folder files + row", async () => {

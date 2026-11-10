@@ -3,6 +3,14 @@
 > **Note:** Supabase SQL Editor se sirf DB cheezein hoti hain (migrations — ye aap kar chuke ho).
 > **Edge Functions SQL se deploy nahi hote** — unke liye neeche 2 raste hain.
 
+## Project thumbnail update (10 Nov 2026)
+
+Apply `supabase/migrations/20261110090000_versioned_project_thumbnails.sql`
+before deploying the updated frontend. Each save uploads an immutable thumbnail
+and publishes its path only when the project update succeeds. The migration
+allows these versioned paths while preserving existing `thumb.webp` paths and
+the restriction to the owner's project folder.
+
 ## 1. Edge Functions deploy
 
 ### Rasta A — CLI (recommended, 2 commands, Docker ki zarurat nahi)
@@ -81,7 +89,8 @@ on conflict (key) do update set value = excluded.value;
 Pehla model primary hai, fail hone pe baaki try hote hain (fallback order).
 T4.5 (model comparison) ke baad yehi row update hogi.
 
-**Koi naya migration pending nahi hai** — aapke chalaye 5 migrations + marker ke baad kuch bhi DB-side change nahi hua (functions existing tables/RPCs use karte hain: `profiles`, `ai_generations`, `rate_limits`, `pexels_cache`, `consume_credits`, `refund_credits`, `hit_rate_limit`).
+Apply pending migrations in `supabase/migrations/` in timestamp order before
+deploying frontend changes that depend on them.
 
 ## 4. Auth verification
 

@@ -119,8 +119,19 @@ export function RightPanel({
   const runRef = useRef(0);
   const actionRef = useRef(false);
   const streamRef = useRef(false);
+  const mountedRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const share = useShareImages(open);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      runRef.current += 1;
+      abortRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -157,16 +168,19 @@ export function RightPanel({
     label: string,
     start: (
       onDelta: (delta: string) => void,
+      signal: AbortSignal,
     ) => Promise<
       | { ok: true; text: string; credits: number | null }
       | { ok: false; code: string; message: string }
     >,
     options: { clear: boolean; restoreOnError?: string },
   ): Promise<string | null> {
-    if (streamRef.current) return null;
+    if (!mountedRef.current || streamRef.current) return null;
     streamRef.current = true;
     const run = runRef.current + 1;
     runRef.current = run;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setBusy(true);
     setPhase(label);
     setError(null);
@@ -176,7 +190,7 @@ export function RightPanel({
       const outcome = await start((delta) => {
         if (runRef.current !== run) return;
         setPostText((current) => current + delta);
-      });
+      }, controller.signal);
       if (runRef.current !== run) return null;
       if (!outcome.ok) {
         if (options.restoreOnError !== undefined) {
@@ -206,8 +220,9 @@ export function RightPanel({
       }
       return null;
     } finally {
-      streamRef.current = false;
       if (runRef.current === run) {
+        streamRef.current = false;
+        abortRef.current = null;
         setBusy(false);
         setPhase(null);
       }
@@ -217,16 +232,22 @@ export function RightPanel({
   async function onGenerate() {
     if (busy || actionRef.current || !hasScreenshot) return;
     actionRef.current = true;
+    const run = runRef.current;
     try {
       const image = await onCapturePreview();
+      if (!mountedRef.current || runRef.current !== run) return;
       if (!image) {
         setError("Unable to capture the post image. Please try again.");
         return;
       }
       await runStream(
         "Generate",
-        (onDelta) =>
-          generatePost({ prompt: prompt.trim() || undefined, image }, onDelta),
+        (onDelta, signal) =>
+          generatePost(
+            { prompt: prompt.trim() || undefined, image },
+            onDelta,
+            signal,
+          ),
         { clear: true, restoreOnError: postText },
       );
     } finally {
@@ -238,7 +259,8 @@ export function RightPanel({
     if (busy || postText.trim().length === 0) return;
     await runStream(
       REFINE_ACTION_LABELS[action],
-      (onDelta) => refinePost({ currentText: postText, action }, onDelta),
+      (onDelta, signal) =>
+        refinePost({ currentText: postText, action }, onDelta, signal),
       { clear: true, restoreOnError: postText },
     );
   }
@@ -253,10 +275,11 @@ export function RightPanel({
     );
     const text = await runStream(
       "Chat",
-      (onDelta) =>
+      (onDelta, signal) =>
         refinePost(
           { currentText: postText, freeform: request, history },
           onDelta,
+          signal,
         ),
       { clear: true, restoreOnError: postText },
     );

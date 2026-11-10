@@ -21,9 +21,12 @@ async function streamAi(
   endpoint: "ai-generate" | "ai-refine",
   body: Record<string, unknown>,
   onDelta: (delta: string) => void,
+  signal?: AbortSignal,
 ): Promise<AiStreamOutcome> {
+  signal?.throwIfAborted();
   const supabase = createSupabaseBrowserClient();
   const { data } = await supabase.auth.getSession();
+  signal?.throwIfAborted();
   const session = data.session;
   if (!session) {
     return {
@@ -45,9 +48,11 @@ async function streamAi(
           apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
         },
         body: JSON.stringify(body),
+        signal,
       },
     );
   } catch {
+    signal?.throwIfAborted();
     return {
       ok: false,
       code: "NETWORK",
@@ -79,11 +84,14 @@ async function streamAi(
 
   try {
     while (true) {
+      signal?.throwIfAborted();
       const { done, value } = await reader.read();
+      signal?.throwIfAborted();
       if (done) break;
       for (const payload of parser.push(
         decoder.decode(value, { stream: true }),
       )) {
+        signal?.throwIfAborted();
         let event: ServerEvent;
         try {
           event = JSON.parse(payload) as ServerEvent;
@@ -96,6 +104,7 @@ async function streamAi(
         } else if (event.type === "done") {
           credits = event.credits ?? null;
           usage = event.usage ?? null;
+          return { ok: true, text, credits, usage };
         } else if (event.type === "error") {
           return {
             ok: false,
@@ -107,20 +116,27 @@ async function streamAi(
       }
     }
   } finally {
+    await reader.cancel().catch(() => undefined);
     reader.releaseLock();
   }
 
-  return { ok: true, text, credits, usage };
+  return {
+    ok: false,
+    code: "INCOMPLETE_STREAM",
+    message: "The AI response was interrupted. Please try again.",
+  };
 }
 
 export function generatePost(
   params: { projectId?: string; prompt?: string; image: string },
   onDelta: (delta: string) => void,
+  signal?: AbortSignal,
 ): Promise<AiStreamOutcome> {
   return streamAi(
     "ai-generate",
     { projectId: params.projectId, prompt: params.prompt, image: params.image },
     onDelta,
+    signal,
   );
 }
 
@@ -133,6 +149,7 @@ export function refinePost(
     history?: Array<{ role: "user" | "assistant"; content: string }>;
   },
   onDelta: (delta: string) => void,
+  signal?: AbortSignal,
 ): Promise<AiStreamOutcome> {
-  return streamAi("ai-refine", params, onDelta);
+  return streamAi("ai-refine", params, onDelta, signal);
 }

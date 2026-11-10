@@ -2,7 +2,8 @@
  * Projects & cloud save (PRD PJ-1…PJ-7) — pure helpers, no I/O.
  * Storage layout (`uploads` bucket, private):
  *   {uid}/{projectId}/source-{token}.{ext}   screenshot (token → no overwrite on conflict)
- *   {uid}/{projectId}/thumb.webp             dashboard thumbnail (DB check enforces path)
+ *   {uid}/{projectId}/thumb-{token}.webp     immutable dashboard thumbnail
+ *   {uid}/{projectId}/thumb.webp             legacy thumbnail (still readable)
  */
 
 export const PROJECTS_BUCKET = "uploads";
@@ -73,8 +74,15 @@ export function sourceImagePath(
   return `${projectFolder(userId, projectId)}/source-${safeToken}.${imageExtension(mime)}`;
 }
 
-export function thumbnailPath(userId: string, projectId: string): string {
-  return `${projectFolder(userId, projectId)}/thumb.webp`;
+export function thumbnailPath(
+  userId: string,
+  projectId: string,
+  token?: string,
+): string {
+  const suffix = token
+    ? `-${token.replace(/[^a-z0-9]/gi, "").slice(0, 16) || "0"}`
+    : "";
+  return `${projectFolder(userId, projectId)}/thumb${suffix}.webp`;
 }
 
 /** Path must live in this user's own project folder (never trust stored paths blindly). */

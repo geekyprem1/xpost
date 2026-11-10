@@ -25,6 +25,10 @@ describe("paths", () => {
       `${UID}/${PID}/source-x.jpg`,
     );
     expect(thumbnailPath(UID, PID)).toBe(`${UID}/${PID}/thumb.webp`);
+    expect(thumbnailPath(UID, PID, "abc123")).toBe(
+      `${UID}/${PID}/thumb-abc123.webp`,
+    );
+    expect(thumbnailPath(UID, PID, "../x")).toBe(`${UID}/${PID}/thumb-x.webp`);
   });
 
   it("unsupported mime reject", () => {

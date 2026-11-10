@@ -242,12 +242,13 @@ async function uploadThumbnail(
   projectId: string,
   thumbnail: Blob,
 ): Promise<string | null> {
-  const path = thumbnailPath(userId, projectId);
+  // Each candidate gets its own object. Only the winning row update publishes it.
+  const path = thumbnailPath(userId, projectId, randomToken());
   const { error } = await client.storage
     .from(PROJECTS_BUCKET)
     .upload(path, thumbnail, {
       contentType: "image/webp",
-      upsert: true,
+      upsert: false,
       cacheControl: "60",
     });
   if (error) {
@@ -279,6 +280,7 @@ export type SavedProject = {
   id: string;
   updatedAt: string;
   imagePath: string | null;
+  thumbnailPath: string | null;
   /** Is save mein thumbnail upload + `thumbnail_path` set hua. */
   thumbnailUploaded: boolean;
 };
@@ -301,10 +303,11 @@ export async function createProject(
     if (error) throw failure(error, "The project could not be created.");
 
     let imagePath: string | null = null;
+    let thumb: string | null = null;
     try {
       if (input.image)
         imagePath = await uploadSource(client, input.userId, id, input.image);
-      const thumb = input.thumbnail
+      thumb = input.thumbnail
         ? await uploadThumbnail(client, input.userId, id, input.thumbnail)
         : null;
       const { data, error: updateError } = await client
@@ -323,16 +326,14 @@ export async function createProject(
         id,
         updatedAt: (data as { updated_at: string }).updated_at,
         imagePath,
+        thumbnailPath: thumb,
         thumbnailUploaded: thumb !== null,
       };
     } catch (reason) {
       await client.from("projects").delete().eq("id", id);
       await removeFiles(
         client,
-        [
-          imagePath,
-          input.thumbnail ? thumbnailPath(input.userId, id) : null,
-        ].filter((path): path is string => path !== null),
+        [imagePath, thumb].filter((path): path is string => path !== null),
       );
       throw reason;
     }
@@ -351,6 +352,7 @@ export type SaveProjectInput = {
   /** Blob = new screenshot to upload, null = screenshot removed, undefined = unchanged. */
   image?: Blob | null;
   currentImagePath: string | null;
+  currentThumbnailPath?: string | null;
   thumbnail?: Blob | null;
 };
 
@@ -389,26 +391,49 @@ export async function saveProject(
     };
     if (thumb) patch.thumbnail_path = thumb;
 
-    let query = client.from("projects").update(patch).eq("id", input.projectId);
-    if (!input.force) query = query.eq("updated_at", input.baseUpdatedAt);
-    const { data, error } = await query.select("updated_at").maybeSingle();
-    if (error || !data) {
-      if (uploaded) await removeFiles(client, [uploaded]);
-      if (error) throw failure(error, "Your changes could not be saved.");
-      // 0 rows: kisi aur tab / device ne pehle save kiya (ya project delete hua).
-      throw new ProjectError(
-        "CONFLICT",
-        "This project was changed somewhere else.",
+    let data: { updated_at: string; thumbnail_path: string | null };
+    try {
+      let query = client
+        .from("projects")
+        .update(patch)
+        .eq("id", input.projectId);
+      if (!input.force) query = query.eq("updated_at", input.baseUpdatedAt);
+      const result = await query
+        .select("updated_at, thumbnail_path")
+        .maybeSingle();
+      if (result.error)
+        throw failure(result.error, "Your changes could not be saved.");
+      if (!result.data) {
+        // Another tab saved first (or the project was deleted).
+        throw new ProjectError(
+          "CONFLICT",
+          "This project was changed somewhere else.",
+        );
+      }
+      data = result.data as typeof data;
+    } catch (reason) {
+      await removeFiles(
+        client,
+        [uploaded, thumb].filter((path): path is string => path !== null),
       );
+      throw reason;
     }
     // Purani screenshot file ab kisi row ki nahi.
     if (input.currentImagePath && input.currentImagePath !== imagePath) {
       await removeFiles(client, [input.currentImagePath]);
     }
+    if (
+      thumb &&
+      input.currentThumbnailPath &&
+      input.currentThumbnailPath !== thumb
+    ) {
+      await removeFiles(client, [input.currentThumbnailPath]);
+    }
     return {
       id: input.projectId,
-      updatedAt: (data as { updated_at: string }).updated_at,
+      updatedAt: data.updated_at,
       imagePath,
+      thumbnailPath: data.thumbnail_path,
       thumbnailUploaded: thumb !== null,
     };
   }, "Your changes could not be saved.");

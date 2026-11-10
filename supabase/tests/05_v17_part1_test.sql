@@ -1,6 +1,6 @@
 begin;
 
-select plan(21);
+select plan(25);
 
 -- ── user_styles: RLS isolation ──────────────────────────────────────────
 insert into public.user_styles (user_id, name, style)
@@ -91,6 +91,26 @@ select lives_ok(
   $$update public.projects set thumbnail_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/dddddddd-dddd-4ddd-8ddd-dddddddddddd/thumb.webp'
     where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
   'apne project folder ka thumbnail path allowed'
+);
+select lives_ok(
+  $$update public.projects set thumbnail_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/dddddddd-dddd-4ddd-8ddd-dddddddddddd/thumb-abc123.webp'
+    where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
+  'immutable versioned thumbnail in own project folder allowed'
+);
+select throws_ok(
+  $$update public.projects set thumbnail_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee/thumb-abc123.webp'
+    where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
+  '23514', null, 'versioned thumbnail from another project rejected'
+);
+select throws_ok(
+  $$update public.projects set thumbnail_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/dddddddd-dddd-4ddd-8ddd-dddddddddddd/thumb-../x.webp'
+    where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
+  '23514', null, 'thumbnail path traversal rejected'
+);
+select throws_ok(
+  $$update public.projects set thumbnail_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/dddddddd-dddd-4ddd-8ddd-dddddddddddd/thumb-abc123.png'
+    where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
+  '23514', null, 'non-WebP thumbnail rejected'
 );
 select throws_ok(
   $$update public.projects set thumbnail_path = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/x/thumb.webp'
